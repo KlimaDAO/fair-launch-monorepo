@@ -7,20 +7,6 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-/**
- * @title IERC20Burnable Interface
- * @dev Interface of the ERC20 standard as defined in the EIP.
- */
-interface IERC20Burnable {
-    /**
-     * @notice Function to burn tokens.
-     * @dev Can only be called by the minter address.
-     * @param from The address that will have its tokens burnt.
-     * @param amount The amount of tokens to burn.
-     */
-    function burn(address from, uint256 amount) external;
-}
-
 interface IKlimaFairLaunchBurnVault {
     function addKlimaAmountToBurn(address _user, uint256 _amount) external;
 }
