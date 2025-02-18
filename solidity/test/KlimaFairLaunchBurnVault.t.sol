@@ -3,6 +3,7 @@ pragma solidity ^0.8.28;
 
 import {Test, console} from "forge-std/Test.sol";
 import {KlimaFairLaunchBurnVault} from "../src/KlimaFairLaunchBurnVault.sol";
+import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 contract KlimaFairLaunchBurnVaultTest is Test {
     KlimaFairLaunchBurnVault public vault;
@@ -17,20 +18,16 @@ contract KlimaFairLaunchBurnVaultTest is Test {
         vault = KlimaFairLaunchBurnVault(deployProxy(address(implementation)));
     }
 
-    function deployProxy(address implementation) internal returns (address) {
-        // Simple proxy deployment simulation
+    function deployProxy(address impl) internal returns (address) {
         bytes memory initData = abi.encodeWithSelector(
             KlimaFairLaunchBurnVault.initialize.selector,
             owner
         );
-        return deployCode(
-            "solidity/test/mocks/ERC1967Proxy.sol:ERC1967Proxy",
-            abi.encode(implementation, initData)
-        );
+        return address(new ERC1967Proxy(impl, initData));
     }
 
     // ======== Initialization Tests ========
-    function test_InitializeWithValidOwner() public {
+    function test_InitializeWithValidOwner() public view {
         // Verify owner is set correctly
         assertEq(vault.owner(), owner);
     }
