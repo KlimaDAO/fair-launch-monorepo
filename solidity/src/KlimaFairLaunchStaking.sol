@@ -58,14 +58,16 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     uint256 finalizationComplete;
 
     // constants
-    uint256 constant GROWTH_CONSTANT = 274;
     uint256 constant GROWTH_DENOMINATOR = 100000;
     address constant KLIMA_V0 = 0xDCEFd8C8fCc492630B943ABcaB3429F12Ea9Fea2; // current klima address on Base
+    
+    uint256 public GROWTH_RATE = 274;
+
     // token state
     address public KLIMA;
     address public KLIMA_X;
-    uint256 public constant KLIMA_SUPPLY = 17_500_000;
-    uint256 public constant KLIMAX_SUPPLY = 40_000_000;
+    uint256 public KLIMA_SUPPLY = 17_500_000;
+    uint256 public KLIMAX_SUPPLY = 40_000_000;
     address public burnVault;
     // events
     event StakeCreated(address indexed user, uint256 amount, uint256 multiplier, uint256 startTimestamp);
@@ -75,6 +77,9 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     event TokenAddressesSet(address indexed klima, address indexed klimax);
     event StakingEnabled(uint256 startTimestamp, uint256 freezeTimestamp);
     event BurnVaultSet(address indexed burnVault);
+    event GrowthRateSet(uint256 newValue);
+    event KlimaSupplySet(uint256 newValue);
+    event KlimaXSupplySet(uint256 newValue);
     
     // TODO
     // receive function (if exists)
@@ -83,6 +88,15 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     /// @dev Reserved storage space per auditor recommendation.
     uint256[50] private __gap;
 
+    modifier beforeStartTimestamp() {
+        require(startTimestamp == 0 || block.timestamp < startTimestamp, "Staking has already started");
+        _;
+    }
+
+    modifier beforeFinalization() {
+        require(finalizationComplete == 0, "Finalization already complete");
+        _;
+    }
 
     /// @notice Disables initialization of the implementation contract
     constructor() {
@@ -328,7 +342,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
 
             uint256 timeElapsed = block.timestamp - userStake.lastUpdateTime;
             uint256 newPoints =
-                (userStake.amount * userStake.bonusMultiplier * timeElapsed * GROWTH_CONSTANT) / GROWTH_DENOMINATOR;
+                (userStake.amount * userStake.bonusMultiplier * timeElapsed * GROWTH_RATE) / GROWTH_DENOMINATOR;
 
             totalOrganicPoints += newPoints;
             userStake.organicPoints += newPoints;
@@ -375,7 +389,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     /// @param _startTimestamp Timestamp when staking begins
     /// @dev Freeze timestamp is 90 days after start
     /// @dev Can only be called by the owner
-    function enableStaking(uint256 _startTimestamp) external onlyOwner {
+    function enableStaking(uint256 _startTimestamp) external onlyOwner beforeStartTimestamp {
         require(_startTimestamp > block.timestamp, "Start timestamp cannot be in the past");
         startTimestamp = _startTimestamp;
         freezeTimestamp = _startTimestamp + 90 days;
@@ -386,12 +400,9 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     /// @param batchSize Number of staker addresses to process in this batch
     /// @dev Can only be called by the owner after freeze timestamp
     /// @dev Processes stakers in batches to avoid gas limits
-    function storeTotalPoints(uint256 batchSize) public onlyOwner {
+    function storeTotalPoints(uint256 batchSize) public onlyOwner beforeFinalization {
         // Require staking to be locked (current time >= freezeTimestamp)
         require(block.timestamp >= freezeTimestamp, "Staking period not locked");
-
-        // Require finalization not complete
-        require(finalizationComplete == 0, "Finalization already complete");
 
         // Calculate end index for this batch
         uint256 endIndex = finalizeIndex + batchSize;
@@ -428,6 +439,25 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         require(_burnVault != address(0), "Invalid burn vault address");
         burnVault = _burnVault;
         emit BurnVaultSet(_burnVault);
+    }
+
+    function setGrowthRate(uint256 _newValue) external onlyOwner beforeStartTimestamp {
+        require(_newValue > 0, "Growth constant must be greater than 0");
+        require(_newValue < GROWTH_DENOMINATOR, "Growth constant must be less than denominator");
+        GROWTH_RATE = _newValue;
+        emit GrowthRateSet(_newValue);
+    }
+
+    function setKlimaSupply(uint256 _newValue) external onlyOwner beforeFinalization {
+        require(_newValue > 0, "KLIMA supply must be greater than 0");
+        KLIMA_SUPPLY = _newValue;
+        emit KlimaSupplySet(_newValue);
+    }
+
+    function setKlimaXSupply(uint256 _newValue) external onlyOwner beforeFinalization {
+        require(_newValue > 0, "KLIMA_X supply must be greater than 0");
+        KLIMAX_SUPPLY = _newValue;
+        emit KlimaXSupplySet(_newValue);
     }
 
     // pure functions
@@ -494,7 +524,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
             // Simulate organic points update
             uint256 timeElapsed = block.timestamp - userStake.lastUpdateTime;
             uint256 newOrganicPoints = userStake.organicPoints
-                + (userStake.amount * userStake.bonusMultiplier * timeElapsed * GROWTH_CONSTANT) / GROWTH_DENOMINATOR;
+                + (userStake.amount * userStake.bonusMultiplier * timeElapsed * GROWTH_RATE) / GROWTH_DENOMINATOR;
 
             // Simulate burn points update
             uint256 burnRatioDiff = burnRatio - userStake.burnRatioSnapshot;
