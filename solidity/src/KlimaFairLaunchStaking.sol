@@ -174,85 +174,71 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         require(amount > 0, "Amount must be greater than 0");
         require(block.timestamp < freezeTimestamp, "Staking period ended");
 
-        // Track total unstaked and burned for this operation
+        // Track totals
         uint256 totalUnstake = 0;
         uint256 totalBurnAmount = 0;
 
-        // NEW: track total freed organic points to update burnRatio incrementally
+        // track total freed organic points to update burnRatio incrementally
         uint256 freedOrganicPointsTotal = 0;
 
-        // Get user's stakes
-        Stake[] storage stakes = userStakes[msg.sender];
+        // Load stakes into memory
+        Stake[] memory stakes = userStakes[msg.sender];
         require(stakes.length > 0, "No stakes found");
+
+        // Create temporary array to track updated stakes
+        Stake[] memory updatedStakes = new Stake[](stakes.length);
+        uint256 updatedStakeCount = 0;
 
         // Process stakes from newest to oldest
         for (uint256 i = stakes.length; i > 0 && totalUnstake < amount; i--) {
-            Stake storage currentStake = stakes[i - 1];
+            Stake memory currentStake = stakes[i - 1];
 
-            // Calculate how much to unstake from this stake
             uint256 stakeUnstakeAmount = amount - totalUnstake;
             if (stakeUnstakeAmount > currentStake.amount) {
                 stakeUnstakeAmount = currentStake.amount;
             }
 
-            // Calculate burn for this unstaked portion
             uint256 burnForStake = calculateBurn(stakeUnstakeAmount, currentStake.stakeStart);
-
-            // NEW: capture original organic points (and optionally burn accrued)
-            uint256 originalOrganicPoints = currentStake.organicPoints;
-            uint256 originalAmount = currentStake.amount; // before reduction
-
-            // Update stake amount
+            uint256 originalAmount = currentStake.amount;
+            
+            // Update stake
             currentStake.amount = originalAmount - stakeUnstakeAmount;
-
-            // Update organic points proportionally
-            if (originalAmount > 0) {
-                uint256 newOrganicPoints = (originalOrganicPoints * currentStake.amount) / originalAmount;
-                // Accumulate freed organic points from this stake
-                uint256 freedOrganicPoints = originalOrganicPoints - newOrganicPoints;
-                freedOrganicPointsTotal += freedOrganicPoints;
-                // Update global total organic points
-                totalOrganicPoints -= freedOrganicPoints;
-                currentStake.organicPoints = newOrganicPoints;
-            } else {
-                currentStake.organicPoints = 0;
-                // Update global total organic points
-                totalOrganicPoints -= originalOrganicPoints;
-            }
-
-            // Update burn accrual proportionally
-            uint256 originalBurnAccrued = currentStake.burnAccrued;
-            if (originalAmount > 0) {
-                currentStake.burnAccrued = (originalBurnAccrued * currentStake.amount) / originalAmount;
-            } else {
-                currentStake.burnAccrued = 0;
-            }
+            
+            uint256 originalOrganicPoints = currentStake.organicPoints;
+            uint256 newOrganicPoints = (originalOrganicPoints * currentStake.amount) / originalAmount;
+            freedOrganicPointsTotal += originalOrganicPoints - newOrganicPoints;
+            currentStake.organicPoints = newOrganicPoints;
+            currentStake.burnAccrued = (currentStake.burnAccrued * currentStake.amount) / originalAmount;
 
             totalUnstake += stakeUnstakeAmount;
             totalBurnAmount += burnForStake;
 
-            // Remove stake if fully unstaked
-            if (currentStake.amount == 0) {
-                // Remove stake by swapping with last element and popping
-                stakes[i - 1] = stakes[stakes.length - 1];
-                stakes.pop();
+            // Only keep non-zero stakes
+            if (currentStake.amount > 0) {
+                updatedStakes[updatedStakeCount++] = currentStake;
             }
         }
 
         require(totalUnstake == amount, "Insufficient stake balance");
 
+        // Update storage once with final state
+        Stake[] storage userStakesList = userStakes[msg.sender];
+        assembly {
+            sstore(userStakesList.slot, updatedStakeCount)
+        }
+        for (uint256 i = 0; i < updatedStakeCount; i++) {
+            userStakesList[i] = updatedStakes[i];
+        }
+
         // Update global state
         totalStaked -= amount;
         totalBurned += totalBurnAmount;
+        totalOrganicPoints -= freedOrganicPointsTotal;
 
-        // Calculate burn ratio update AFTER updating totalOrganicPoints
-        // This ensures correct distribution of freed points to remaining stakers
+        // Update burn ratio
         if (totalOrganicPoints > 0) {
-            // First multiply by scaling factor to maintain precision
             uint256 scaledFreedPoints = freedOrganicPointsTotal * GROWTH_DENOMINATOR;
-            // Safe division using remaining organic points
             uint256 deltaRatio = scaledFreedPoints / totalOrganicPoints;
-            // Update burn ratio
             burnRatio = burnRatio + deltaRatio;
         }
 
@@ -267,7 +253,6 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
             require(IERC20(KLIMA_V0).transfer(msg.sender, remainingAmount), "Transfer failed");
         }
 
-        // Emit event
         emit StakeBurned(msg.sender, totalBurnAmount, block.timestamp);
     }
 
