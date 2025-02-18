@@ -252,7 +252,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
             burnRatio = burnRatio + deltaRatio;
         }
 
-        // Burn the tokens for the burn portion before transferring remaining tokens
+        // Send tokens to burn vault for the burn portion before transferring remaining tokens
         if (totalBurnAmount > 0) {
             require(IERC20(KLIMA_V0).approve(burnVault, totalBurnAmount), "Approve failed");
             IKlimaFairLaunchBurnVault(burnVault).addKlimaAmountToBurn(msg.sender, totalBurnAmount);
@@ -277,6 +277,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
 
         uint256 totalUserStaked = 0;
         uint256 totalUserPoints = 0;
+        bool hasUnclaimedStakes = false;
 
         // Load stakes into memory
         Stake[] memory stakes = userStakes[msg.sender];
@@ -285,14 +286,21 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         // Process all stakes in memory
         for (uint256 i = 0; i < stakes.length; i++) {
             Stake memory currentStake = stakes[i];
-            require(currentStake.hasBeenClaimed == 0, "Stake already claimed");
             
-            totalUserStaked += currentStake.amount;
-            totalUserPoints += currentStake.organicPoints + currentStake.burnAccrued;
+            // Only add unclaimed stakes to totals
+            if (currentStake.hasBeenClaimed == 0) {
+                totalUserStaked += currentStake.amount;
+                totalUserPoints += currentStake.organicPoints + currentStake.burnAccrued;
+                hasUnclaimedStakes = true;
+            }
             
+            // Mark as claimed regardless
             currentStake.hasBeenClaimed = 1;
             updatedStakes[i] = currentStake;
         }
+
+        // Require at least one unclaimed stake
+        require(hasUnclaimedStakes, "No unclaimed stakes found");
 
         // Update storage once
         Stake[] storage userStakesList = userStakes[msg.sender];
@@ -304,13 +312,19 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         uint256 klimaAllocation = (totalUserStaked * KLIMA_SUPPLY) / totalStaked;
         uint256 klimaXAllocation = (totalUserPoints * KLIMAX_SUPPLY) / finalTotalPoints;
 
-        // Burn the original KLIMA_V0 tokens
-        require(IERC20(KLIMA_V0).approve(burnVault, totalUserStaked), "Approve failed");
-        IKlimaFairLaunchBurnVault(burnVault).addKlimaAmountToBurn(msg.sender, totalUserStaked);
+        // Only process KLIMA_V0 burn if there are tokens to burn
+        if (totalUserStaked > 0) {
+            require(IERC20(KLIMA_V0).approve(burnVault, totalUserStaked), "Approve failed");
+            IKlimaFairLaunchBurnVault(burnVault).addKlimaAmountToBurn(msg.sender, totalUserStaked);
+        }
 
-        // Transfer new tokens to user
-        require(IERC20(KLIMA).transfer(msg.sender, klimaAllocation), "KLIMA transfer failed");
-        require(IERC20(KLIMA_X).transfer(msg.sender, klimaXAllocation), "KLIMA_X transfer failed");
+        // Transfer new tokens to user (if any)
+        if (klimaAllocation > 0) {
+            require(IERC20(KLIMA).transfer(msg.sender, klimaAllocation), "KLIMA transfer failed");
+        }
+        if (klimaXAllocation > 0) {
+            require(IERC20(KLIMA_X).transfer(msg.sender, klimaXAllocation), "KLIMA_X transfer failed");
+        }
 
         emit Claimed(msg.sender, klimaAllocation, klimaXAllocation);
     }
