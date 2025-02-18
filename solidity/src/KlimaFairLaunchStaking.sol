@@ -15,7 +15,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     // user stakes
     struct Stake {
         uint256 amount;
-        uint256 stakeStart;
+        uint256 stakeStartTime;
         // points
         uint256 lastUpdateTime;
         uint256 bonusMultiplier;
@@ -28,8 +28,8 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     mapping(address => Stake[]) public userStakes;
 
     // staking timeline
-    uint256 startTimestamp; // (either via initialize or enableStaking())
-    uint256 freezeTimestamp; // (set via same function as above)
+    uint256 startTimestamp;
+    uint256 freezeTimestamp;
 
     // global totals
     uint256 totalOrganicPoints;
@@ -146,7 +146,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         // Create new stake
         Stake memory newStake = Stake({
             amount: amount,
-            stakeStart: block.timestamp,
+            stakeStartTime: block.timestamp,
             lastUpdateTime: block.timestamp,
             bonusMultiplier: multiplier,
             organicPoints: 0,
@@ -213,7 +213,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
                 stakeUnstakeAmount = currentStake.amount;
             }
 
-            uint256 burnForStake = calculateBurn(stakeUnstakeAmount, currentStake.stakeStart);
+            uint256 burnForStake = calculateBurn(stakeUnstakeAmount, currentStake.stakeStartTime);
             uint256 originalAmount = currentStake.amount;
             
             // Update stake
@@ -479,15 +479,15 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
 
     /// @notice Calculates the amount of tokens to burn when unstaking
     /// @param amount Amount of tokens being unstaked
-    /// @param stakeStart Timestamp when the stake was created
+    /// @param stakeStartTime Timestamp when the stake was created
     /// @return Amount of tokens to burn
     /// @dev Base burn is 25%, additional burn up to 75% based on stake duration
-    function calculateBurn(uint256 amount, uint256 stakeStart) public view returns (uint256) {
+    function calculateBurn(uint256 amount, uint256 stakeStartTime) public view returns (uint256) {
         // Base burn is 25% of amount
         uint256 baseBurn = (amount * 25) / 100;
 
         // Calculate time-based burn percentage (capped at 75%)
-        uint256 daysStaked = (block.timestamp - stakeStart) / 1 days;
+        uint256 daysStaked = (block.timestamp - stakeStartTime) / 1 days;
         uint256 timeBasedBurnPercent = (daysStaked * 75) / 365;
         if (timeBasedBurnPercent > 75) timeBasedBurnPercent = 75;
 
