@@ -475,8 +475,8 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     /// @dev Can only be called before staking starts
     /// @dev Must be less than GROWTH_DENOMINATOR to prevent excessive point accrual
     function setGrowthRate(uint256 _newValue) external onlyOwner beforeStartTimestamp {
-        require(_newValue > 0, "Growth constant must be greater than 0");
-        require(_newValue < GROWTH_DENOMINATOR, "Growth constant must be less than denominator");
+        require(_newValue > 0, "Growth Rate must be greater than 0");
+        require(_newValue < GROWTH_DENOMINATOR, "Growth Rate must be less than denominator");
         GROWTH_RATE = _newValue;
         emit GrowthRateSet(_newValue);
     }
