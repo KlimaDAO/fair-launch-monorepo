@@ -5,13 +5,14 @@ import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Own
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 interface IKlimaFairLaunchBurnVault {
     function addKlimaAmountToBurn(address _user, uint256 _amount) external;
 }
 
-contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgradeable, PausableUpgradeable {
+contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgradeable, PausableUpgradeable, ReentrancyGuardUpgradeable {
     // user stakes
     struct Stake {
         uint256 amount;
@@ -100,6 +101,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         __Ownable_init(initialOwner);
         __Pausable_init();
         __UUPSUpgradeable_init();
+        __ReentrancyGuard_init();
     }
 
     /// @notice Authorizes an upgrade to a new implementation
@@ -186,7 +188,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     /// @notice Processes unstaking before the freeze period, applying burn penalties
     /// @param amount Amount of tokens to unstake and partially burn
     /// @dev Burns tokens based on stake duration and updates points/ratios accordingly
-    function _unstakeAndBurn(uint256 amount) internal {
+    function _unstakeAndBurn(uint256 amount) internal nonReentrant {
         require(amount > 0, "Amount must be greater than 0");
         require(block.timestamp < freezeTimestamp, "Staking period ended");
 
@@ -271,7 +273,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     /// @dev Requires finalization to be complete
     /// @dev Converts staked amount to KLIMA and points to KLIMA_X
     /// @dev Burns the original KLIMA_V0 tokens when claiming
-    function _claim() internal {
+    function _claim() internal nonReentrant {
         require(block.timestamp >= freezeTimestamp, "Staking period not ended");
         require(finalizationComplete == 1, "Finalization not complete");
 
@@ -427,8 +429,8 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     /// @dev Can only be called by the owner after freeze timestamp
     /// @dev Processes stakers in batches to avoid gas limits
     function storeTotalPoints(uint256 batchSize) public onlyOwner beforeFinalization {
-        // Require staking to be locked (current time >= freezeTimestamp)
         require(block.timestamp >= freezeTimestamp, "Staking period not locked");
+
 
         // Calculate end index for this batch
         uint256 endIndex = finalizeIndex + batchSize;
@@ -465,6 +467,8 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
 
         // If we've processed all addresses, mark finalization as complete
         if (finalizeIndex == stakerAddresses.length) {
+            require(IERC20(KLIMA).balanceOf(address(this)) >= KLIMA_SUPPLY, "Insufficient KLIMA balance");
+            require(IERC20(KLIMA_X).balanceOf(address(this)) >= KLIMAX_SUPPLY, "Insufficient KLIMA_X balance");
             finalizationComplete = 1;
             emit FinalizationComplete();
         }
