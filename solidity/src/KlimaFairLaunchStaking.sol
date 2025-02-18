@@ -386,16 +386,13 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         emit TokenAddressesSet(_klima, _klimax);
     }
 
-    // TODO
-    // verify with team how this functions
-    // do we need a flag to only allow one call to this function?
-
     /// @notice Enables staking by setting the start timestamp
     /// @param _startTimestamp Timestamp when staking begins
     /// @dev Freeze timestamp is 90 days after start
     /// @dev Can only be called by the owner
     function enableStaking(uint256 _startTimestamp) external onlyOwner beforeStartTimestamp {
         require(_startTimestamp > block.timestamp, "Start timestamp cannot be in the past");
+        require(burnVault != address(0), "Burn vault not set");
         startTimestamp = _startTimestamp;
         freezeTimestamp = _startTimestamp + 90 days;
         emit StakingEnabled(_startTimestamp, freezeTimestamp);
@@ -471,8 +468,8 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
 
     /// @notice Sets the burn vault address
     /// @param _burnVault Address of the burn vault contract
-    /// @dev Can only be called by the owner
-    function setBurnVault(address _burnVault) external onlyOwner {
+    /// @dev Can only be called by the owner before staking starts
+    function setBurnVault(address _burnVault) external onlyOwner beforeStartTimestamp {
         require(_burnVault != address(0), "Invalid burn vault address");
         burnVault = _burnVault;
         emit BurnVaultSet(_burnVault);
