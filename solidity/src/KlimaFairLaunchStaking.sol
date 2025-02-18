@@ -340,36 +340,60 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     /// @param _user Address of the user to update
     /// @dev Points accrue based on stake amount, time, and multiplier
     function _updateOrganicPoints(address _user) internal {
-        Stake[] storage userStakesList = userStakes[_user];
+        // Load stakes into memory
+        Stake[] memory stakes = userStakes[_user];
+        Stake[] memory updatedStakes = new Stake[](stakes.length);
+        uint256 newTotalOrganicPoints = totalOrganicPoints;
 
-        for (uint256 i = 0; i < userStakesList.length; i++) {
-            Stake storage userStake = userStakesList[i];
+        // Process all stakes in memory
+        for (uint256 i = 0; i < stakes.length; i++) {
+            Stake memory currentStake = stakes[i];
 
-            uint256 timeElapsed = block.timestamp - userStake.lastUpdateTime;
-            uint256 newPoints =
-                (userStake.amount * userStake.bonusMultiplier * timeElapsed * GROWTH_RATE) / GROWTH_DENOMINATOR;
+            uint256 timeElapsed = block.timestamp - currentStake.lastUpdateTime;
+            uint256 newPoints = 
+                (currentStake.amount * currentStake.bonusMultiplier * timeElapsed * GROWTH_RATE) / GROWTH_DENOMINATOR;
 
-            totalOrganicPoints += newPoints;
-            userStake.organicPoints += newPoints;
-            userStake.lastUpdateTime = block.timestamp;
+            newTotalOrganicPoints += newPoints;
+            currentStake.organicPoints += newPoints;
+            currentStake.lastUpdateTime = block.timestamp;
+            
+            updatedStakes[i] = currentStake;
         }
+
+        // Update storage once
+        Stake[] storage userStakesList = userStakes[_user];
+        for (uint256 i = 0; i < stakes.length; i++) {
+            userStakesList[i] = updatedStakes[i];
+        }
+        totalOrganicPoints = newTotalOrganicPoints;
     }
 
     /// @notice Updates burn distribution for a user's stakes
     /// @param _user Address of the user to update
     /// @dev Distributes burned tokens proportionally based on organic points
     function _updateBurnDistribution(address _user) internal {
-        Stake[] storage userStakesList = userStakes[_user];
+        // Load stakes into memory
+        Stake[] memory stakes = userStakes[_user];
+        Stake[] memory updatedStakes = new Stake[](stakes.length);
 
-        for (uint256 i = 0; i < userStakesList.length; i++) {
-            Stake storage userStake = userStakesList[i];
+        // Process all stakes in memory
+        for (uint256 i = 0; i < stakes.length; i++) {
+            Stake memory currentStake = stakes[i];
 
-            uint256 burnRatioDiff = burnRatio - userStake.burnRatioSnapshot;
+            uint256 burnRatioDiff = burnRatio - currentStake.burnRatioSnapshot;
             if (burnRatioDiff > 0) {
-                uint256 newBurnAccrual = (userStake.organicPoints * burnRatioDiff) / GROWTH_DENOMINATOR;
-                userStake.burnAccrued += newBurnAccrual;
+                uint256 newBurnAccrual = (currentStake.organicPoints * burnRatioDiff) / GROWTH_DENOMINATOR;
+                currentStake.burnAccrued += newBurnAccrual;
             }
-            userStake.burnRatioSnapshot = burnRatio;
+            currentStake.burnRatioSnapshot = burnRatio;
+            
+            updatedStakes[i] = currentStake;
+        }
+
+        // Update storage once
+        Stake[] storage userStakesList = userStakes[_user];
+        for (uint256 i = 0; i < stakes.length; i++) {
+            userStakesList[i] = updatedStakes[i];
         }
     }
 
@@ -412,22 +436,31 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
             endIndex = stakerAddresses.length;
         }
 
+        // Track new points in memory
+        uint256 newFinalTotalPoints = finalTotalPoints;
+
         // Process each address in the batch
         for (uint256 i = finalizeIndex; i < endIndex; i++) {
             address staker = stakerAddresses[i];
-            Stake[] storage stakes = userStakes[staker];
-
+            
+            // Load stakes into memory
+            Stake[] memory stakes = userStakes[staker];
+            
             // Update points for this staker's stakes
             _updateOrganicPoints(staker);
             _updateBurnDistribution(staker);
 
-            // Sum all stakes' organic points for this user
+            // Reload stakes after updates
+            stakes = userStakes[staker];
+
+            // Sum all stakes' points for this user
             for (uint256 j = 0; j < stakes.length; j++) {
-                finalTotalPoints += stakes[j].organicPoints;
+                newFinalTotalPoints += stakes[j].organicPoints;
             }
         }
 
-        // Update the finalize index
+        // Update storage once
+        finalTotalPoints = newFinalTotalPoints;
         finalizeIndex = endIndex;
 
         // If we've processed all addresses, mark finalization as complete
