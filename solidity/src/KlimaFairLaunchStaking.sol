@@ -76,6 +76,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     event FinalizationComplete();
     event TokenAddressesSet(address indexed klima, address indexed klimax);
     event StakingEnabled(uint256 startTimestamp, uint256 freezeTimestamp);
+    event StakingExtended(uint256 oldFreezeTimestamp, uint256 newFreezeTimestamp);
     event BurnVaultSet(address indexed burnVault);
     event GrowthRateSet(uint256 newValue);
     event KlimaSupplySet(uint256 newValue);
@@ -458,6 +459,19 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         require(_newValue > 0, "KLIMA_X supply must be greater than 0");
         KLIMAX_SUPPLY = _newValue;
         emit KlimaXSupplySet(_newValue);
+    }
+
+    /// @notice Updates the freeze timestamp to a later time
+    /// @param _newFreezeTimestamp New timestamp when staking ends
+    /// @dev Can only extend the freeze period, not shorten it
+    function setFreezeTimestamp(uint256 _newFreezeTimestamp) external onlyOwner beforeFinalization {
+        require(startTimestamp > 0, "Staking not initialized");
+        require(_newFreezeTimestamp > freezeTimestamp, "Can only extend freeze period");
+        require(_newFreezeTimestamp > block.timestamp, "Freeze timestamp must be future");
+        
+        uint256 oldFreezeTimestamp = freezeTimestamp;
+        freezeTimestamp = _newFreezeTimestamp;
+        emit StakingExtended(oldFreezeTimestamp, _newFreezeTimestamp);
     }
 
     // pure functions
