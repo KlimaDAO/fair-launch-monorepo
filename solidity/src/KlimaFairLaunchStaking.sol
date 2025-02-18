@@ -578,23 +578,25 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     /// @dev Simulates point updates up to current timestamp
     function previewUserPoints(address user) public view returns (uint256) {
         uint256 totalPoints = 0;
-        Stake[] storage userStakesList = userStakes[user];
+        
+        // Load stakes into memory once
+        Stake[] memory stakes = userStakes[user];
 
         // For each stake, simulate organic and burn point updates
-        for (uint256 i = 0; i < userStakesList.length; i++) {
-            Stake storage userStake = userStakesList[i];
+        for (uint256 i = 0; i < stakes.length; i++) {
+            Stake memory currentStake = stakes[i];
 
             // Simulate organic points update
-            uint256 timeElapsed = block.timestamp - userStake.lastUpdateTime;
-            uint256 newOrganicPoints = userStake.organicPoints
-                + (userStake.amount * userStake.bonusMultiplier * timeElapsed * GROWTH_RATE) / GROWTH_DENOMINATOR;
+            uint256 timeElapsed = block.timestamp - currentStake.lastUpdateTime;
+            uint256 newOrganicPoints = currentStake.organicPoints
+                + (currentStake.amount * currentStake.bonusMultiplier * timeElapsed * GROWTH_RATE) / GROWTH_DENOMINATOR;
 
             // Simulate burn points update
-            uint256 burnRatioDiff = burnRatio - userStake.burnRatioSnapshot;
+            uint256 burnRatioDiff = burnRatio - currentStake.burnRatioSnapshot;
             uint256 newBurnPoints = (newOrganicPoints * burnRatioDiff) / GROWTH_DENOMINATOR;
 
             // Add both types of points to total
-            totalPoints += newOrganicPoints + (userStake.burnAccrued + newBurnPoints);
+            totalPoints += newOrganicPoints + (currentStake.burnAccrued + newBurnPoints);
         }
 
         return totalPoints;
