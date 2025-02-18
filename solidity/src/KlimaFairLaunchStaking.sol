@@ -89,11 +89,15 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     /// @dev Reserved storage space per auditor recommendation.
     uint256[50] private __gap;
 
+    /// @notice Prevents actions after staking has started
+    /// @dev Used to lock configuration changes once staking begins
     modifier beforeStartTimestamp() {
         require(startTimestamp == 0 || block.timestamp < startTimestamp, "Staking has already started");
         _;
     }
 
+    /// @notice Prevents actions after finalization is complete
+    /// @dev Used to lock changes that would affect final distribution
     modifier beforeFinalization() {
         require(finalizationComplete == 0, "Finalization already complete");
         _;
@@ -436,12 +440,10 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         }
     }
 
-    function setBurnVault(address _burnVault) external onlyOwner {
-        require(_burnVault != address(0), "Invalid burn vault address");
-        burnVault = _burnVault;
-        emit BurnVaultSet(_burnVault);
-    }
-
+    /// @notice Sets the growth rate for point accrual
+    /// @param _newValue New growth rate value
+    /// @dev Can only be called before staking starts
+    /// @dev Must be less than GROWTH_DENOMINATOR to prevent excessive point accrual
     function setGrowthRate(uint256 _newValue) external onlyOwner beforeStartTimestamp {
         require(_newValue > 0, "Growth constant must be greater than 0");
         require(_newValue < GROWTH_DENOMINATOR, "Growth constant must be less than denominator");
@@ -449,21 +451,37 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         emit GrowthRateSet(_newValue);
     }
 
+    /// @notice Sets the total KLIMA token supply for distribution
+    /// @param _newValue New KLIMA supply value
+    /// @dev Can only be called before finalization
     function setKlimaSupply(uint256 _newValue) external onlyOwner beforeFinalization {
         require(_newValue > 0, "KLIMA supply must be greater than 0");
         KLIMA_SUPPLY = _newValue;
         emit KlimaSupplySet(_newValue);
     }
 
+    /// @notice Sets the total KLIMA_X token supply for distribution
+    /// @param _newValue New KLIMA_X supply value
+    /// @dev Can only be called before finalization
     function setKlimaXSupply(uint256 _newValue) external onlyOwner beforeFinalization {
         require(_newValue > 0, "KLIMA_X supply must be greater than 0");
         KLIMAX_SUPPLY = _newValue;
         emit KlimaXSupplySet(_newValue);
     }
 
+    /// @notice Sets the burn vault address
+    /// @param _burnVault Address of the burn vault contract
+    /// @dev Can only be called by the owner
+    function setBurnVault(address _burnVault) external onlyOwner {
+        require(_burnVault != address(0), "Invalid burn vault address");
+        burnVault = _burnVault;
+        emit BurnVaultSet(_burnVault);
+    }
+
     /// @notice Updates the freeze timestamp to a later time
     /// @param _newFreezeTimestamp New timestamp when staking ends
     /// @dev Can only extend the freeze period, not shorten it
+    /// @dev Can only be called before finalization
     function setFreezeTimestamp(uint256 _newFreezeTimestamp) external onlyOwner beforeFinalization {
         require(startTimestamp > 0, "Staking not initialized");
         require(_newFreezeTimestamp > freezeTimestamp, "Can only extend freeze period");
@@ -552,9 +570,9 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     }
 
     /// @notice Calculates total points across all users
-    /// @return Sum of all user points
+    /// @return Total points including organic and burn points
     /// @dev Should only be called off-chain due to gas costs
-    /// @dev Simulates point updates for all users
+    /// @dev Simulates point updates for all users up to current timestamp
     function getTotalPoints() public view returns (uint256) {
         uint256 totalPoints = 0;
 
