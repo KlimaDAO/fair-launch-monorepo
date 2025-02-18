@@ -357,7 +357,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     /// @param _klima Address of the KLIMA token contract
     /// @param _klimax Address of the KLIMA_X token contract
     /// @dev Can only be called by the owner
-    function setTokenAddresses(address _klima, address _klimax) public onlyOwner {
+    function setTokenAddresses(address _klima, address _klimax) external onlyOwner {
         KLIMA = _klima;
         KLIMA_X = _klimax;
     }
@@ -366,19 +366,14 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     // verify with team how this functions
     // do we need a flag to only allow one call to this function?
 
-    /// @notice Enables staking by setting the start and freeze timestamps
+    /// @notice Enables staking by setting the start timestamp
     /// @param _startTimestamp Timestamp when staking begins
-    /// @param _freezeTimestamp Timestamp when staking ends
-    /// @dev Freeze must be at least 7 days after start
+    /// @dev Freeze timestamp is 90 days after start
     /// @dev Can only be called by the owner
-    function enableStaking(uint256 _startTimestamp, uint256 _freezeTimestamp) public onlyOwner {
-        // Require freezeTimestamp to be at least 7 days after startTimestamp
-        require(
-            _freezeTimestamp >= _startTimestamp + 7 days,
-            "Freeze timestamp must be at least 7 days after start timestamp"
-        );
+    function enableStaking(uint256 _startTimestamp) external onlyOwner {
+        require(_startTimestamp > block.timestamp, "Start timestamp cannot be in the past");
         startTimestamp = _startTimestamp;
-        freezeTimestamp = _freezeTimestamp;
+        freezeTimestamp = _startTimestamp + 90 days;
     }
 
     /// @notice Stores the final total points for distribution
