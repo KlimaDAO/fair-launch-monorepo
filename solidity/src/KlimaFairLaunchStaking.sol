@@ -66,6 +66,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     event StakeCreated(address indexed user, uint256 amount, uint256 multiplier, uint256 startTimestamp);
     event StakeBurned(address indexed user, uint256 burnAmount, uint256 timestamp);
     event Claimed(address indexed user, uint256 klimaAmount, uint256 klimaXAmount);
+    event FinalizationComplete();
 
     // TODO
     // receive function (if exists)
@@ -399,6 +400,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         // If we've processed all addresses, mark finalization as complete
         if (finalizeIndex == stakerAddresses.length) {
             finalizationComplete = 1;
+            emit FinalizationComplete();
         }
     }
 
