@@ -21,6 +21,10 @@ interface IERC20Burnable {
     function burn(address from, uint256 amount) external;
 }
 
+interface IKlimaFairLaunchBurnVault {
+    function addKlimaAmountToBurn(address _user, uint256 _amount) external;
+}
+
 contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgradeable, PausableUpgradeable {
     // user stakes
     struct Stake {
@@ -62,20 +66,23 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     address public KLIMA_X;
     uint256 public constant KLIMA_SUPPLY = 17_500_000;
     uint256 public constant KLIMAX_SUPPLY = 40_000_000;
-
+    address public burnVault;
     // events
     event StakeCreated(address indexed user, uint256 amount, uint256 multiplier, uint256 startTimestamp);
     event StakeBurned(address indexed user, uint256 burnAmount, uint256 timestamp);
     event Claimed(address indexed user, uint256 klimaAmount, uint256 klimaXAmount);
     event FinalizationComplete();
     event TokenAddressesSet(address indexed klima, address indexed klimax);
-
+    event StakingEnabled(uint256 startTimestamp, uint256 freezeTimestamp);
+    event BurnVaultSet(address indexed burnVault);
+    
     // TODO
     // receive function (if exists)
     // fallback function (if exists)
 
     /// @dev Reserved storage space per auditor recommendation.
     uint256[50] private __gap;
+
 
     /// @notice Disables initialization of the implementation contract
     constructor() {
@@ -242,7 +249,8 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
 
         // Burn the tokens for the burn portion before transferring remaining tokens
         if (totalBurnAmount > 0) {
-            IERC20Burnable(KLIMA_V0).burn(address(this), totalBurnAmount);
+            require(IERC20(KLIMA_V0).approve(burnVault, totalBurnAmount), "Approve failed");
+            IKlimaFairLaunchBurnVault(burnVault).addKlimaAmountToBurn(msg.sender, totalBurnAmount);
         }
 
         // Transfer remaining tokens back to user (amount unstaked minus the burned tokens)
@@ -292,7 +300,8 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         uint256 klimaXAllocation = (totalUserPoints * KLIMAX_SUPPLY) / finalTotalPoints;
 
         // Burn the original KLIMA_V0 tokens
-        IERC20Burnable(KLIMA_V0).burn(address(this), totalUserStaked);
+        require(IERC20(KLIMA_V0).approve(burnVault, totalUserStaked), "Approve failed");
+        IKlimaFairLaunchBurnVault(burnVault).addKlimaAmountToBurn(msg.sender, totalUserStaked);
 
         // Transfer new tokens to user
         require(IERC20(KLIMA).transfer(msg.sender, klimaAllocation), "KLIMA transfer failed");
@@ -370,6 +379,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         require(_startTimestamp > block.timestamp, "Start timestamp cannot be in the past");
         startTimestamp = _startTimestamp;
         freezeTimestamp = _startTimestamp + 90 days;
+        emit StakingEnabled(_startTimestamp, freezeTimestamp);
     }
 
     /// @notice Stores the final total points for distribution
@@ -412,6 +422,12 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
             finalizationComplete = 1;
             emit FinalizationComplete();
         }
+    }
+
+    function setBurnVault(address _burnVault) external onlyOwner {
+        require(_burnVault != address(0), "Invalid burn vault address");
+        burnVault = _burnVault;
+        emit BurnVaultSet(_burnVault);
     }
 
     // pure functions
