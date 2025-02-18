@@ -68,6 +68,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     event StakeBurned(address indexed user, uint256 burnAmount, uint256 timestamp);
     event Claimed(address indexed user, uint256 klimaAmount, uint256 klimaXAmount);
     event FinalizationComplete();
+    event TokenAddressesSet(address indexed klima, address indexed klimax);
 
     // TODO
     // receive function (if exists)
@@ -351,8 +352,10 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     /// @param _klimax Address of the KLIMA_X token contract
     /// @dev Can only be called by the owner
     function setTokenAddresses(address _klima, address _klimax) external onlyOwner {
+        require(_klima != address(0) && _klimax != address(0), "Invalid token addresses");
         KLIMA = _klima;
         KLIMA_X = _klimax;
+        emit TokenAddressesSet(_klima, _klimax);
     }
 
     // TODO
