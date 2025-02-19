@@ -69,10 +69,6 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     event KlimaSupplySet(uint256 newValue);
     event KlimaXSupplySet(uint256 newValue);
     
-    // TODO
-    // receive function (if exists)
-    // fallback function (if exists)
-
     /// @dev Reserved storage space per auditor recommendation.
     uint256[50] private __gap;
 

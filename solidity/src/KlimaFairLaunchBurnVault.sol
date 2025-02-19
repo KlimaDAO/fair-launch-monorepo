@@ -39,9 +39,6 @@ contract KlimaFairLaunchBurnVault is Initializable, UUPSUpgradeable, OwnableUpgr
     event KlimaFairLaunchStakingSet(address indexed klimaFairLaunchStaking);
     event FinalBurnPerformed();
     event AddedKlimaAmountToBurn(address indexed user, uint256 amount);
-    // TODO
-    // receive function (if exists)
-    // fallback function (if exists)
 
     /// @dev Reserved storage space per auditor recommendation.
     uint256[50] private __gap;
