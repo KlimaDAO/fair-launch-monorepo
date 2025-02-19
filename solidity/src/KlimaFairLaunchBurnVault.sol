@@ -74,6 +74,7 @@ contract KlimaFairLaunchBurnVault is Initializable, UUPSUpgradeable, OwnableUpgr
     }
 
     function setKlimaFairLaunchStaking(address _klimaFairLaunchStaking) external onlyOwner {
+        require(_klimaFairLaunchStaking != address(0), "Staking contract cannot be zero address");
         klimaFairLaunchStaking = _klimaFairLaunchStaking;
         emit KlimaFairLaunchStakingSet(_klimaFairLaunchStaking);
     }
