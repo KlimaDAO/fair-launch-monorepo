@@ -33,15 +33,15 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     uint256 public freezeTimestamp;
 
     // global totals
-    uint256 totalOrganicPoints;
-    uint256 totalBurned;
+    uint256 public totalOrganicPoints;
+    uint256 public totalBurned;
     uint256 public totalStaked;
     address[] stakerAddresses;
     uint256 public burnRatio;
 
     // finalization
-    uint256 finalTotalPoints;
-    uint256 finalizeIndex;
+    uint256 public finalTotalPoints;
+    uint256 public finalizeIndex;
     uint256 public finalizationComplete;
 
     // constants
