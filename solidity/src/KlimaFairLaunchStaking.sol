@@ -512,7 +512,6 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         require(startTimestamp > 0, "Staking not initialized");
         require(block.timestamp < freezeTimestamp, "Staking period already ended");
         require(_newFreezeTimestamp > freezeTimestamp, "Can only extend freeze period");
-        require(_newFreezeTimestamp > block.timestamp, "Freeze timestamp must be future");
         
         uint256 oldFreezeTimestamp = freezeTimestamp;
         freezeTimestamp = _newFreezeTimestamp;
