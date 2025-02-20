@@ -183,7 +183,6 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     /// @dev Burns tokens based on stake duration and updates points/ratios accordingly
     function _unstakeAndBurn(uint256 amount) internal nonReentrant {
         require(amount > 0, "Amount must be greater than 0");
-        require(block.timestamp < freezeTimestamp, "Staking period ended");
 
         // Track totals
         uint256 totalUnstake = 0;
