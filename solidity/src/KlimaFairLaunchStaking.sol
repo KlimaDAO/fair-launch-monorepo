@@ -68,9 +68,6 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     event GrowthRateSet(uint256 newValue);
     event KlimaSupplySet(uint256 newValue);
     event KlimaXSupplySet(uint256 newValue);
-    
-    /// @dev Reserved storage space per auditor recommendation.
-    uint256[50] private __gap;
 
     /// @notice Prevents actions after staking has started
     /// @dev Used to lock configuration changes once staking begins
@@ -617,4 +614,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
 
         return totalPoints;
     }
+
+    /// @dev Reserved storage space per auditor recommendation.
+    uint256[50] private __gap;
 }

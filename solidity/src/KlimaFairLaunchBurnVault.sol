@@ -44,9 +44,6 @@ contract KlimaFairLaunchBurnVault is Initializable, UUPSUpgradeable, OwnableUpgr
 
     bool public emergencyWithdrawalEnabled;
 
-    /// @dev Reserved storage space per auditor recommendation.
-    uint256[50] private __gap;
-
     /// @notice Disables initialization of the implementation contract
     constructor() {
         _disableInitializers();
@@ -108,4 +105,6 @@ contract KlimaFairLaunchBurnVault is Initializable, UUPSUpgradeable, OwnableUpgr
         emit AddedKlimaAmountToBurn(_user, _amount);
     }
 
+    /// @dev Reserved storage space per auditor recommendation.
+    uint256[50] private __gap;
 }
