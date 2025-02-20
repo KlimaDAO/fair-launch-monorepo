@@ -39,6 +39,10 @@ contract KlimaFairLaunchBurnVault is Initializable, UUPSUpgradeable, OwnableUpgr
     event KlimaFairLaunchStakingSet(address indexed klimaFairLaunchStaking);
     event FinalBurnPerformed();
     event AddedKlimaAmountToBurn(address indexed user, uint256 amount);
+    event EmergencyWithdrawalEnabled();
+    event EmergencyWithdrawal(address indexed user, uint256 amount);
+
+    bool public emergencyWithdrawalEnabled;
 
     /// @dev Reserved storage space per auditor recommendation.
     uint256[50] private __gap;
@@ -53,6 +57,7 @@ contract KlimaFairLaunchBurnVault is Initializable, UUPSUpgradeable, OwnableUpgr
     function initialize(address initialOwner) external initializer {
         __Ownable_init(initialOwner);
         __UUPSUpgradeable_init();
+        emergencyWithdrawalEnabled = false;
     }
 
     /// @notice Authorizes an upgrade to a new implementation
@@ -63,7 +68,27 @@ contract KlimaFairLaunchBurnVault is Initializable, UUPSUpgradeable, OwnableUpgr
         require(newImplementation != address(0), "New implementation cannot be zero address");
     }
 
+    function enableEmergencyWithdrawal() external onlyOwner {
+        require(!emergencyWithdrawalEnabled, "Emergency withdrawal already enabled");
+        require(klimaFairLaunchStaking != address(0), "Staking contract not set");
+        require(IKlimaFairLaunchStaking(klimaFairLaunchStaking).finalizationComplete() == 0, "Staking contract already finalized");
+        emergencyWithdrawalEnabled = true;
+        emit EmergencyWithdrawalEnabled();
+    }
+
+    function emergencyWithdraw() external {
+        require(emergencyWithdrawalEnabled, "Emergency withdrawal not enabled");
+        uint256 amount = klimaAmountToBurn[msg.sender];
+        require(amount > 0, "No tokens to withdraw");
+        
+        klimaAmountToBurn[msg.sender] = 0;
+        require(IERC20(KLIMA_V0).transfer(msg.sender, amount), "Transfer failed");
+        
+        emit EmergencyWithdrawal(msg.sender, amount);
+    }
+
     function performFinalBurn() external onlyOwner {
+        require(!emergencyWithdrawalEnabled, "Emergency withdrawal is enabled");
         require(klimaFairLaunchStaking != address(0), "Staking contract not set");
         require(IKlimaFairLaunchStaking(klimaFairLaunchStaking).finalizationComplete() == 1, "Staking contract not finalized");
         IERC20Burnable(KLIMA_V0).burn(address(this), IERC20(KLIMA_V0).balanceOf(address(this)));
@@ -77,8 +102,10 @@ contract KlimaFairLaunchBurnVault is Initializable, UUPSUpgradeable, OwnableUpgr
     }
 
     function addKlimaAmountToBurn(address _user, uint256 _amount) external {
+        require(msg.sender == klimaFairLaunchStaking, "Caller is not staking contract");
         require(IERC20(KLIMA_V0).transferFrom(msg.sender, address(this), _amount), "Transfer failed");
         klimaAmountToBurn[_user] += _amount;
         emit AddedKlimaAmountToBurn(_user, _amount);
     }
+
 }
