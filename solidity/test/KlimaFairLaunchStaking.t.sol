@@ -1,0 +1,1299 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.28;
+
+import {Test, console} from "forge-std/Test.sol";
+import {KlimaFairLaunchStaking} from "../src/KlimaFairLaunchStaking.sol";
+import {KlimaFairLaunchBurnVault} from "../src/KlimaFairLaunchBurnVault.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {IERC1967} from "@openzeppelin/contracts/interfaces/IERC1967.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
+// High Level Explanation
+
+// When burned points are freed up the ratio of those points compared to the total points is calculated.
+
+// So if 100 points are freed up and then there are 1000 total points, then the burn ratio increases by .1.Given that uses points are increased based on their organic points, if Alice holds 20 tokens for that slice of burn yield, she receives 2 points from that burn event.If there is another burn event that frees up 500 points, then 500/1100 = .454545454 + current burnRatio of .1 = new burnRatio of .545454545454Alice hasn’t cashed out yet. so she receives 11.0909 points from the two yields.If Bob staked 50 AFTER the 100 yield and only for the 500 he would receive burnRatio - burnRatioWhereHeEntered (.1) * points  - .545454545454 - 1 *  50 = 22.73 points
+
+contract MockKlimaV0 is ERC20 {
+    constructor() ERC20("KLIMA", "KLIMA") {
+        _mint(msg.sender, 1_000_000 * 10**decimals());
+    }
+
+    function decimals() public pure override returns (uint8) {
+        return 12;
+    }
+}
+
+contract MockKlima is ERC20 {
+    constructor() ERC20("KLIMA", "KLIMA") {
+        _mint(msg.sender, 50_000_000 * 10**decimals());
+    }
+
+    function decimals() public pure override returns (uint8) {
+        return 18;
+    }
+}
+
+contract MockKlimaX is ERC20 {
+    constructor() ERC20("KLIMA-X", "KLIMA-X") {
+        _mint(msg.sender, 50_000_000 * 10**decimals());
+    }
+
+    function decimals() public pure override returns (uint8) {
+        return 18;
+    }
+}
+
+contract KlimaFairLaunchStakingTest is Test {
+    // =============================================================
+    //                           SETUP
+    // =============================================================
+
+    KlimaFairLaunchStaking staking;
+    KlimaFairLaunchBurnVault burnVault;
+    address owner;
+    address user1;
+    address user2;
+    address mockKlima;
+    address mockKlimaX;
+    MockKlimaV0 public klimaV0;
+    MockKlima public klimaToken;
+    MockKlimaX public klimaXToken;
+    uint256 public constant INITIAL_BALANCE = 1000 * 1e12; // 1000 KLIMA
+    address constant KLIMA_V0_ADDR = 0xDCEFd8C8fCc492630B943ABcaB3429F12Ea9Fea2;
+
+    // Events
+    event StakeCreated(address indexed user, uint256 amount, uint256 multiplier, uint256 startTimestamp);
+    event StakeBurned(address indexed user, uint256 burnAmount, uint256 timestamp);
+    event Claimed(address indexed user, uint256 klimaAmount, uint256 klimaXAmount);
+    event FinalizationComplete();
+    event TokenAddressesSet(address indexed klima, address indexed klimax);
+    event StakingEnabled(uint256 startTimestamp, uint256 freezeTimestamp);
+    event StakingExtended(uint256 oldFreezeTimestamp, uint256 newFreezeTimestamp);
+    event BurnVaultSet(address indexed burnVault);
+    event GrowthRateSet(uint256 newValue);
+    event KlimaSupplySet(uint256 newValue);
+    event KlimaXSupplySet(uint256 newValue);
+
+    function setUp() public {
+        owner = makeAddr("owner");
+        user1 = makeAddr("user1");
+        user2 = makeAddr("user2");
+
+        // Deploy all mock tokens
+        klimaV0 = new MockKlimaV0();
+        klimaToken = new MockKlima();
+        klimaXToken = new MockKlimaX();
+        
+        // Store addresses
+        mockKlima = address(klimaToken);
+        mockKlimaX = address(klimaXToken);
+
+        // Mint tokens to owner for transfers
+        vm.startPrank(address(this));
+        klimaToken.transfer(owner, 17_500_000 * 1e18);   // Only transfer what we need
+        klimaXToken.transfer(owner, 40_000_000 * 1e18);  // Only transfer what we need
+        vm.stopPrank();
+
+        // Deploy implementation contract
+        KlimaFairLaunchStaking implementation = new KlimaFairLaunchStaking();
+        
+        // Deploy proxy pointing to implementation
+        staking = KlimaFairLaunchStaking(deployProxy(address(implementation)));
+
+        // Deploy burn vault
+        KlimaFairLaunchBurnVault vaultImplementation = new KlimaFairLaunchBurnVault();
+        burnVault = KlimaFairLaunchBurnVault(deployBurnVaultProxy(address(vaultImplementation)));
+
+        // Replace the hardcoded KLIMA_V0 address with our mock
+        bytes memory code = address(klimaV0).code;
+        vm.etch(KLIMA_V0_ADDR, code);
+        
+        // Give users some tokens
+        deal(KLIMA_V0_ADDR, user1, INITIAL_BALANCE);
+        deal(KLIMA_V0_ADDR, user2, INITIAL_BALANCE);
+    }
+
+    function deployProxy(address impl) internal returns (address) {
+        bytes memory initData = abi.encodeWithSelector(
+            KlimaFairLaunchStaking.initialize.selector,
+            owner
+        );
+        return address(new ERC1967Proxy(impl, initData));
+    }
+
+    function deployBurnVaultProxy(address impl) internal returns (address) {
+        bytes memory initData = abi.encodeWithSelector(
+            KlimaFairLaunchBurnVault.initialize.selector,
+            owner
+        );
+        return address(new ERC1967Proxy(impl, initData));
+    }
+
+    // =============================================================
+    //                     INITIALIZATION TESTS
+    // =============================================================
+
+    /// @notice Test successful contract initialization
+    function test_Initialize() public {
+        // Deploy new instance to test initialization
+        KlimaFairLaunchStaking implementation = new KlimaFairLaunchStaking();
+        KlimaFairLaunchStaking newStaking = KlimaFairLaunchStaking(deployProxy(address(implementation)));
+        
+        // Verify owner is set correctly
+        assertEq(newStaking.owner(), owner);
+        
+        // Verify initial state
+        assertEq(newStaking.startTimestamp(), 0);
+        assertEq(newStaking.freezeTimestamp(), 0);
+        assertEq(newStaking.totalStaked(), 0);
+        assertEq(newStaking.finalizationComplete(), 0);
+    }
+
+    /// @notice Test initialization cannot be called twice
+    function test_RevertWhen_InitializingTwice() public {
+        vm.expectRevert(Initializable.InvalidInitialization.selector);
+        staking.initialize(owner);
+    }
+
+    /// @notice Test implementation contract cannot be initialized
+    function test_RevertWhen_InitializingImplementation() public {
+        KlimaFairLaunchStaking implementation = new KlimaFairLaunchStaking();
+        vm.expectRevert(Initializable.InvalidInitialization.selector);
+        implementation.initialize(owner);
+    }
+
+    // =============================================================
+    //                      ADMIN FUNCTION TESTS
+    // =============================================================
+
+    // Token Address Setting Tests
+    /// @notice Test setting valid token addresses
+    function test_SetTokenAddresses() public {
+        vm.startPrank(owner);
+        
+        vm.expectEmit(true, true, false, true);
+        emit TokenAddressesSet(mockKlima, mockKlimaX);
+        staking.setTokenAddresses(mockKlima, mockKlimaX);
+        
+        assertEq(staking.KLIMA(), mockKlima);
+        assertEq(staking.KLIMA_X(), mockKlimaX);
+        vm.stopPrank();
+    }
+
+    /// @notice Test setting zero addresses fails
+    function test_RevertWhen_SettingZeroTokenAddresses() public {
+        vm.startPrank(owner);
+        vm.expectRevert("Invalid token addresses");
+        staking.setTokenAddresses(address(0), mockKlimaX);
+        
+        vm.expectRevert("Invalid token addresses");
+        staking.setTokenAddresses(mockKlima, address(0));
+        vm.stopPrank();
+    }
+
+    /// @notice Test non-owner cannot set token addresses
+    function test_RevertWhen_NonOwnerSetsTokenAddresses() public {
+        vm.prank(user1);
+        vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, user1));
+        staking.setTokenAddresses(mockKlima, mockKlimaX);
+    }
+
+    // Staking Enable Tests
+    /// @notice Test enabling staking with valid future timestamp
+    function test_EnableStaking() public {
+        // Set burn vault first
+        vm.prank(owner);
+        staking.setBurnVault(address(burnVault));
+
+        uint256 futureTimestamp = block.timestamp + 1 days;
+        
+        vm.prank(owner);
+        vm.expectEmit(true, true, true, true);
+        emit StakingEnabled(futureTimestamp, futureTimestamp + 90 days);
+        staking.enableStaking(futureTimestamp);
+
+        assertEq(staking.startTimestamp(), futureTimestamp);
+        assertEq(staking.freezeTimestamp(), futureTimestamp + 90 days);
+    }
+
+    /// @notice Test enabling staking with past timestamp fails
+    function test_RevertWhen_EnablingStakingWithPastTimestamp() public {
+        vm.prank(owner);
+        staking.setBurnVault(address(burnVault));
+
+        uint256 pastTimestamp = block.timestamp - 1;
+        
+        vm.prank(owner);
+        vm.expectRevert("Start timestamp cannot be in the past");
+        staking.enableStaking(pastTimestamp);
+    }
+
+    /// @notice Test enabling staking without burn vault fails
+    function test_RevertWhen_EnablingStakingWithoutBurnVault() public {
+        uint256 futureTimestamp = block.timestamp + 1 days;
+        
+        vm.prank(owner);
+        vm.expectRevert("Burn vault not set");
+        staking.enableStaking(futureTimestamp);
+    }
+
+    // Total Points Storage Tests
+    /// @notice Test storing total points with single batch
+    function test_StoreTotalPointsSingleBatch() public {
+        // Set token addresses first
+        vm.startPrank(owner);
+        staking.setTokenAddresses(mockKlima, mockKlimaX);
+
+        // Set growth rate to ensure point accumulation
+        staking.setGrowthRate(274); // Default growth rate
+
+        // Mint tokens to staking contract
+        klimaToken.transfer(address(staking), staking.KLIMA_SUPPLY() * 1e18);
+        klimaXToken.transfer(address(staking), staking.KLIMAX_SUPPLY() * 1e18);
+        vm.stopPrank();
+
+        // Setup staking period
+        vm.prank(owner);
+        staking.setBurnVault(address(burnVault));
+        
+        uint256 startTime = block.timestamp + 1 days;
+        vm.prank(owner);
+        staking.enableStaking(startTime);
+
+        // Create some stakes
+        vm.warp(startTime);
+        vm.startPrank(user1);
+        IERC20(KLIMA_V0_ADDR).approve(address(staking), 100 * 1e12);
+        staking.stake(100 * 1e12);
+        vm.stopPrank();
+
+        // Warp to after freeze period and ensure enough time for point accumulation
+        vm.warp(startTime + 91 days);
+
+        // Process batch
+        vm.startPrank(owner);
+        uint256 beforeIndex = staking.finalizeIndex();
+        uint256 beforePoints = staking.finalTotalPoints();
+        
+        staking.storeTotalPoints(1);
+        
+        uint256 afterIndex = staking.finalizeIndex();
+        uint256 afterPoints = staking.finalTotalPoints();
+
+        // Verify points were stored
+        assertGt(afterIndex, beforeIndex, "Index should increase");
+        assertGt(afterPoints, beforePoints, "Points should increase");
+        assertEq(afterIndex, 1, "Should process one address");
+        vm.stopPrank();
+    }
+
+    /// @notice Test storing total points with multiple batches
+    function test_StoreTotalPointsMultipleBatches() public {
+        // Set token addresses first
+        vm.startPrank(owner);
+        staking.setTokenAddresses(mockKlima, mockKlimaX);
+
+        // Set growth rate to ensure point accumulation
+        staking.setGrowthRate(274); // Default growth rate
+
+        // Mint tokens to staking contract
+        klimaToken.transfer(address(staking), staking.KLIMA_SUPPLY() * 1e18);
+        klimaXToken.transfer(address(staking), staking.KLIMAX_SUPPLY() * 1e18);
+        vm.stopPrank();
+
+        // Setup staking period
+        vm.prank(owner);
+        staking.setBurnVault(address(burnVault));
+        
+        uint256 startTime = block.timestamp + 1 days;
+        vm.prank(owner);
+        staking.enableStaking(startTime);
+
+        // Create stakes for multiple users
+        vm.warp(startTime);
+        
+        vm.startPrank(user1);
+        IERC20(KLIMA_V0_ADDR).approve(address(staking), 100 * 1e12);
+        staking.stake(100 * 1e12);
+        vm.stopPrank();
+
+        vm.startPrank(user2);
+        IERC20(KLIMA_V0_ADDR).approve(address(staking), 100 * 1e12);
+        staking.stake(100 * 1e12);
+        vm.stopPrank();
+
+        // Warp to after freeze period and ensure enough time for point accumulation
+        vm.warp(startTime + 91 days);
+
+        // Process in batches
+        vm.startPrank(owner);
+        uint256 initialIndex = staking.finalizeIndex();
+        uint256 initialPoints = staking.finalTotalPoints();
+        
+        staking.storeTotalPoints(1);
+        uint256 midIndex = staking.finalizeIndex();
+        uint256 midPoints = staking.finalTotalPoints();
+        
+        staking.storeTotalPoints(1);
+        uint256 finalIndex = staking.finalizeIndex();
+        uint256 finalPoints = staking.finalTotalPoints();
+
+        // Verify progression
+        assertGt(midIndex, initialIndex, "First batch should increase index");
+        assertGt(finalIndex, midIndex, "Second batch should increase index");
+        assertGt(midPoints, initialPoints, "First batch should increase points");
+        assertGt(finalPoints, midPoints, "Second batch should increase points");
+        assertEq(finalIndex, 2, "Should process both addresses");
+        vm.stopPrank();
+    }
+
+    /// @notice Test storing points before freeze timestamp fails
+    function test_RevertWhen_StoringPointsBeforeFreeze() public {
+        // Setup staking period
+        vm.prank(owner);
+        staking.setBurnVault(address(burnVault));
+        
+        uint256 startTime = block.timestamp + 1 days;
+        vm.prank(owner);
+        staking.enableStaking(startTime);
+
+        // Try to store points before freeze
+        vm.prank(owner);
+        vm.expectRevert("Staking period not locked");
+        staking.storeTotalPoints(1);
+    }
+
+    // Growth Rate Setting Tests
+    /// @notice Test setting valid growth rate
+    function test_SetGrowthRate() public {
+        uint256 newRate = 100;
+        
+        vm.prank(owner);
+        vm.expectEmit(true, true, true, true);
+        emit GrowthRateSet(newRate);
+        staking.setGrowthRate(newRate);
+
+        assertEq(staking.GROWTH_RATE(), newRate);
+    }
+
+    /// @notice Test setting zero growth rate fails
+    function test_RevertWhen_SettingZeroGrowthRate() public {
+        vm.prank(owner);
+        vm.expectRevert("Growth Rate must be greater than 0");
+        staking.setGrowthRate(0);
+    }
+
+    /// @notice Test setting growth rate after staking starts fails
+    function test_RevertWhen_SettingGrowthRateAfterStart() public {
+        // Enable staking first
+        vm.prank(owner);
+        staking.setBurnVault(address(burnVault));
+        
+        uint256 futureTimestamp = block.timestamp + 1 days;
+        vm.prank(owner);
+        staking.enableStaking(futureTimestamp);
+
+        // Warp to after start
+        vm.warp(futureTimestamp + 1);
+        
+        vm.prank(owner);
+        vm.expectRevert("Staking has already started");
+        staking.setGrowthRate(100);
+    }
+
+    // Supply Setting Tests
+    /// @notice Test setting valid KLIMA supply
+    function test_SetKlimaSupply() public {
+        uint256 newSupply = 20_000_000;
+        
+        vm.prank(owner);
+        vm.expectEmit(true, true, true, true);
+        emit KlimaSupplySet(newSupply);
+        staking.setKlimaSupply(newSupply);
+
+        assertEq(staking.KLIMA_SUPPLY(), newSupply);
+    }
+
+    /// @notice Test setting valid KLIMA_X supply
+    function test_SetKlimaXSupply() public {
+        uint256 newSupply = 45_000_000;
+        
+        vm.prank(owner);
+        vm.expectEmit(true, true, true, true);
+        emit KlimaXSupplySet(newSupply);
+        staking.setKlimaXSupply(newSupply);
+
+        assertEq(staking.KLIMAX_SUPPLY(), newSupply);
+    }
+
+    /// @notice Test setting supplies after finalization fails
+    function test_RevertWhen_SettingSuppliesAfterFinalization() public {
+        // Set token addresses first
+        vm.startPrank(owner);
+        staking.setTokenAddresses(mockKlima, mockKlimaX);
+
+        // Mint tokens to staking contract - Use the current supply amounts
+        klimaToken.transfer(address(staking), 17_500_000 * 1e18);  // Changed from 20M to 17.5M
+        klimaXToken.transfer(address(staking), 40_000_000 * 1e18);
+        vm.stopPrank();
+
+        // Set up for finalization
+        vm.prank(owner);
+        staking.setBurnVault(address(burnVault));
+        
+        uint256 startTime = block.timestamp + 1 days;
+        vm.prank(owner);
+        staking.enableStaking(startTime);
+
+        // Create a stake to have something to finalize
+        vm.warp(startTime);
+        vm.startPrank(user1);
+        IERC20(KLIMA_V0_ADDR).approve(address(staking), 100 * 1e12);
+        staking.stake(100 * 1e12);
+        vm.stopPrank();
+
+        // Warp to after freeze period
+        vm.warp(startTime + 91 days);
+
+        // Process finalization
+        vm.startPrank(owner);
+        staking.storeTotalPoints(1);
+        vm.stopPrank();
+
+        // Verify finalization is complete
+        assertEq(staking.finalizationComplete(), 1);
+
+        // Try to set supplies
+        vm.startPrank(owner);
+        vm.expectRevert("Finalization already complete");
+        staking.setKlimaSupply(17_500_000);  // Changed from 20M to 17.5M
+
+        vm.expectRevert("Finalization already complete");
+        staking.setKlimaXSupply(40_000_000);
+        vm.stopPrank();
+    }
+
+    // =============================================================
+    //                      STAKING FUNCTION TESTS
+    // =============================================================
+
+    /// @notice Test successful staking with correct multiplier in week 1
+    function test_StakeWeekOne() public {
+        // Setup staking period
+        vm.startPrank(owner);
+        staking.setBurnVault(address(burnVault));
+        uint256 startTime = block.timestamp + 1 days;
+        staking.enableStaking(startTime);
+        vm.stopPrank();
+
+        // Stake in week 1
+        vm.warp(startTime + 1 days);
+        uint256 stakeAmount = 100 * 1e12;
+        
+        vm.startPrank(user1);
+        IERC20(KLIMA_V0_ADDR).approve(address(staking), stakeAmount);
+        
+        vm.expectEmit(true, true, true, true);
+        emit StakeCreated(user1, stakeAmount, 200, block.timestamp); // 2x multiplier
+        staking.stake(stakeAmount);
+        vm.stopPrank();
+
+        // Verify stake details
+        (
+            uint256 amount,
+            uint256 stakeStartTime,
+            uint256 lastUpdateTime,
+            uint256 bonusMultiplier,
+            ,,,
+        ) = staking.userStakes(user1, 0);
+
+        assertEq(amount, stakeAmount);
+        assertEq(stakeStartTime, block.timestamp);
+        assertEq(lastUpdateTime, block.timestamp);
+        assertEq(bonusMultiplier, 200); // 2x multiplier
+    }
+
+    /// @notice Test successful staking with correct multiplier in week 2
+    function test_StakeWeekTwo() public {
+        // Setup staking period
+        vm.startPrank(owner);
+        staking.setBurnVault(address(burnVault));
+        uint256 startTime = block.timestamp + 1 days;
+        staking.enableStaking(startTime);
+        vm.stopPrank();
+
+        // Stake in week 2
+        vm.warp(startTime + 8 days); // After first week
+        uint256 stakeAmount = 100 * 1e12;
+        
+        vm.startPrank(user1);
+        IERC20(KLIMA_V0_ADDR).approve(address(staking), stakeAmount);
+        
+        vm.expectEmit(true, true, true, true);
+        emit StakeCreated(user1, stakeAmount, 150, block.timestamp); // 1.5x multiplier
+        staking.stake(stakeAmount);
+        vm.stopPrank();
+
+        // Verify stake details
+        (
+            uint256 amount,
+            uint256 stakeStartTime,
+            uint256 lastUpdateTime,
+            uint256 bonusMultiplier,
+            ,,,
+        ) = staking.userStakes(user1, 0);
+
+        assertEq(amount, stakeAmount);
+        assertEq(stakeStartTime, block.timestamp);
+        assertEq(lastUpdateTime, block.timestamp);
+        assertEq(bonusMultiplier, 150); // 1.5x multiplier
+    }
+
+    /// @notice Test successful staking with correct multiplier in week 3+
+    function test_StakeWeekThreePlus() public {
+        // Setup staking period
+        vm.startPrank(owner);
+        staking.setBurnVault(address(burnVault));
+        uint256 startTime = block.timestamp + 1 days;
+        staking.enableStaking(startTime);
+        vm.stopPrank();
+
+        // Stake in week 3
+        vm.warp(startTime + 15 days); // After second week
+        uint256 stakeAmount = 100 * 1e12;
+        
+        vm.startPrank(user1);
+        IERC20(KLIMA_V0_ADDR).approve(address(staking), stakeAmount);
+        
+        vm.expectEmit(true, true, true, true);
+        emit StakeCreated(user1, stakeAmount, 100, block.timestamp); // 1x multiplier
+        staking.stake(stakeAmount);
+        vm.stopPrank();
+
+        // Verify stake details
+        (
+            uint256 amount,
+            uint256 stakeStartTime,
+            uint256 lastUpdateTime,
+            uint256 bonusMultiplier,
+            ,,,
+        ) = staking.userStakes(user1, 0);
+
+        assertEq(amount, stakeAmount);
+        assertEq(stakeStartTime, block.timestamp);
+        assertEq(lastUpdateTime, block.timestamp);
+        assertEq(bonusMultiplier, 100); // 1x multiplier
+    }
+
+    /// @notice Test staking before start timestamp fails
+    function test_RevertWhen_StakingBeforeStart() public {
+        // Setup staking period
+        vm.startPrank(owner);
+        staking.setBurnVault(address(burnVault));
+        uint256 startTime = block.timestamp + 1 days;
+        staking.enableStaking(startTime);
+        vm.stopPrank();
+
+        // Try to stake before start
+        uint256 stakeAmount = 100 * 1e12;
+        vm.startPrank(user1);
+        IERC20(KLIMA_V0_ADDR).approve(address(staking), stakeAmount);
+        
+        vm.expectRevert("Staking not started");
+        staking.stake(stakeAmount);
+        vm.stopPrank();
+    }
+
+    /// @notice Test staking after freeze timestamp fails
+    function test_RevertWhen_StakingAfterFreeze() public {
+        // Setup staking period
+        vm.startPrank(owner);
+        staking.setBurnVault(address(burnVault));
+        uint256 startTime = block.timestamp + 1 days;
+        staking.enableStaking(startTime);
+        vm.stopPrank();
+
+        // Try to stake after freeze
+        vm.warp(startTime + 91 days);
+        uint256 stakeAmount = 100 * 1e12;
+        vm.startPrank(user1);
+        IERC20(KLIMA_V0_ADDR).approve(address(staking), stakeAmount);
+        
+        vm.expectRevert("Staking period ended");
+        staking.stake(stakeAmount);
+        vm.stopPrank();
+    }
+
+    // =============================================================
+    //                      UNSTAKING FUNCTION TESTS
+    // =============================================================
+
+    /// @notice Test successful unstaking before freeze
+    function test_UnstakeBeforeFreeze() public {
+        // Setup - in correct order
+        vm.startPrank(owner);
+        staking.setTokenAddresses(mockKlima, mockKlimaX);
+        klimaToken.transfer(address(staking), staking.KLIMA_SUPPLY() * 1e18);
+        klimaXToken.transfer(address(staking), staking.KLIMAX_SUPPLY() * 1e18);
+        staking.setGrowthRate(274);
+        staking.setBurnVault(address(burnVault));
+        uint256 startTime = block.timestamp + 1 days;
+        staking.enableStaking(startTime);
+        vm.stopPrank();
+
+        // Create stake for user1
+        vm.warp(startTime);
+        uint256 stakeAmount = 100 * 1e12;
+        vm.startPrank(user1);
+        IERC20(KLIMA_V0_ADDR).approve(address(staking), stakeAmount);
+        staking.stake(stakeAmount);
+        vm.stopPrank();
+
+        // Create stake for user2 (to receive burn points)
+        vm.startPrank(user2);
+        IERC20(KLIMA_V0_ADDR).approve(address(staking), stakeAmount);
+        staking.stake(stakeAmount);
+        vm.stopPrank();
+
+        // Let points accumulate
+        vm.warp(startTime + 2 days);
+        
+        // Check initial points
+        uint256 initialUser2Points = staking.previewUserPoints(user2);
+
+        // Calculate expected burn amount
+        uint256 burnAmount = staking.calculateBurn(stakeAmount, startTime);
+
+        // User1 unstakes - this should generate burn points for user2
+        vm.startPrank(user1);
+        emit StakeBurned(user1, burnAmount, block.timestamp);
+        staking.unstake(stakeAmount);
+        vm.stopPrank();
+
+        // Let the burn points distribute
+        vm.warp(startTime + 3 days);
+
+        // Check user1's stake is cleared
+        (uint256 amount,,,,,,uint256 burnAccrued,) = staking.userStakes(user1, 0);
+        assertEq(amount, 0, "Stake amount should be 0");
+        
+        // Check user2's points increased from burn distribution
+        uint256 finalUser2Points = staking.previewUserPoints(user2);
+        assertGt(finalUser2Points, initialUser2Points, "User2 should have received additional points");
+    }
+
+    /// @notice Test partial unstaking before freeze
+    function test_PartialUnstakeBeforeFreeze() public {
+        // Setup
+        vm.startPrank(owner);
+        staking.setBurnVault(address(burnVault));
+        staking.setGrowthRate(274);
+        uint256 startTime = block.timestamp + 1 days;
+        staking.enableStaking(startTime);
+        vm.stopPrank();
+
+        // Create stake
+        vm.warp(startTime);
+        uint256 stakeAmount = 100 * 1e12;
+        vm.startPrank(user1);
+        IERC20(KLIMA_V0_ADDR).approve(address(staking), stakeAmount);
+        staking.stake(stakeAmount);
+
+        // Verify stake was created
+        (uint256 stakedAmount,,,,,,,) = staking.userStakes(user1, 0);
+        assertEq(stakedAmount, stakeAmount, "Stake should be created with correct amount");
+
+        // Warp forward 2 days
+        vm.warp(startTime + 2 days);
+        
+        // Calculate burn for full amount
+        uint256 burnAmount = staking.calculateBurn(stakeAmount, startTime);
+        
+        // Calculate expected burn for half unstake
+        uint256 unstakeAmount = stakeAmount / 2;
+        uint256 expectedBurn = burnAmount / 2;
+
+        // Get initial total burned
+        uint256 initialTotalBurned = staking.totalBurned();
+
+        // Emit expected event
+        emit StakeBurned(user1, expectedBurn, block.timestamp);
+
+        // Try to unstake half
+        staking.unstake(unstakeAmount);
+        vm.stopPrank();
+
+        // Verify partial unstake
+        (uint256 remainingAmount,,,,,,,) = staking.userStakes(user1, 0);
+        assertEq(remainingAmount, stakeAmount - unstakeAmount, "Should have half amount remaining");
+        
+        // Verify total burned increased by expected amount
+        assertEq(staking.totalBurned() - initialTotalBurned, expectedBurn, "Should have increased total burned by half burn amount");
+    }
+
+    /// @notice Test unstaking with insufficient balance fails
+    function test_RevertWhen_UnstakingInsufficientBalance() public {
+        // Setup staking
+        setupStaking();
+        uint256 stakeAmount = 100 * 1e12;
+        
+        // Create stake
+        createStake(user1, stakeAmount);
+        
+        // Try to unstake more than staked
+        vm.startPrank(user1);
+        vm.expectRevert("Insufficient stake balance");  // Update expected revert message to match contract
+        staking.unstake(stakeAmount + 1);  // Try to unstake more than user has
+        vm.stopPrank();
+    }
+
+    /// @notice Test successful claiming after freeze
+    function test_ClaimAfterFreeze() public {
+        // Setup
+        vm.startPrank(owner);
+        staking.setTokenAddresses(mockKlima, mockKlimaX);
+        klimaToken.transfer(address(staking), staking.KLIMA_SUPPLY() * 1e18);
+        klimaXToken.transfer(address(staking), staking.KLIMAX_SUPPLY() * 1e18);
+        staking.setGrowthRate(274);
+        staking.setBurnVault(address(burnVault));
+        uint256 startTime = block.timestamp + 1 days;
+        staking.enableStaking(startTime);
+        vm.stopPrank();
+
+        // Create stake
+        vm.warp(startTime);
+        uint256 stakeAmount = 100 * 1e12;
+        vm.startPrank(user1);
+        IERC20(KLIMA_V0_ADDR).approve(address(staking), stakeAmount);
+        staking.stake(stakeAmount);
+        vm.stopPrank();
+
+        // Finalize
+        vm.warp(startTime + 91 days);
+        vm.startPrank(owner);
+        staking.storeTotalPoints(1);
+        vm.stopPrank();
+
+        // Calculate expected amounts
+        uint256 klimaAmount = staking.calculateKlimaAllocation(stakeAmount);
+        uint256 klimaXAmount = staking.calculateKlimaXAllocation(staking.previewUserPoints(user1));
+
+        // Claim
+        vm.startPrank(user1);
+        emit Claimed(user1, klimaAmount, klimaXAmount);
+        staking.unstake(0);
+        vm.stopPrank();
+    }
+
+    /// @notice Test claiming before finalization fails
+    function test_RevertWhen_ClaimingBeforeFinalization() public {
+        // Setup staking period
+        vm.startPrank(owner);
+        staking.setBurnVault(address(burnVault));
+        uint256 startTime = block.timestamp + 1 days;
+        staking.enableStaking(startTime);
+        vm.stopPrank();
+
+        // Create stake
+        vm.warp(startTime);
+        uint256 stakeAmount = 100 * 1e12;
+        vm.startPrank(user1);
+        IERC20(KLIMA_V0_ADDR).approve(address(staking), stakeAmount);
+        staking.stake(stakeAmount);
+
+        // Try to claim before finalization
+        vm.warp(startTime + 91 days);
+        vm.expectRevert("Finalization not complete");
+        staking.unstake(0);
+        vm.stopPrank();
+    }
+
+    // =============================================================
+    //                    POINT CALCULATION TESTS
+    // =============================================================
+
+    /// @notice Test organic points accumulation over time
+    function test_OrganicPointsAccumulation() public {
+        // Setup staking period with growth rate
+        vm.startPrank(owner);
+        staking.setGrowthRate(274);
+        staking.setBurnVault(address(burnVault));
+        uint256 startTime = block.timestamp + 1 days;
+        staking.enableStaking(startTime);
+        vm.stopPrank();
+
+        // Create stake
+        vm.warp(startTime);
+        uint256 stakeAmount = 100 * 1e12;
+        vm.startPrank(user1);
+        IERC20(KLIMA_V0_ADDR).approve(address(staking), stakeAmount);
+        staking.stake(stakeAmount);
+        vm.stopPrank();
+
+        // Check points after time passes
+        vm.warp(startTime + 1 days);
+        uint256 points = staking.previewUserPoints(user1);
+        assertGt(points, 0);
+
+        // Check points increase over time
+        vm.warp(startTime + 2 days);
+        uint256 laterPoints = staking.previewUserPoints(user1);
+        assertGt(laterPoints, points);
+    }
+
+    /// @notice Test burn distribution across multiple stakes
+    function test_BurnDistribution() public {
+        // Setup staking
+        setupStaking();
+        
+        // User1 and User2 stake same amount
+        createStake(user1, 100000000000000);
+        createStake(user2, 100000000000000);
+        
+        // Let points accumulate for 2 days
+        vm.warp(block.timestamp + 2 days);
+        
+        // Check initial points
+        uint256 user1InitialPoints = staking.previewUserPoints(user1);
+        uint256 user2InitialPoints = staking.previewUserPoints(user2);
+        assertGt(user1InitialPoints, 0, "User1 should have organic points");
+        assertGt(user2InitialPoints, 0, "User2 should have organic points");
+        
+        // User1 unstakes
+        vm.prank(user1);
+        staking.unstake(100000000000000);
+        
+        // Let burn points distribute
+        vm.warp(block.timestamp + 1 days);
+        
+        // Check User2's points increased from burn distribution
+        uint256 user2PointsAfterBurn = staking.previewUserPoints(user2);
+        assertGt(user2PointsAfterBurn, user2InitialPoints, "User2 should receive burn points");
+        
+        // Finalize
+        vm.warp(staking.startTimestamp() + 91 days);
+        vm.prank(owner);
+        staking.storeTotalPoints(1);
+        
+        require(staking.finalizationComplete() == 1, "Finalization failed");
+    }
+
+    /// @notice Test burn calculation with different durations
+    function test_BurnCalculation() public {
+        uint256 amount = 100 * 1e12;
+        
+        // Test immediate burn (should be 25%)
+        uint256 burnAmount = staking.calculateBurn(amount, 1);
+        assertEq(burnAmount, amount * 25 / 100, "Immediate burn should be 25%");
+
+        // Test burn after 1 year (should be 100%)
+        vm.warp(1 days * 365 + 1);
+        burnAmount = staking.calculateBurn(amount, 1);
+        assertEq(burnAmount, amount, "Year burn should be 100%");
+
+        // Test burn after ~6 months (should be between 25% and 100%)
+        vm.warp(1 days * 182);  // ~6 months
+        burnAmount = staking.calculateBurn(amount, 1);
+        assertGt(burnAmount, amount * 25 / 100, "Half year burn should be > 25%");
+        assertLt(burnAmount, amount, "Half year burn should be < 100%");
+    }
+
+    /// @notice Test organic points calculation
+    function test_OrganicPointsCalculation() public {
+        // Setup staking
+        setupStaking();
+        uint256 stakeAmount = 100 * 1e12; // Example stake amount
+
+        // Create a stake for user1
+        createStake(user1, stakeAmount);
+
+        // Advance time to simulate point accumulation
+        uint256 startTime = block.timestamp;
+        uint256 daysPassed = 5;
+        vm.warp(startTime + daysPassed * 1 days);
+
+        // Calculate expected organic points using approximation
+        uint256 expectedOrganicPoints = stakeAmount * 2 * (expApprox(2740 * daysPassed) - 1e18) / 1e18;
+
+        // Verify organic points
+        uint256 actualOrganicPoints = staking.previewUserPoints(user1);
+        assertApproxEq(actualOrganicPoints, expectedOrganicPoints, 1e12, "Organic points calculation is incorrect");
+    }
+
+    /// @notice Test burn points calculation
+    function test_BurnPointsCalculation() public {
+        // Setup staking
+        setupStaking();
+        uint256 stakeAmount = 100 * 1e12; // Example stake amount
+
+        // Create a stake for user1
+        createStake(user1, stakeAmount);
+
+        // Advance time to simulate point accumulation
+        uint256 startTime = block.timestamp;
+        uint256 daysPassed = 5;
+        vm.warp(startTime + daysPassed * 1 days);
+
+        // Unstake a portion of the stake
+        uint256 unstakeAmount = 20 * 1e12;
+        vm.prank(user1);
+        staking.unstake(unstakeAmount);
+
+        // Calculate expected burn points
+        uint256 expectedBurnPoints = (unstakeAmount * staking.previewUserPoints(user1)) / stakeAmount;
+
+        // Get actual burn points from the stake struct
+        (,,,,,, uint256 actualBurnPoints,) = staking.userStakes(user1, 0);
+
+        // Verify burn points
+        assertApproxEq(actualBurnPoints, expectedBurnPoints, 1e12, "Burn points calculation is incorrect");
+    }
+
+    /// @notice Test partial staking period points and KLIMAX allocation
+    function test_PartialStakingPeriodRewards() public {
+        // Setup staking
+        setupStaking();
+        uint256 stakeAmount = 100 * 1e12;
+
+        // Create stakes for both users
+        createStake(user1, stakeAmount);
+        createStake(user2, stakeAmount);
+
+        // Let points accumulate for 45 days
+        vm.warp(block.timestamp + 45 days);
+
+        // Check user2's points before unstaking
+        uint256 user2PointsBeforeUnstake = staking.previewUserPoints(user2);
+        assertGt(user2PointsBeforeUnstake, 0, "Should have accumulated points before unstaking");
+
+        // Store user2's stake info before unstaking
+        (,,,,,uint256 organicPoints,,) = staking.userStakes(user2, 0);
+        
+        // User2 unstakes
+        vm.prank(user2);
+        staking.unstake(stakeAmount);
+
+        // Verify organic points are preserved in the stake struct
+        (,,,,,uint256 organicPointsAfter,,) = staking.userStakes(user2, 0);
+        assertEq(organicPoints, organicPointsAfter, "Organic points should be preserved in stake struct");
+
+        // Advance to finalization period
+        vm.warp(staking.freezeTimestamp() + 1 days);
+
+        // Finalize staking
+        vm.startPrank(owner);
+        staking.storeTotalPoints(2);
+        vm.stopPrank();
+
+        // Both users should get KLIMAX based on their staking duration
+        uint256 user1Points = staking.previewUserPoints(user1);
+        uint256 user2Points = staking.previewUserPoints(user2);
+
+        uint256 user1KlimaX = staking.calculateKlimaXAllocation(user1Points);
+        uint256 user2KlimaX = staking.calculateKlimaXAllocation(user2Points);
+
+        assertGt(user1KlimaX, user2KlimaX, "User1 should get more KLIMAX for staking longer");
+        assertGt(user2KlimaX, 0, "User2 should get some KLIMAX for partial staking");
+    }
+
+    // =============================================================
+    //                       VIEW FUNCTION TESTS
+    // =============================================================
+
+    /// @notice Test KLIMA allocation calculation
+    function test_CalculateKlimaAllocation() public {
+        // Setup staking with total staked
+        vm.startPrank(owner);
+        staking.setBurnVault(address(burnVault));
+        uint256 startTime = block.timestamp + 1 days;
+        staking.enableStaking(startTime);
+        vm.stopPrank();
+
+        // Create stake
+        vm.warp(startTime);
+        uint256 stakeAmount = 100 * 1e12;
+        vm.startPrank(user1);
+        IERC20(KLIMA_V0_ADDR).approve(address(staking), stakeAmount);
+        staking.stake(stakeAmount);
+        vm.stopPrank();
+
+        // Calculate allocation
+        uint256 allocation = staking.calculateKlimaAllocation(stakeAmount);
+        assertEq(allocation, staking.KLIMA_SUPPLY());
+    }
+
+    /// @notice Test KLIMA_X allocation calculation
+    function test_CalculateKlimaXAllocation() public {
+        // Setup staking
+        setupStaking();
+        uint256 stakeAmount = 100 * 1e12;
+
+        // Create stakes for both users
+        createStake(user1, stakeAmount);
+        createStake(user2, stakeAmount);
+
+        // Advance time to 45 days (within staking period)
+        vm.warp(block.timestamp + 45 days);
+
+        // User2 unstakes
+        vm.prank(user2);
+        staking.unstake(stakeAmount);
+
+        // Advance to finalization period (after freeze time)
+        uint256 freezeTime = staking.freezeTimestamp();
+        vm.warp(freezeTime + 1 days); // Make sure we're past freeze time
+
+        // Try to finalize with correct number of users
+        vm.startPrank(owner);
+        staking.storeTotalPoints(2); // Pass correct number of users
+        vm.stopPrank();
+
+        // Verify finalization
+        require(staking.finalizationComplete() == 1, "Finalization failed");
+        assertGt(staking.finalTotalPoints(), 0, "Final points should be greater than 0");
+
+        // Compare points
+        uint256 user1Points = staking.previewUserPoints(user1);
+        uint256 user2Points = staking.previewUserPoints(user2);
+        assertGt(user1Points, user2Points);
+    }
+
+    /// @notice Test point preview calculation
+    function test_PreviewUserPoints() public {
+        // Setup staking with growth rate
+        vm.startPrank(owner);
+        staking.setGrowthRate(274);
+        staking.setBurnVault(address(burnVault));
+        uint256 startTime = block.timestamp + 1 days;
+        staking.enableStaking(startTime);
+        vm.stopPrank();
+
+        // Create stake
+        vm.warp(startTime);
+        uint256 stakeAmount = 100 * 1e12;
+        vm.startPrank(user1);
+        IERC20(KLIMA_V0_ADDR).approve(address(staking), stakeAmount);
+        staking.stake(stakeAmount);
+        vm.stopPrank();
+
+        // Preview points
+        vm.warp(startTime + 1 days);
+        uint256 points = staking.previewUserPoints(user1);
+        assertGt(points, 0);
+    }
+
+    /// @notice Test total points calculation
+    function test_GetTotalPoints() public {
+        // Setup staking with growth rate
+        vm.startPrank(owner);
+        staking.setGrowthRate(274);
+        staking.setBurnVault(address(burnVault));
+        uint256 startTime = block.timestamp + 1 days;
+        staking.enableStaking(startTime);
+        vm.stopPrank();
+
+        // Create stakes for multiple users
+        vm.warp(startTime);
+        uint256 stakeAmount = 100 * 1e12;
+        
+        vm.startPrank(user1);
+        IERC20(KLIMA_V0_ADDR).approve(address(staking), stakeAmount);
+        staking.stake(stakeAmount);
+        vm.stopPrank();
+
+        vm.startPrank(user2);
+        IERC20(KLIMA_V0_ADDR).approve(address(staking), stakeAmount);
+        staking.stake(stakeAmount);
+        vm.stopPrank();
+
+        // Calculate total points
+        vm.warp(startTime + 1 days);
+        uint256 totalPoints = staking.getTotalPoints();
+        assertGt(totalPoints, 0);
+        assertEq(totalPoints, staking.previewUserPoints(user1) + staking.previewUserPoints(user2));
+    }
+
+    // =============================================================
+    //                      INTEGRATION TESTS
+    // =============================================================
+
+    /// @notice Test complete staking lifecycle
+    function test_CompleteStakingLifecycle() public {
+        // Setup
+        vm.startPrank(owner);
+        staking.setTokenAddresses(mockKlima, mockKlimaX);
+        klimaToken.transfer(address(staking), staking.KLIMA_SUPPLY() * 1e18);
+        klimaXToken.transfer(address(staking), staking.KLIMAX_SUPPLY() * 1e18);
+        staking.setGrowthRate(274);
+        staking.setBurnVault(address(burnVault));
+        
+        uint256 startTime = block.timestamp + 1 days;
+        staking.enableStaking(startTime);
+        vm.stopPrank();
+
+        // Staking phase
+        vm.warp(startTime);
+        uint256 stakeAmount = 100 * 1e12;
+        
+        vm.startPrank(user1);
+        IERC20(KLIMA_V0_ADDR).approve(address(staking), stakeAmount);
+        staking.stake(stakeAmount);
+        vm.stopPrank();
+
+        // Point accumulation phase
+        vm.warp(startTime + 45 days);
+        uint256 midPoints = staking.previewUserPoints(user1);
+        assertGt(midPoints, 0);
+
+        // Finalization phase
+        vm.warp(startTime + 91 days);
+        vm.prank(owner);
+        staking.storeTotalPoints(1);
+        assertEq(staking.finalizationComplete(), 1);
+
+        // Claim phase
+        vm.startPrank(user1);
+        staking.unstake(0);
+        (,,,,,,,uint256 claimed) = staking.userStakes(user1, 0);
+        assertEq(claimed, 1);
+        vm.stopPrank();
+    }
+
+    /// @notice Test multiple users with multiple stakes
+    function test_MultipleUsersMultipleStakes() public {
+        // Setup
+        vm.startPrank(owner);
+        staking.setTokenAddresses(mockKlima, mockKlimaX);
+        klimaToken.transfer(address(staking), staking.KLIMA_SUPPLY() * 1e18);
+        klimaXToken.transfer(address(staking), staking.KLIMAX_SUPPLY() * 1e18);
+        staking.setGrowthRate(274);
+        staking.setBurnVault(address(burnVault));
+        
+        uint256 startTime = block.timestamp + 1 days;
+        staking.enableStaking(startTime);
+        vm.stopPrank();
+
+        // User 1 stakes
+        vm.warp(startTime);
+        uint256 stakeAmount = 100 * 1e12;
+        
+        vm.startPrank(user1);
+        IERC20(KLIMA_V0_ADDR).approve(address(staking), stakeAmount * 2);
+        staking.stake(stakeAmount);
+        vm.warp(startTime + 1 days);
+        staking.stake(stakeAmount);
+        vm.stopPrank();
+
+        // User 2 stakes
+        vm.startPrank(user2);
+        IERC20(KLIMA_V0_ADDR).approve(address(staking), stakeAmount);
+        staking.stake(stakeAmount);
+        vm.stopPrank();
+
+        // Verify points
+        vm.warp(startTime + 45 days);
+        uint256 user1Points = staking.previewUserPoints(user1);
+        uint256 user2Points = staking.previewUserPoints(user2);
+        assertGt(user1Points, user2Points);
+    }
+
+    /// @notice Test mixed unstaking and claiming scenario
+    function test_MixedUnstakingAndClaiming() public {
+        // --- 1. SET UP STAKING ---
+        setupStaking();
+        uint256 stakeAmount = 100 * 1e12; // Example stake amount
+
+        // Create a stake for user1
+        createStake(user1, stakeAmount);
+
+        // --- 2. ADVANCE TIME FOR STAKE ACCUMULATION ---
+        // Advance time to after the staking period (i.e., past freezeTimestamp).
+        uint256 freezeTime = staking.freezeTimestamp();
+        vm.warp(freezeTime + 1);  // Ensure block.timestamp >= freezeTimestamp
+
+        // --- 3. PROCESS FINALIZATION ---
+        // As the owner, process all staker addresses.
+        vm.prank(owner);
+        staking.storeTotalPoints(1); // Assuming only one staker for simplicity
+
+        // Verify finalization is complete and finalTotalPoints is nonzero.
+        uint256 finalPoints = staking.finalTotalPoints();
+        assert(finalPoints > 0);  // Organic points have now been accumulated.
+        assertEq(staking.finalizationComplete(), 1); // Finalization flag is set
+
+        // --- 4. UNSTAKE ---
+        // Now a staker can safely call unstake() knowing organic points are in place.
+        vm.prank(user1);
+        staking.unstake(stakeAmount);
+        
+        // Further assertions on claimed rewards can follow here...
+    }
+
+    // Helper functions for test phases
+    function setupStaking() public {
+        vm.startPrank(owner);
+        staking.setGrowthRate(274);
+        staking.setBurnVault(address(burnVault));
+        
+        // Set token addresses
+        staking.setTokenAddresses(mockKlima, mockKlimaX);
+        
+        // Set supplies
+        staking.setKlimaSupply(17_500_000);
+        staking.setKlimaXSupply(40_000_000);
+        
+        // Transfer KLIMA tokens to the staking contract
+        klimaToken.transfer(address(staking), staking.KLIMA_SUPPLY() * 1e18);
+        klimaXToken.transfer(address(staking), staking.KLIMAX_SUPPLY() * 1e18);
+        
+        // Enable staking
+        uint256 startTime = block.timestamp + 1 days;
+        staking.enableStaking(startTime);
+        vm.stopPrank();
+        
+        // Warp to start of staking
+        vm.warp(startTime);
+    }
+
+    function createStake(address user, uint256 amount) public {
+        vm.startPrank(user);
+        IERC20(KLIMA_V0_ADDR).approve(address(staking), amount);
+        staking.stake(amount);
+        vm.stopPrank();
+    }
+
+    function warpToFinalization() public {
+        // Warp to after freeze time (91 days from start)
+        vm.warp(staking.startTimestamp() + 91 days);
+    }
+
+    function finalizeStaking() public {
+        vm.prank(owner);
+        staking.storeTotalPoints(1);
+        require(staking.finalizationComplete() == 1, "Finalization failed");
+    }
+
+    function expApprox(uint256 x) internal pure returns (uint256) {
+        // Approximate e^x using a few terms of the Taylor series
+        // e^x ≈ 1 + x + x^2/2! + x^3/3! + ...
+        uint256 term = 1e18; // Start with 1 in fixed-point
+        uint256 sum = term;  // Initialize sum with the first term
+        for (uint256 i = 1; i < 5; i++) {
+            term = (term * x) / (i * 1e18);
+            sum += term;
+        }
+        return sum;
+    }
+
+    function assertApproxEq(uint256 a, uint256 b, uint256 tolerance, string memory message) internal {
+        if (a > b) {
+            require(a - b <= tolerance, message);
+        } else {
+            require(b - a <= tolerance, message);
+        }
+    }
+} 
