@@ -420,7 +420,6 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     function storeTotalPoints(uint256 batchSize) public onlyOwner beforeFinalization {
         require(block.timestamp >= freezeTimestamp, "Staking period not locked");
 
-
         // Calculate end index for this batch
         uint256 endIndex = finalizeIndex + batchSize;
         if (endIndex > stakerAddresses.length) {
@@ -446,7 +445,8 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
 
             // Sum all stakes' points for this user
             for (uint256 j = 0; j < stakes.length; j++) {
-                newFinalTotalPoints += stakes[j].organicPoints;
+                // Include both organic points and burn accrued points
+                newFinalTotalPoints += stakes[j].organicPoints + stakes[j].burnAccrued;
             }
         }
 
