@@ -123,14 +123,12 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         require(IERC20(KLIMA_V0).transferFrom(msg.sender, address(this), amount), "Transfer failed");
 
         // Calculate multiplier based on current week
-        uint256 multiplier;
+        uint256 multiplier = 100;
         uint256 weeksPassed = (block.timestamp - startTimestamp) / 1 weeks;
         if (weeksPassed == 0) {
             multiplier = 200; // 2x for week 1
         } else if (weeksPassed == 1) {
             multiplier = 150; // 1.5x for week 2
-        } else {
-            multiplier = 100; // 1x for week 3+
         }
 
         // Add user to stakerAddresses if first stake
