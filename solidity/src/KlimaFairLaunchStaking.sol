@@ -515,6 +515,14 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         emit StakingExtended(oldFreezeTimestamp, _newFreezeTimestamp);
     }
 
+    function pause() external onlyOwner {
+        _pause();
+    }
+
+    function unpause() external onlyOwner {
+        _unpause();
+    }
+
     // pure functions
 
     /// @notice Calculates the amount of tokens to burn when unstaking
