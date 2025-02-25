@@ -183,11 +183,11 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         require(amount > 0, "Amount must be greater than 0");
 
         // Track totals
-        uint256 totalUnstake = 0;
-        uint256 totalBurnAmount = 0;
+        uint256 totalUnstake;
+        uint256 totalBurnAmount;
 
         // track total freed organic points to update burnRatio incrementally
-        uint256 freedOrganicPointsTotal = 0;
+        uint256 freedOrganicPointsTotal;
 
         // Load stakes into memory
         Stake[] memory stakes = userStakes[msg.sender];
@@ -265,9 +265,9 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         require(block.timestamp >= freezeTimestamp, "Staking period not ended");
         require(finalizationComplete == 1, "Finalization not complete");
 
-        uint256 totalUserStaked = 0;
-        uint256 totalUserPoints = 0;
-        bool hasUnclaimedStakes = false;
+        uint256 totalUserStaked;
+        uint256 totalUserPoints;
+        bool hasUnclaimedStakes;
 
         // Load stakes into memory
         Stake[] memory stakes = userStakes[msg.sender];
@@ -568,7 +568,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     /// @return Total points including organic and burn points
     /// @dev Simulates point updates up to current timestamp
     function previewUserPoints(address user) public view returns (uint256) {
-        uint256 totalPoints = 0;
+        uint256 totalPoints;
         
         // Load stakes into memory once
         Stake[] memory stakes = userStakes[user];
@@ -598,7 +598,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     /// @dev Should only be called off-chain due to gas costs
     /// @dev Simulates point updates for all users up to current timestamp
     function getTotalPoints() public view returns (uint256) {
-        uint256 totalPoints = 0;
+        uint256 totalPoints;
 
         // Iterate through all staker addresses
         for (uint256 i = 0; i < stakerAddresses.length; i++) {
