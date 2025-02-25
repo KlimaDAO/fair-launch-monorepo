@@ -1290,21 +1290,19 @@ contract KlimaFairLaunchStakingTest is Test {
         // Deploy a new implementation
         KlimaFairLaunchStaking newImplementation = new KlimaFairLaunchStaking();
         
+        // Store the proxy address
+        address proxyAddress = address(staking);
+        
         // Attempt to upgrade as owner
         vm.prank(owner);
         staking.upgradeToAndCall(address(newImplementation), "");
         
-        // Verify the implementation was upgraded by checking behavior
-        // For example, check that a function call goes to the new implementation
-        // or use a storage slot check if you know the implementation slot
-        
-        // Alternative: use the ERC1967 storage slot directly
+        // Use vm.load to read the implementation slot directly
         bytes32 implementationSlot = 0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc;
-        address currentImplementation;
-        assembly {
-            currentImplementation := sload(implementationSlot)
-        }
+        bytes32 implAddressBytes = vm.load(proxyAddress, implementationSlot);
+        address currentImplementation = address(uint160(uint256(implAddressBytes)));
         
+        // Verify the implementation was upgraded
         assertEq(currentImplementation, address(newImplementation), "Implementation should be upgraded");
     }
 
@@ -1464,17 +1462,21 @@ contract KlimaFairLaunchStakingTest is Test {
         // Setup staking period
         vm.prank(owner);
         staking.setBurnVault(address(burnVault));
-        uint256 startTime = block.timestamp + 1 days;
+        
         vm.prank(owner);
+        uint256 startTime = block.timestamp + 1 days;
         staking.enableStaking(startTime);
         
         // Warp to after freeze time
         vm.warp(staking.freezeTimestamp() + 1);
         
-        // Try to extend freeze time
+        // Get the current freeze timestamp
+        uint256 currentFreezeTime = staking.freezeTimestamp();
+        
+        // Try to extend freeze time - should revert
         vm.prank(owner);
         vm.expectRevert("Staking period already ended");
-        staking.setFreezeTimestamp(staking.freezeTimestamp() + 30 days);
+        staking.setFreezeTimestamp(currentFreezeTime + 30 days);
     }
 
     /// @notice Test extending freeze timestamp fails with earlier timestamp
@@ -1486,24 +1488,39 @@ contract KlimaFairLaunchStakingTest is Test {
         vm.prank(owner);
         staking.enableStaking(startTime);
         
+        uint256 currentFreezeTime = staking.freezeTimestamp();
+        
         // Try to set earlier freeze time
         vm.prank(owner);
         vm.expectRevert("Can only extend freeze period");
-        staking.setFreezeTimestamp(staking.freezeTimestamp() - 1);
+        staking.setFreezeTimestamp(currentFreezeTime - 1);
     }
 
     /// @notice Test extending freeze timestamp fails after finalization
     function test_RevertWhen_ExtendingAfterFinalization() public {
         // Setup staking with finalization
-        setupStaking();
+        setupStaking();  // This already sets up token addresses and transfers tokens
+        
+        // Create stake
         createStake(user1, 100 * 1e12);
+        
+        // Warp to after freeze time
         warpToFinalization();
-        finalizeStaking();
+        
+        // Finalize staking
+        vm.prank(owner);
+        staking.storeTotalPoints(1);
+        
+        // Verify finalization is complete
+        assertEq(staking.finalizationComplete(), 1, "Finalization should be complete");
+        
+        // Get current freeze timestamp
+        uint256 currentFreezeTime = staking.freezeTimestamp();
         
         // Try to extend freeze time after finalization
         vm.prank(owner);
         vm.expectRevert("Finalization already complete");
-        staking.setFreezeTimestamp(staking.freezeTimestamp() + 30 days);
+        staking.setFreezeTimestamp(currentFreezeTime + 30 days);
     }
 
     // =============================================================
