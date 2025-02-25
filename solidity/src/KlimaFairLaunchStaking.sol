@@ -239,9 +239,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
 
         // Update burn ratio
         if (totalOrganicPoints > 0) {
-            uint256 scaledFreedPoints = freedOrganicPointsTotal * GROWTH_DENOMINATOR;
-            uint256 deltaRatio = scaledFreedPoints / totalOrganicPoints;
-            burnRatio = burnRatio + deltaRatio;
+            burnRatio = burnRatio + ((freedOrganicPointsTotal * GROWTH_DENOMINATOR) / totalOrganicPoints);
         }
 
         // Send tokens to burn vault for the burn portion before transferring remaining tokens
