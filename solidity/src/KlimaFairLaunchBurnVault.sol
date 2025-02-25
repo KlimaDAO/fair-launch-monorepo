@@ -76,12 +76,10 @@ contract KlimaFairLaunchBurnVault is Initializable, UUPSUpgradeable, OwnableUpgr
 
     function emergencyWithdraw() external {
         require(emergencyWithdrawalEnabled, "Emergency withdrawal not enabled");
+        require(klimaAmountToBurn[msg.sender] > 0, "No tokens to withdraw");
         uint256 amount = klimaAmountToBurn[msg.sender];
-        require(amount > 0, "No tokens to withdraw");
-        
         klimaAmountToBurn[msg.sender] = 0;
         require(IERC20(KLIMA_V0).transfer(msg.sender, amount), "Transfer failed");
-        
         emit EmergencyWithdrawal(msg.sender, amount);
     }
 
