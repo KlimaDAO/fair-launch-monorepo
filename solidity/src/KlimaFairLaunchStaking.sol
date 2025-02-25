@@ -53,8 +53,8 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     // token state
     address public KLIMA;
     address public KLIMA_X;
-    uint256 public KLIMA_SUPPLY = 17_500_000;
-    uint256 public KLIMAX_SUPPLY = 40_000_000;
+    uint256 public KLIMA_SUPPLY = 17_500_000 * 1e18;
+    uint256 public KLIMAX_SUPPLY = 40_000_000 * 1e18;
     address public burnVault;
     // events
     event StakeCreated(address indexed user, uint256 amount, uint256 multiplier, uint256 startTimestamp);
@@ -476,7 +476,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     }
 
     /// @notice Sets the total KLIMA token supply for distribution
-    /// @param _newValue New KLIMA supply value
+    /// @param _newValue New KLIMA supply value (raw value with 18 decimals)
     /// @dev Can only be called before finalization
     function setKlimaSupply(uint256 _newValue) external onlyOwner beforeFinalization {
         require(_newValue > 0, "KLIMA supply must be greater than 0");
@@ -485,7 +485,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     }
 
     /// @notice Sets the total KLIMA_X token supply for distribution
-    /// @param _newValue New KLIMA_X supply value
+    /// @param _newValue New KLIMA_X supply value (raw value with 18 decimals)
     /// @dev Can only be called before finalization
     function setKlimaXSupply(uint256 _newValue) external onlyOwner beforeFinalization {
         require(_newValue > 0, "KLIMA_X supply must be greater than 0");
