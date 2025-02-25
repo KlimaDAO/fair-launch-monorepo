@@ -303,9 +303,10 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
             userStakesList[i] = updatedStakes[i];
         }
 
-        // Calculate allocations
-        uint256 klimaAllocation = (totalUserStaked * KLIMA_SUPPLY) / totalStaked;
-        uint256 klimaXAllocation = (totalUserPoints * KLIMAX_SUPPLY) / finalTotalPoints;
+        // Calculate allocations using the view functions
+        uint256 klimaAllocation = calculateKlimaAllocation(totalUserStaked);
+        uint256 klimaXAllocation = calculateKlimaXAllocation(totalUserPoints);
+    
 
       
         // Transfer new tokens to user (if any)
