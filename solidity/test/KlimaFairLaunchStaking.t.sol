@@ -885,18 +885,23 @@ contract KlimaFairLaunchStakingTest is Test {
     function test_BurnCalculation() public {
         uint256 amount = 100 * 1e12;
         
+        // Set a reasonable current timestamp first
+        uint256 currentTime = 1000000;
+        vm.warp(currentTime);
+        
         // Test immediate burn (should be 25%)
-        uint256 burnAmount = staking.calculateBurn(amount, 1);
+        uint256 stakeStartTime = currentTime; // Same as current time
+        uint256 burnAmount = staking.calculateBurn(amount, stakeStartTime);
         assertEq(burnAmount, amount * 25 / 100, "Immediate burn should be 25%");
 
         // Test burn after 1 year (should be 100%)
-        vm.warp(1 days * 365 + 1);
-        burnAmount = staking.calculateBurn(amount, 1);
+        vm.warp(currentTime + 1 days * 365);
+        burnAmount = staking.calculateBurn(amount, stakeStartTime);
         assertEq(burnAmount, amount, "Year burn should be 100%");
 
         // Test burn after ~6 months (should be between 25% and 100%)
-        vm.warp(1 days * 182);  // ~6 months
-        burnAmount = staking.calculateBurn(amount, 1);
+        vm.warp(currentTime + 1 days * 182);  // ~6 months
+        burnAmount = staking.calculateBurn(amount, stakeStartTime);
         assertGt(burnAmount, amount * 25 / 100, "Half year burn should be > 25%");
         assertLt(burnAmount, amount, "Half year burn should be < 100%");
     }
