@@ -1611,13 +1611,13 @@ contract KlimaFairLaunchStakingTest is Test {
         uint256 smallAmount = 1 * 1e9; // 0.001 KLIMA_V0
         
         // Give user enough tokens
-        deal(KLIMA_V0_ADDR, user1, smallAmount * 10);
+        deal(KLIMA_V0_ADDR, user1, smallAmount * 15);
         
         vm.startPrank(user1);
-        IERC20(KLIMA_V0_ADDR).approve(address(staking), smallAmount * 10);
+        IERC20(KLIMA_V0_ADDR).approve(address(staking), smallAmount * 15);
         
         // Create 10 small stakes
-        for (uint256 i = 0; i < 10; i++) {
+        for (uint256 i = 0; i < 15; i++) {
             staking.stake(smallAmount);
         }
         vm.stopPrank();
@@ -1632,7 +1632,7 @@ contract KlimaFairLaunchStakingTest is Test {
                 hasMoreStakes = false;
             }
         }
-        assertEq(stakeCount, 10, "Should have 10 stakes");
+        assertEq(stakeCount, 15, "Should have 15 stakes");
         
         // Unstake half the total amount
         vm.prank(user1);
@@ -1640,11 +1640,11 @@ contract KlimaFairLaunchStakingTest is Test {
         
         // Verify correct amount was unstaked
         uint256 remainingTotal = 0;
-        for (uint256 i = 0; i < 10; i++) {
+        for (uint256 i = 0; i < 15; i++) {
             (uint256 amount,,,,,,,) = staking.userStakes(user1, i);
             remainingTotal += amount;
         }
-        assertEq(remainingTotal, smallAmount * 5, "Should have half the amount remaining");
+        assertEq(remainingTotal, smallAmount * 10, "Should have half the amount remaining");
     }
 
         /// @notice Test adding a new test to verify the exact compounding formula
