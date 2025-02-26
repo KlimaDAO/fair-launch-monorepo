@@ -6,20 +6,6 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-/**
- * @title IERC20Burnable Interface
- * @dev Interface of the ERC20 standard as defined in the EIP.
- */
-interface IERC20Burnable {
-    /**
-     * @notice Function to burn tokens.
-     * @dev Can only be called by the minter address.
-     * @param from The address that will have its tokens burnt.
-     * @param amount The amount of tokens to burn.
-     */
-    function burn(address from, uint256 amount) external;
-}
-
 interface IKlimaFairLaunchStaking {
     function finalizationComplete() external view returns (uint256);
 }
@@ -38,7 +24,7 @@ contract KlimaFairLaunchBurnVault is Initializable, UUPSUpgradeable, OwnableUpgr
 
     // events
     event KlimaFairLaunchStakingSet(address indexed klimaFairLaunchStaking);
-    event FinalBurnPerformed(uint256 finalAmountBurned);
+    event FinalBurnInitiated(uint256 finalAmountBurned);
     event AddedKlimaAmountToBurn(address indexed user, uint256 amount);
     event EmergencyWithdrawalEnabled();
     event EmergencyWithdrawal(address indexed user, uint256 amount);
@@ -66,6 +52,10 @@ contract KlimaFairLaunchBurnVault is Initializable, UUPSUpgradeable, OwnableUpgr
         require(newImplementation != address(0), "New implementation cannot be zero address");
     }
 
+    function _AxelarBurn(uint256 amount) internal {
+        // TODO: Implement AxelarBurn
+    }
+
     function enableEmergencyWithdrawal() external onlyOwner {
         require(!emergencyWithdrawalEnabled, "Emergency withdrawal already enabled");
         require(klimaFairLaunchStaking != address(0), "Staking contract not set");
@@ -87,8 +77,8 @@ contract KlimaFairLaunchBurnVault is Initializable, UUPSUpgradeable, OwnableUpgr
         require(!emergencyWithdrawalEnabled, "Emergency withdrawal is enabled");
         require(klimaFairLaunchStaking != address(0), "Staking contract not set");
         require(IKlimaFairLaunchStaking(klimaFairLaunchStaking).finalizationComplete() == 1, "Staking contract not finalized");
-        IERC20Burnable(KLIMA_V0).burn(address(this), totalKlimaToBurn);
-        emit FinalBurnPerformed(totalKlimaToBurn);
+        _AxelarBurn(totalKlimaToBurn);
+        emit FinalBurnInitiated(totalKlimaToBurn);
     }
 
     function setKlimaFairLaunchStaking(address _klimaFairLaunchStaking) external onlyOwner {
