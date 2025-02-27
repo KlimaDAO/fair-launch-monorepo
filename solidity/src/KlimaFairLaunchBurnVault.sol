@@ -10,17 +10,33 @@ interface IKlimaFairLaunchStaking {
     function finalizationComplete() external view returns (uint256);
 }
 
+interface IInterchainTokenService {
+    function callContractWithInterchainToken(
+        bytes32 tokenId,
+        string calldata destinationChain,
+        bytes calldata destinationAddress,
+        uint256 amount,
+        bytes calldata data,
+        uint256 gasValue
+    ) external payable;
+}
+
 // this contract is used to burn the KLIMA_V0 tokens after finalization. Before finalization, the KLIMA_V0 tokens are stored pending burn.
 
 contract KlimaFairLaunchBurnVault is Initializable, UUPSUpgradeable, OwnableUpgradeable {
-
+    
     address public klimaFairLaunchStaking;
 
     mapping(address => uint256) public klimaAmountToBurn;
     uint256 public totalKlimaToBurn;
 
+    address public HelperContractOnPolygon;
+    address public InterchainTokenService = 0xB5FB4BE02232B1bBA4dC8f81dc24C26980dE9e3C;
+
     // constants
     address constant KLIMA_V0 = 0xDCEFd8C8fCc492630B943ABcaB3429F12Ea9Fea2; // current klima address on Base
+    bytes32 public constant TOKEN_ID = 0xdc30a9bd9048b5a833e3f90ea281f70ae77e82018fa5b96831d3a1f563e38aaf;
+    string public constant DESTINATION_CHAIN = "Polygon";
 
     // events
     event KlimaFairLaunchStakingSet(address indexed klimaFairLaunchStaking);
@@ -54,6 +70,42 @@ contract KlimaFairLaunchBurnVault is Initializable, UUPSUpgradeable, OwnableUpgr
 
     function _AxelarBurn(uint256 amount) internal {
         // TODO: Implement AxelarBurn
+
+        // Approve KLIMA (on Base) for cross-chain transfer to Polygon
+        IERC20(KLIMA_V0).approve(InterchainTokenService, amount);
+
+        bytes memory data = new bytes(0);
+
+        // Send cross-chain message and handle gas refunds on failure.
+        try IInterchainTokenService(InterchainTokenService).callContractWithInterchainToken{value: msg.value}(
+            TOKEN_ID,
+            DESTINATION_CHAIN,
+            abi.encodePacked(HelperContractOnPolygon),
+            amount,
+            data, // empty data
+            msg.value
+        ) {
+            // Success - any remaining gas will be handled by receive()
+        } catch {
+            // Refund gas on failure
+            (bool success, ) = msg.sender.call{value: msg.value}("");
+            require(success, "Gas refund failed");
+            revert("Cross-chain call failed");
+        }
+    }
+
+    function setHelperContractOnPolygon(address _HelperContractOnPolygon) external onlyOwner {
+        HelperContractOnPolygon = _HelperContractOnPolygon;
+    }
+
+    function setInterchainTokenService(address _InterchainTokenService) external onlyOwner {
+        InterchainTokenService = _InterchainTokenService;
+    }
+
+    function setKlimaFairLaunchStaking(address _klimaFairLaunchStaking) external onlyOwner {
+        require(_klimaFairLaunchStaking != address(0), "Staking contract cannot be zero address");
+        klimaFairLaunchStaking = _klimaFairLaunchStaking;
+        emit KlimaFairLaunchStakingSet(_klimaFairLaunchStaking);
     }
 
     function enableEmergencyWithdrawal() external onlyOwner {
@@ -73,18 +125,12 @@ contract KlimaFairLaunchBurnVault is Initializable, UUPSUpgradeable, OwnableUpgr
         emit EmergencyWithdrawal(msg.sender, amount);
     }
 
-    function performFinalBurn() external onlyOwner {
+    function initiateFinalBurn() external payable onlyOwner {
         require(!emergencyWithdrawalEnabled, "Emergency withdrawal is enabled");
         require(klimaFairLaunchStaking != address(0), "Staking contract not set");
         require(IKlimaFairLaunchStaking(klimaFairLaunchStaking).finalizationComplete() == 1, "Staking contract not finalized");
         _AxelarBurn(totalKlimaToBurn);
         emit FinalBurnInitiated(totalKlimaToBurn);
-    }
-
-    function setKlimaFairLaunchStaking(address _klimaFairLaunchStaking) external onlyOwner {
-        require(_klimaFairLaunchStaking != address(0), "Staking contract cannot be zero address");
-        klimaFairLaunchStaking = _klimaFairLaunchStaking;
-        emit KlimaFairLaunchStakingSet(_klimaFairLaunchStaking);
     }
 
     function addKlimaAmountToBurn(address _user, uint256 _amount) external {
