@@ -1777,4 +1777,239 @@ contract KlimaFairLaunchStakingTest is Test {
         assertApproxEqRel(staking.calculateKlimaXAllocation(user2Points), expectedUser2KlimaX, 0.01e18);
     }
 
+    /// @notice Test setting pre-staking window
+    function test_SetPreStakingWindow() public {
+        // Set burn vault first
+        vm.prank(owner);
+        staking.setBurnVault(address(burnVault));
+
+        uint256 futureTimestamp = block.timestamp + 7 days;
+        uint256 preStakingWindow = 3 days; // 3 days pre-staking window
+        
+        vm.startPrank(owner);
+        // Set pre-staking window
+        staking.setPreStakingWindow(preStakingWindow);
+        // Enable staking
+        staking.enableStaking(futureTimestamp);
+        vm.stopPrank();
+
+        assertEq(staking.startTimestamp(), futureTimestamp);
+        assertEq(staking.freezeTimestamp(), futureTimestamp + 90 days);
+        assertEq(staking.preStakingWindow(), preStakingWindow);
+    }
+
+    /// @notice Test pre-staking functionality
+    function test_PreStaking() public {
+        // Setup staking period with pre-staking window
+        vm.startPrank(owner);
+        staking.setBurnVault(address(burnVault));
+        uint256 startTime = block.timestamp + 5 days;
+        staking.setPreStakingWindow(3 days); // 3 days pre-staking window
+        staking.enableStaking(startTime);
+        vm.stopPrank();
+
+        // Warp to pre-staking period (2 days before official start)
+        vm.warp(startTime - 2 days);
+        
+        // Stake during pre-staking period
+        uint256 stakeAmount = 100 * 1e12;
+        vm.startPrank(user1);
+        IERC20(KLIMA_V0_ADDR).approve(address(staking), stakeAmount);
+        staking.stake(stakeAmount);
+        vm.stopPrank();
+
+        // Verify stake details
+        (
+            uint256 amount,
+            uint256 stakeStartTime,
+            uint256 lastUpdateTime,
+            uint256 bonusMultiplier,
+            ,,,
+        ) = staking.userStakes(user1, 0);
+
+        assertEq(amount, stakeAmount);
+        assertEq(stakeStartTime, startTime); // Should be set to official start time
+        assertEq(lastUpdateTime, startTime); // Points start accruing from official start
+        assertEq(bonusMultiplier, 200); // 2x multiplier for pre-staking
+    }
+
+    /// @notice Test staking before pre-staking window fails
+    function test_RevertWhen_StakingBeforePreStakingWindow() public {
+        // Setup staking period with pre-staking window
+        vm.startPrank(owner);
+        staking.setBurnVault(address(burnVault));
+        uint256 startTime = block.timestamp + 5 days;
+        staking.setPreStakingWindow(3 days); // Changed from 2 days to 3 days (minimum allowed)
+        staking.enableStaking(startTime);
+        vm.stopPrank();
+
+        // Warp to before pre-staking period (4 days before official start)
+        vm.warp(startTime - 4 days); // Changed from 3 days to 4 days
+        
+        // Try to stake before pre-staking window
+        uint256 stakeAmount = 100 * 1e12;
+        vm.startPrank(user1);
+        IERC20(KLIMA_V0_ADDR).approve(address(staking), stakeAmount);
+        vm.expectRevert("Staking not started");
+        staking.stake(stakeAmount);
+        vm.stopPrank();
+    }
+
+    /// @notice Test setting pre-staking window to minimum value
+    function test_MinimumPreStakingWindow() public {
+        // Setup staking period with minimum pre-staking window
+        vm.startPrank(owner);
+        staking.setBurnVault(address(burnVault));
+        uint256 startTime = block.timestamp + 5 days;
+        staking.setPreStakingWindow(3 days); // Minimum allowed
+        staking.enableStaking(startTime);
+        vm.stopPrank();
+
+        // Warp to before start time but within pre-staking window
+        vm.warp(startTime - 2 days);
+        
+        // Should be able to stake
+        uint256 stakeAmount = 100 * 1e12;
+        vm.startPrank(user1);
+        IERC20(KLIMA_V0_ADDR).approve(address(staking), stakeAmount);
+        staking.stake(stakeAmount);
+        vm.stopPrank();
+        
+        // Verify stake details
+        (
+            uint256 amount,
+            uint256 stakeStartTime,
+            ,,,,,
+        ) = staking.userStakes(user1, 0);
+
+        assertEq(amount, stakeAmount);
+        assertEq(stakeStartTime, startTime);
+    }
+
+    /// @notice Test that setting pre-staking window to zero fails (as expected)
+    function test_RevertWhen_ZeroPreStakingWindow() public {
+        vm.startPrank(owner);
+        staking.setBurnVault(address(burnVault));
+        
+        // Try to set pre-staking window to zero
+        vm.expectRevert("Pre-staking window must be between 3 days and 7 days");
+        staking.setPreStakingWindow(0);
+        vm.stopPrank();
+    }
+
+    /// @notice Test points don't accrue during pre-staking period
+    function test_NoPointsAccrualDuringPreStaking() public {
+        // Setup staking period with pre-staking window
+        vm.startPrank(owner);
+        staking.setBurnVault(address(burnVault));
+        staking.setGrowthRate(274); // Set growth rate
+        uint256 startTime = block.timestamp + 5 days;
+        staking.setPreStakingWindow(3 days); // 3 days pre-staking window
+        staking.enableStaking(startTime);
+        vm.stopPrank();
+
+        // Warp to pre-staking period
+        vm.warp(startTime - 2 days);
+        
+        // Stake during pre-staking period
+        uint256 stakeAmount = 100 * 1e12;
+        vm.startPrank(user1);
+        IERC20(KLIMA_V0_ADDR).approve(address(staking), stakeAmount);
+        staking.stake(stakeAmount);
+        vm.stopPrank();
+
+        // Check points - should be 0 during pre-staking
+        uint256 pointsDuringPreStaking = staking.previewUserPoints(user1);
+        assertEq(pointsDuringPreStaking, 0, "No points should accrue during pre-staking");
+        
+        // Warp to exactly the start time
+        vm.warp(startTime);
+        
+        // Points should still be 0 at the exact start time
+        uint256 pointsAtStart = staking.previewUserPoints(user1);
+        assertEq(pointsAtStart, 0, "No points should accrue at the exact start time");
+        
+        // Warp to after start time
+        vm.warp(startTime + 1 days);
+        
+        // Check points - should be non-zero after start time
+        uint256 pointsAfterStart = staking.previewUserPoints(user1);
+        assertGt(pointsAfterStart, 0, "Points should accrue after official start time");
+    }
+
+    /// @notice Test pre-staking with multiple users
+    function test_PreStakingMultipleUsers() public {
+        // Setup staking period with pre-staking window
+        vm.startPrank(owner);
+        staking.setBurnVault(address(burnVault));
+        uint256 startTime = block.timestamp + 5 days;
+        staking.setPreStakingWindow(3 days); // 3 days pre-staking window
+        staking.enableStaking(startTime);
+        vm.stopPrank();
+
+        // Warp to pre-staking period
+        vm.warp(startTime - 2 days);
+        
+        // User1 stakes during pre-staking period
+        uint256 stakeAmount = 100 * 1e12;
+        vm.startPrank(user1);
+        IERC20(KLIMA_V0_ADDR).approve(address(staking), stakeAmount);
+        staking.stake(stakeAmount);
+        vm.stopPrank();
+        
+        // User2 stakes during pre-staking period
+        vm.startPrank(user2);
+        IERC20(KLIMA_V0_ADDR).approve(address(staking), stakeAmount);
+        staking.stake(stakeAmount);
+        vm.stopPrank();
+        
+        // Warp to after start time
+        vm.warp(startTime + 1 days);
+        
+        // Both users should have the same points since they both staked during pre-staking period
+        uint256 user1Points = staking.previewUserPoints(user1);
+        uint256 user2Points = staking.previewUserPoints(user2);
+        assertEq(user1Points, user2Points, "Both users should have equal points");
+    }
+
+    /// @notice Test pre-staking followed by regular staking
+    function test_PreStakingAndRegularStaking() public {
+        // Setup staking period with pre-staking window
+        vm.startPrank(owner);
+        staking.setBurnVault(address(burnVault));
+        staking.setGrowthRate(274); // Set growth rate
+        uint256 startTime = block.timestamp + 5 days;
+        staking.setPreStakingWindow(3 days); // 3 days pre-staking window
+        staking.enableStaking(startTime);
+        vm.stopPrank();
+
+        // User1 stakes during pre-staking period
+        vm.warp(startTime - 2 days);
+        uint256 stakeAmount = 100 * 1e12;
+        vm.startPrank(user1);
+        IERC20(KLIMA_V0_ADDR).approve(address(staking), stakeAmount);
+        staking.stake(stakeAmount);
+        vm.stopPrank();
+        
+        // User2 stakes during regular period (week 1)
+        vm.warp(startTime + 1 days);
+        vm.startPrank(user2);
+        IERC20(KLIMA_V0_ADDR).approve(address(staking), stakeAmount);
+        staking.stake(stakeAmount);
+        vm.stopPrank();
+        
+        // Warp forward to check points
+        vm.warp(startTime + 2 days);
+        
+        // User1 should have more points since their stake has been accruing for longer
+        uint256 user1Points = staking.previewUserPoints(user1);
+        uint256 user2Points = staking.previewUserPoints(user2);
+        assertGt(user1Points, user2Points, "Earlier staker should have more points");
+        
+        // The difference should be exactly 1 day of points
+        uint256 expectedDiff = (stakeAmount * 200 * 1 days * 274) / 100000;
+        uint256 actualDiff = user1Points - user2Points;
+        assertApproxEqRel(actualDiff, expectedDiff, 0.01e18); // Within 1%
+    }
+
 } 

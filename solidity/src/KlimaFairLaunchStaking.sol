@@ -31,6 +31,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     // staking timeline
     uint256 public startTimestamp;
     uint256 public freezeTimestamp;
+    uint256 public preStakingWindow; // Time before startTimestamp when staking is allowed but points are not accruing
 
     // global totals
     uint256 public totalOrganicPoints;
@@ -68,6 +69,14 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     event GrowthRateSet(uint256 newValue);
     event KlimaSupplySet(uint256 newValue);
     event KlimaXSupplySet(uint256 newValue);
+    event PreStakingWindowSet(uint256 preStakingWindow);
+
+    /// @notice Prevents actions after pre-staking has begun
+    /// @dev Used to lock configuration changes once pre-staking begins
+    modifier beforePreStaking() {
+        require(startTimestamp == 0 || block.timestamp < startTimestamp - preStakingWindow, "Pre-staking has already started");
+        _;
+    }
 
     /// @notice Prevents actions after staking has started
     /// @dev Used to lock configuration changes once staking begins
@@ -115,19 +124,21 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         // Require valid amount
         require(amount > 0, "Amount must be greater than 0");
 
-        // Require staking is active
-        require(block.timestamp >= startTimestamp, "Staking not started");
+        // Require staking is active (either pre-staking or regular staking period)
+        require(startTimestamp > 0, "Staking not initialized");
+        require(block.timestamp >= startTimestamp - preStakingWindow, "Staking not started");
         require(block.timestamp < freezeTimestamp, "Staking period ended");
 
         // Transfer KLIMA_V0 tokens to this contract
         require(IERC20(KLIMA_V0).transferFrom(msg.sender, address(this), amount), "Transfer failed");
 
-        // Calculate multiplier based on current week
+        // Calculate multiplier based on current week (after official start)
         uint256 multiplier = 100;
-        uint256 weeksPassed = (block.timestamp - startTimestamp) / 1 weeks;
-        if (weeksPassed == 0) {
-            multiplier = 200; // 2x for week 1
-        } else if (weeksPassed == 1) {
+        
+        // If we're in pre-staking or week 1, use 2x multiplier
+        if (block.timestamp < startTimestamp || (block.timestamp - startTimestamp) < 1 weeks) {
+            multiplier = 200; // 2x for pre-staking and week 1
+        } else if ((block.timestamp - startTimestamp) < 2 weeks) {
             multiplier = 150; // 1.5x for week 2
         }
 
@@ -136,11 +147,17 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
             stakerAddresses.push(msg.sender);
         }
 
+        // Set stake start time to either current time or startTimestamp (whichever is later)
+        uint256 stakeStartTime = block.timestamp;
+        if (block.timestamp < startTimestamp) {
+            stakeStartTime = startTimestamp; // For pre-staking, set to official start time
+        }
+
         // Create new stake
         Stake memory newStake = Stake({
             amount: amount,
-            stakeStartTime: block.timestamp,
-            lastUpdateTime: block.timestamp,
+            stakeStartTime: stakeStartTime,
+            lastUpdateTime: stakeStartTime, // Points start accruing from stakeStartTime
             bonusMultiplier: multiplier,
             organicPoints: 0,
             burnRatioSnapshot: burnRatio,
@@ -155,7 +172,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         totalStaked += amount;
 
         // Emit stake created event
-        emit StakeCreated(msg.sender, amount, multiplier, block.timestamp);
+        emit StakeCreated(msg.sender, amount, multiplier, stakeStartTime);
     }
 
     /// @notice Allows users to unstake their KLIMA_V0 tokens
@@ -419,7 +436,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     /// @param _startTimestamp Timestamp when staking begins
     /// @dev Freeze timestamp is 90 days after start
     /// @dev Can only be called by the owner
-    function enableStaking(uint256 _startTimestamp) external onlyOwner beforeStartTimestamp {
+    function enableStaking(uint256 _startTimestamp) external onlyOwner beforeStartTimestamp beforePreStaking {
         require(_startTimestamp > block.timestamp, "Start timestamp cannot be in the past");
         require(burnVault != address(0), "Burn vault not set");
         startTimestamp = _startTimestamp;
@@ -529,6 +546,15 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         emit StakingExtended(oldFreezeTimestamp, _newFreezeTimestamp);
     }
 
+    /// @notice Sets the pre-staking window
+    /// @param _preStakingWindow Time in seconds before start when pre-staking is allowed
+    /// @dev Can only be called by the owner before pre-staking begins
+    function setPreStakingWindow(uint256 _preStakingWindow) external onlyOwner beforePreStaking {
+        require(_preStakingWindow >= 3 days && _preStakingWindow <= 7 days, "Pre-staking window must be between 3 days and 7 days");
+        preStakingWindow = _preStakingWindow;
+        emit PreStakingWindowSet(_preStakingWindow);
+    }
+
     function pause() external onlyOwner {
         _pause();
     }
@@ -604,7 +630,12 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
             if (currentStake.amount == 0) continue;
 
             // Simulate organic points update
-            uint256 timeElapsed = block.timestamp - currentStake.lastUpdateTime;
+            // Add check to prevent underflow during pre-staking period
+            uint256 timeElapsed = 0;
+            if (block.timestamp > currentStake.lastUpdateTime) {
+                timeElapsed = block.timestamp - currentStake.lastUpdateTime;
+            }
+            
             uint256 newOrganicPoints = currentStake.organicPoints
                 + (currentStake.amount * currentStake.bonusMultiplier * timeElapsed * GROWTH_RATE) / GROWTH_DENOMINATOR;
 
