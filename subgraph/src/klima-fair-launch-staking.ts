@@ -1,260 +1,71 @@
+import { log, BigInt } from "@graphprotocol/graph-ts";
 import {
-  BurnVaultSet as BurnVaultSetEvent,
-  FinalizationComplete as FinalizationCompleteEvent,
-  GrowthRateSet as GrowthRateSetEvent,
-  Initialized as InitializedEvent,
-  KlimaSupplySet as KlimaSupplySetEvent,
-  KlimaXSupplySet as KlimaXSupplySetEvent,
-  OwnershipTransferred as OwnershipTransferredEvent,
-  Paused as PausedEvent,
   StakeBurned as StakeBurnedEvent,
   StakeClaimed as StakeClaimedEvent,
   StakeCreated as StakeCreatedEvent,
-  StakingEnabled as StakingEnabledEvent,
-  StakingExtended as StakingExtendedEvent,
-  TokenAddressesSet as TokenAddressesSetEvent,
-  Unpaused as UnpausedEvent,
-  Upgraded as UpgradedEvent
-} from "../generated/KlimaFairLaunchStaking/KlimaFairLaunchStaking"
-import {
-  BurnVaultSet,
-  FinalizationComplete,
-  GrowthRateSet,
-  Initialized,
-  KlimaSupplySet,
-  KlimaXSupplySet,
-  OwnershipTransferred,
-  Paused,
-  StakeBurned,
-  StakeClaimed,
-  StakeCreated,
-  StakingEnabled,
-  StakingExtended,
-  TokenAddressesSet,
-  Unpaused,
-  Upgraded
-} from "../generated/schema"
+} from "../generated/KlimaFairLaunchStaking/KlimaFairLaunchStaking";
+import { Stake } from "../generated/schema";
+import { loadOrCreateWallet } from "./utils/utils";
 
-export function handleBurnVaultSet(event: BurnVaultSetEvent): void {
-  let entity = new BurnVaultSet(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.burnVault = event.params.burnVault
+export function handleStakeCreated(event: StakeCreatedEvent): void {
+  let wallet = loadOrCreateWallet(event.params.user);
+  wallet.totalStaked = wallet.totalStaked.plus(event.params.amount);
+  wallet.save();
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
+  let stake = new Stake(wallet.id);
+  stake.wallet = wallet.id;
+  stake.amount = event.params.amount;
+  stake.multiplier = event.params.multiplier;
+  stake.startTimestamp = event.params.startTimestamp;
+  stake.stakeCreationHash = event.transaction.hash;
 
-  entity.save()
-}
-
-export function handleFinalizationComplete(
-  event: FinalizationCompleteEvent
-): void {
-  let entity = new FinalizationComplete(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
-}
-
-export function handleGrowthRateSet(event: GrowthRateSetEvent): void {
-  let entity = new GrowthRateSet(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.newValue = event.params.newValue
-
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
-}
-
-export function handleInitialized(event: InitializedEvent): void {
-  let entity = new Initialized(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.version = event.params.version
-
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
-}
-
-export function handleKlimaSupplySet(event: KlimaSupplySetEvent): void {
-  let entity = new KlimaSupplySet(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.newValue = event.params.newValue
-
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
-}
-
-export function handleKlimaXSupplySet(event: KlimaXSupplySetEvent): void {
-  let entity = new KlimaXSupplySet(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.newValue = event.params.newValue
-
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
-}
-
-export function handleOwnershipTransferred(
-  event: OwnershipTransferredEvent
-): void {
-  let entity = new OwnershipTransferred(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.previousOwner = event.params.previousOwner
-  entity.newOwner = event.params.newOwner
-
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
-}
-
-export function handlePaused(event: PausedEvent): void {
-  let entity = new Paused(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.account = event.params.account
-
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
+  stake.save();
 }
 
 export function handleStakeBurned(event: StakeBurnedEvent): void {
-  let entity = new StakeBurned(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.user = event.params.user
-  entity.burnAmount = event.params.burnAmount
-  entity.timestamp = event.params.timestamp
+  let burnAmount = event.params.burnAmount;
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
+  let wallet = loadOrCreateWallet(event.params.user);
 
-  entity.save()
+  wallet.totalStaked = wallet.totalStaked.minus(event.params.burnAmount);
+  wallet.save();
+
+  let stakeIds = wallet.stakes.load();
+
+  let allStakes: Stake[] = [];
+
+  for (let i = 0; i < stakeIds.length; i++) {
+    let stake = Stake.load(stakeIds[i].id);
+    if (stake) {
+      allStakes.push(stake);
+    }
+  }
+
+  let remainingBurnAmount = burnAmount;
+  for (let i = allStakes.length - 1; i >= 0; i--) {
+    let stake = allStakes[i];
+    if (stake.amount.equals(BigInt.fromI32(0))) {
+      return;
+    } else {
+      if (stake.amount.gt(remainingBurnAmount)) {
+        stake.amount = stake.amount.minus(remainingBurnAmount);
+        remainingBurnAmount = BigInt.fromI32(0);
+      } else {
+        remainingBurnAmount = remainingBurnAmount.minus(stake.amount);
+        stake.amount = BigInt.fromI32(0);
+      }
+      stake.save();
+    }
+  }
 }
 
 export function handleStakeClaimed(event: StakeClaimedEvent): void {
-  let entity = new StakeClaimed(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.user = event.params.user
-  entity.totalUserStaked = event.params.totalUserStaked
-  entity.klimaAllocation = event.params.klimaAllocation
-  entity.klimaXAllocation = event.params.klimaXAllocation
-  entity.timestamp = event.params.timestamp
-
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
-}
-
-export function handleStakeCreated(event: StakeCreatedEvent): void {
-  let entity = new StakeCreated(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.user = event.params.user
-  entity.amount = event.params.amount
-  entity.multiplier = event.params.multiplier
-  entity.startTimestamp = event.params.startTimestamp
-
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
-}
-
-export function handleStakingEnabled(event: StakingEnabledEvent): void {
-  let entity = new StakingEnabled(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.startTimestamp = event.params.startTimestamp
-  entity.freezeTimestamp = event.params.freezeTimestamp
-
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
-}
-
-export function handleStakingExtended(event: StakingExtendedEvent): void {
-  let entity = new StakingExtended(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.oldFreezeTimestamp = event.params.oldFreezeTimestamp
-  entity.newFreezeTimestamp = event.params.newFreezeTimestamp
-
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
-}
-
-export function handleTokenAddressesSet(event: TokenAddressesSetEvent): void {
-  let entity = new TokenAddressesSet(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.klima = event.params.klima
-  entity.klimax = event.params.klimax
-
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
-}
-
-export function handleUnpaused(event: UnpausedEvent): void {
-  let entity = new Unpaused(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.account = event.params.account
-
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
-}
-
-export function handleUpgraded(event: UpgradedEvent): void {
-  let entity = new Upgraded(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.implementation = event.params.implementation
-
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
+  let stake = Stake.load(event.params.user);
+  if (!stake) {
+    log.error("Stake not found for user: {}", [event.params.user.toHex()]);
+    return;
+  }
+  stake.amount = event.params.klimaAllocation;
+  stake.amount = event.params.klimaXAllocation;
+  stake.save();
 }

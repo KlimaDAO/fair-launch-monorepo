@@ -1,140 +1,16 @@
-type BurnVaultSet @entity(immutable: true) {
+type Wallet @entity {
   id: Bytes!
-  burnVault: Bytes! # address
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
+  totalStaked: BigInt!
+  klimaAllocation: BigInt!
+  klimaXAllocation: BigInt!
+  stakes: [Stake!]! @derivedFrom(field: "wallet")
 }
 
-type FinalizationComplete @entity(immutable: true) {
+type Stake @entity {
   id: Bytes!
-
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
-}
-
-type GrowthRateSet @entity(immutable: true) {
-  id: Bytes!
-  newValue: BigInt! # uint256
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
-}
-
-type Initialized @entity(immutable: true) {
-  id: Bytes!
-  version: BigInt! # uint64
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
-}
-
-type KlimaSupplySet @entity(immutable: true) {
-  id: Bytes!
-  newValue: BigInt! # uint256
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
-}
-
-type KlimaXSupplySet @entity(immutable: true) {
-  id: Bytes!
-  newValue: BigInt! # uint256
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
-}
-
-type OwnershipTransferred @entity(immutable: true) {
-  id: Bytes!
-  previousOwner: Bytes! # address
-  newOwner: Bytes! # address
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
-}
-
-type Paused @entity(immutable: true) {
-  id: Bytes!
-  account: Bytes! # address
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
-}
-
-type StakeBurned @entity(immutable: true) {
-  id: Bytes!
-  user: Bytes! # address
-  burnAmount: BigInt! # uint256
-  timestamp: BigInt! # uint256
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
-}
-
-type StakeClaimed @entity(immutable: true) {
-  id: Bytes!
-  user: Bytes! # address
-  totalUserStaked: BigInt! # uint256
-  klimaAllocation: BigInt! # uint256
-  klimaXAllocation: BigInt! # uint256
-  timestamp: BigInt! # uint256
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
-}
-
-type StakeCreated @entity(immutable: true) {
-  id: Bytes!
-  user: Bytes! # address
-  amount: BigInt! # uint256
-  multiplier: BigInt! # uint256
-  startTimestamp: BigInt! # uint256
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
-}
-
-type StakingEnabled @entity(immutable: true) {
-  id: Bytes!
-  startTimestamp: BigInt! # uint256
-  freezeTimestamp: BigInt! # uint256
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
-}
-
-type StakingExtended @entity(immutable: true) {
-  id: Bytes!
-  oldFreezeTimestamp: BigInt! # uint256
-  newFreezeTimestamp: BigInt! # uint256
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
-}
-
-type TokenAddressesSet @entity(immutable: true) {
-  id: Bytes!
-  klima: Bytes! # address
-  klimax: Bytes! # address
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
-}
-
-type Unpaused @entity(immutable: true) {
-  id: Bytes!
-  account: Bytes! # address
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
-}
-
-type Upgraded @entity(immutable: true) {
-  id: Bytes!
-  implementation: Bytes! # address
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  transactionHash: Bytes!
+  wallet: Wallet!
+  amount: BigInt!
+  multiplier: BigInt!
+  startTimestamp: BigInt!
+  stakeCreationHash: Bytes!
 }

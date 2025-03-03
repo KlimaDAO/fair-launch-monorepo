@@ -16,22 +16,8 @@ dataSources:
       apiVersion: 0.0.7
       language: wasm/assemblyscript
       entities:
-        - BurnVaultSet
-        - FinalizationComplete
-        - GrowthRateSet
-        - Initialized
-        - KlimaSupplySet
-        - KlimaXSupplySet
-        - OwnershipTransferred
-        - Paused
-        - StakeBurned
-        - StakeClaimed
-        - StakeCreated
-        - StakingEnabled
-        - StakingExtended
-        - TokenAddressesSet
-        - Unpaused
-        - Upgraded
+        - User
+        - Stake
       abis:
         - name: KlimaFairLaunchStaking
           file: ./abis/KlimaFairLaunchStaking.json
