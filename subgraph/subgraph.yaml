@@ -22,36 +22,10 @@ dataSources:
         - name: KlimaFairLaunchStaking
           file: ./abis/KlimaFairLaunchStaking.json
       eventHandlers:
-        - event: BurnVaultSet(indexed address)
-          handler: handleBurnVaultSet
-        - event: FinalizationComplete()
-          handler: handleFinalizationComplete
-        - event: GrowthRateSet(uint256)
-          handler: handleGrowthRateSet
-        - event: Initialized(uint64)
-          handler: handleInitialized
-        - event: KlimaSupplySet(uint256)
-          handler: handleKlimaSupplySet
-        - event: KlimaXSupplySet(uint256)
-          handler: handleKlimaXSupplySet
-        - event: OwnershipTransferred(indexed address,indexed address)
-          handler: handleOwnershipTransferred
-        - event: Paused(address)
-          handler: handlePaused
         - event: StakeBurned(indexed address,uint256,uint256)
           handler: handleStakeBurned
         - event: StakeClaimed(indexed address,uint256,uint256,uint256,uint256)
           handler: handleStakeClaimed
         - event: StakeCreated(indexed address,uint256,uint256,uint256)
           handler: handleStakeCreated
-        - event: StakingEnabled(uint256,uint256)
-          handler: handleStakingEnabled
-        - event: StakingExtended(uint256,uint256)
-          handler: handleStakingExtended
-        - event: TokenAddressesSet(indexed address,indexed address)
-          handler: handleTokenAddressesSet
-        - event: Unpaused(address)
-          handler: handleUnpaused
-        - event: Upgraded(indexed address)
-          handler: handleUpgraded
       file: ./src/klima-fair-launch-staking.ts
