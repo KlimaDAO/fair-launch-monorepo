@@ -11,12 +11,12 @@ interface IKlimaFairLaunchStaking {
 }
 
 interface IInterchainTokenService {
-    function callContractWithInterchainToken(
+    function interchainTransfer(
         bytes32 tokenId,
         string calldata destinationChain,
         bytes calldata destinationAddress,
         uint256 amount,
-        bytes calldata data,
+        bytes calldata metadata,
         uint256 gasValue
     ) external payable;
 }
@@ -77,16 +77,16 @@ contract KlimaFairLaunchBurnVault is Initializable, UUPSUpgradeable, OwnableUpgr
         IERC20(KLIMA_V0).approve(InterchainTokenService, amount);
         
         // Format the data according to Axelar's expected format
-        // Use simple abi.encode without version prefix
-        bytes memory data = abi.encode(amount, address(this));
+        // The first 4 bytes should be the metadata version (0)
+        bytes memory metadata = abi.encodePacked(bytes4(0), abi.encode(amount, address(this)));
         
-        // Call the Axelar Interchain Token Service
-        try IInterchainTokenService(InterchainTokenService).callContractWithInterchainToken{value: msg.value}(
+        // Call the Axelar Interchain Token Service with the updated interface
+        try IInterchainTokenService(InterchainTokenService).interchainTransfer{value: msg.value}(
             TOKEN_ID,
             DESTINATION_CHAIN,
             abi.encodePacked(HelperContractOnPolygon),
             amount,
-            data,
+            metadata,
             msg.value
         ) {
             // Success case
@@ -148,4 +148,9 @@ contract KlimaFairLaunchBurnVault is Initializable, UUPSUpgradeable, OwnableUpgr
 
     /// @dev Reserved storage space per auditor recommendation.
     uint256[50] private __gap;
+
+    // Optional: Add a function to ensure the contract has ETH for gas
+    function fundGasForAxelar() external payable onlyOwner {
+        // Just receives ETH, nothing else needed
+    }
 }

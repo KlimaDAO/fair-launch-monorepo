@@ -11,10 +11,12 @@ interface IKLIMA_V0_TOKEN {
 
 contract KlimaFairLaunchPolygonBurnHelper is InterchainTokenExecutable, OwnableUpgradeable, UUPSUpgradeable {
     address public KLIMA;
+    bytes32 public immutable EXPECTED_TOKEN_ID;
 
-    constructor(address interchainTokenService_, address KLIMA_) InterchainTokenExecutable(interchainTokenService_) {
+    constructor(address interchainTokenService_, address KLIMA_, bytes32 expectedTokenId_) InterchainTokenExecutable(interchainTokenService_) {
         _disableInitializers();
         KLIMA = KLIMA_;
+        EXPECTED_TOKEN_ID = expectedTokenId_;
     }
 
     /// @notice Initializes the contract with the initial owner
@@ -23,7 +25,6 @@ contract KlimaFairLaunchPolygonBurnHelper is InterchainTokenExecutable, OwnableU
         __Ownable_init(initialOwner);
         __UUPSUpgradeable_init();
     }
-
 
     /// @notice Authorizes an upgrade to a new implementation
     /// @param newImplementation Address of the new implementation contract
@@ -58,8 +59,8 @@ contract KlimaFairLaunchPolygonBurnHelper is InterchainTokenExecutable, OwnableU
         address token,
         uint256 amount
     ) internal override {
-        require(token == KLIMA, "Invalid token");
-        IKLIMA_V0_TOKEN(KLIMA).burn(amount);
+        require(tokenId == EXPECTED_TOKEN_ID, "Invalid tokenId");
+        IKLIMA_V0_TOKEN(token).burn(amount);
     }
 
     /// @dev Reserved storage space per auditor recommendation.
