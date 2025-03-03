@@ -8,11 +8,12 @@ import { Stake, Wallet } from "../generated/schema";
 import { loadOrCreateWallet } from "./utils/utils";
 
 export function handleStakeCreated(event: StakeCreatedEvent): void {
+  log.info("user: {}", [event.params.user.toHexString()]);
   let wallet = loadOrCreateWallet(event.params.user);
   wallet.totalStaked = wallet.totalStaked.plus(event.params.amount);
   wallet.save();
 
-  let stake = new Stake(wallet.id);
+  let stake = new Stake(event.transaction.hash);
   stake.wallet = wallet.id;
   stake.amount = event.params.amount;
   stake.multiplier = event.params.multiplier;
@@ -32,22 +33,40 @@ export function handleStakeBurned(event: StakeBurnedEvent): void {
     return;
   }
 
-  let wallet = loadOrCreateWallet(event.params.user);
+  let wallet = Wallet.load(event.params.user);
+  if (!wallet) {
+    log.error("Wallet not found for use in burned event: {}", [
+      event.transaction.hash.toHexString(),
+    ]);
+    return;
+  }
 
   wallet.totalStaked = wallet.totalStaked.minus(event.params.burnAmount);
   wallet.save();
 
   let stakeRefs = wallet.stakes.load();
 
-  for (let i = stakeRefs.length - 1; i >= 0; i--) {
+  let userStakes: Stake[] = [];
+  for (let i = 0; i < stakeRefs.length; i++) {
+    let stake = Stake.load(stakeRefs[i].id);
+    if (stake) {
+      userStakes.push(stake);
+    }
+  }
+
+  // ensure correct order
+  userStakes.sort((a, b) => {
+    if (a.startTimestamp.gt(b.startTimestamp)) return -1;
+    if (a.startTimestamp.lt(b.startTimestamp)) return 1;
+    return 0;
+  });
+
+  for (let i = 0; i < userStakes.length; i++) {
     if (burnAmount.isZero()) {
       break;
     }
 
-    let stakeEntity = Stake.load(stakeRefs[i].id);
-    if (!stakeEntity) {
-      continue;
-    }
+    let stakeEntity = userStakes[i];
 
     let stakeBalance = stakeEntity.amount;
     if (stakeBalance.isZero()) {
@@ -67,7 +86,7 @@ export function handleStakeBurned(event: StakeBurnedEvent): void {
 }
 
 export function handleStakeClaimed(event: StakeClaimedEvent): void {
-  let stake = Stake.load(event.params.user);
+  let stake = Stake.load(event.transaction.hash);
   if (!stake) {
     log.error("Stake not found for user: {}", [event.params.user.toHex()]);
     return;
