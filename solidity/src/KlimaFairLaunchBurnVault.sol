@@ -69,28 +69,33 @@ contract KlimaFairLaunchBurnVault is Initializable, UUPSUpgradeable, OwnableUpgr
     }
 
     function _AxelarBurn(uint256 amount) internal {
-        // TODO: Implement AxelarBurn
-
-        // Approve KLIMA (on Base) for cross-chain transfer to Polygon
+        require(HelperContractOnPolygon != address(0), "Helper contract not set");
+        require(InterchainTokenService != address(0), "Interchain token service not set");
+        require(amount > 0, "Amount must be greater than 0");
+        
+        // Approve the Interchain Token Service to spend our tokens
         IERC20(KLIMA_V0).approve(InterchainTokenService, amount);
-
-        bytes memory data = new bytes(0);
-
-        // Send cross-chain message and handle gas refunds on failure.
+        
+        // Format the data according to Axelar's expected format
+        // Use simple abi.encode without version prefix
+        bytes memory data = abi.encode(amount, address(this));
+        
+        // Call the Axelar Interchain Token Service
         try IInterchainTokenService(InterchainTokenService).callContractWithInterchainToken{value: msg.value}(
             TOKEN_ID,
             DESTINATION_CHAIN,
             abi.encodePacked(HelperContractOnPolygon),
             amount,
-            data, // empty data
+            data,
             msg.value
         ) {
-            // Success - any remaining gas will be handled by receive()
+            // Success case
+        } catch Error(string memory reason) {
+            // If the call reverts with a reason, revert with that reason
+            revert(reason);
         } catch {
-            // Refund gas on failure
-            (bool success, ) = msg.sender.call{value: msg.value}("");
-            require(success, "Gas refund failed");
-            revert("Cross-chain call failed");
+            // If the call reverts without a reason, revert with a generic message
+            revert("Axelar ITS call failed");
         }
     }
 

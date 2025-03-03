@@ -176,7 +176,7 @@ contract KlimaFairLaunchBurnVaultTest is Test {
         vm.prank(owner);
         vm.expectEmit(true, true, true, true);
         emit FinalBurnPerformed();
-        vault.performFinalBurn();
+        vault.initiateFinalBurn{value: 0.1 ether}();
     }
 
     function test_RevertWhen_NonOwnerPerformsBurn() public {
@@ -184,7 +184,7 @@ contract KlimaFairLaunchBurnVaultTest is Test {
         
         vm.prank(nonOwner);
         vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, nonOwner));
-        vault.performFinalBurn();
+        vault.initiateFinalBurn{value: 0.1 ether}();
     }
 
     // ======== KlimaFairLaunchStaking Setting Tests ========
@@ -327,7 +327,7 @@ contract KlimaFairLaunchBurnVaultTest is Test {
     function test_RevertWhen_StakingNotSet() public {
         vm.prank(owner);
         vm.expectRevert("Staking contract not set");
-        vault.performFinalBurn();
+        vault.initiateFinalBurn{value: 0.1 ether}();
     }
 
     function test_RevertWhen_StakingNotFinalized() public {
@@ -343,7 +343,7 @@ contract KlimaFairLaunchBurnVaultTest is Test {
         vm.startPrank(owner);
         vault.setKlimaFairLaunchStaking(mockStaking);
         vm.expectRevert("Staking contract not finalized");
-        vault.performFinalBurn();
+        vault.initiateFinalBurn{value: 0.1 ether}();
         vm.stopPrank();
     }
 
@@ -366,7 +366,7 @@ contract KlimaFairLaunchBurnVaultTest is Test {
         
         vm.expectEmit(true, true, true, true);
         emit FinalBurnPerformed();
-        vault.performFinalBurn();
+        vault.initiateFinalBurn{value: 0.1 ether}();
         vm.stopPrank();
         
         assertEq(IERC20(KLIMA_V0_ADDR).balanceOf(address(vault)), 0, "Tokens not burned");
@@ -387,7 +387,7 @@ contract KlimaFairLaunchBurnVaultTest is Test {
         
         vm.expectEmit(true, true, true, true);
         emit FinalBurnPerformed();
-        vault.performFinalBurn();
+        vault.initiateFinalBurn{value: 0.1 ether}();
         vm.stopPrank();
         
         assertEq(IERC20(KLIMA_V0_ADDR).balanceOf(address(vault)), 0, "Balance should be zero");
@@ -430,7 +430,7 @@ contract KlimaFairLaunchBurnVaultTest is Test {
         // Try to burn before finalization - should fail
         vm.prank(owner);
         vm.expectRevert("Staking contract not finalized");
-        vault.performFinalBurn();
+        vault.initiateFinalBurn{value: 0.1 ether}();
         
         // Update mock to finalized state
         vm.mockCall(
@@ -443,7 +443,7 @@ contract KlimaFairLaunchBurnVaultTest is Test {
         vm.prank(owner);
         vm.expectEmit();
         emit FinalBurnPerformed();
-        vault.performFinalBurn();
+        vault.initiateFinalBurn{value: 0.1 ether}();
         
         // Verify final state
         assertEq(IERC20(KLIMA_V0_ADDR).balanceOf(address(vault)), 0);
@@ -475,7 +475,7 @@ contract KlimaFairLaunchBurnVaultTest is Test {
         vault.setKlimaFairLaunchStaking(mockStaking);
         
         vm.prank(owner);
-        vault.performFinalBurn();
+        vault.initiateFinalBurn{value: 0.1 ether}();
         
         assertEq(IERC20(KLIMA_V0_ADDR).balanceOf(address(vault)), 0);
     }
@@ -499,11 +499,11 @@ contract KlimaFairLaunchBurnVaultTest is Test {
         
         // First burn succeeds
         vm.prank(owner);
-        vault.performFinalBurn();
+        vault.initiateFinalBurn{value: 0.1 ether}();
         
         // Second burn should still work (with zero balance)
         vm.prank(owner);
-        vault.performFinalBurn();
+        vault.initiateFinalBurn{value: 0.1 ether}();
     }
 
     function test_AddKlimaToBurn_Overflow() public {
@@ -555,7 +555,7 @@ contract KlimaFairLaunchBurnVaultTest is Test {
         vm.prank(owner);
         vm.expectEmit(true, true, true, true);
         emit FinalBurnPerformed();
-        vault.performFinalBurn();
+        vault.initiateFinalBurn{value: 0.1 ether}();
 
         // Verify final state matches events
         assertEq(vault.klimaFairLaunchStaking(), mockStaking);
