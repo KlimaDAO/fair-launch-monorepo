@@ -1,8 +1,6 @@
 import { Bytes, BigInt } from "@graphprotocol/graph-ts";
 import { Stake, Wallet } from "../../generated/schema";
 
-const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
-
 export function loadOrCreateWallet(address: Bytes): Wallet {
   let wallet = Wallet.load(address);
   if (!wallet) {
@@ -13,4 +11,3 @@ export function loadOrCreateWallet(address: Bytes): Wallet {
   }
   return wallet;
 }
-

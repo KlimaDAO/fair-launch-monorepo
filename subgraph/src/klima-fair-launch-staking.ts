@@ -4,7 +4,7 @@ import {
   StakeClaimed as StakeClaimedEvent,
   StakeCreated as StakeCreatedEvent,
 } from "../generated/KlimaFairLaunchStaking/KlimaFairLaunchStaking";
-import { Stake } from "../generated/schema";
+import { Stake, Wallet } from "../generated/schema";
 import { loadOrCreateWallet } from "./utils/utils";
 
 export function handleStakeCreated(event: StakeCreatedEvent): void {
@@ -25,37 +25,44 @@ export function handleStakeCreated(event: StakeCreatedEvent): void {
 export function handleStakeBurned(event: StakeBurnedEvent): void {
   let burnAmount = event.params.burnAmount;
 
+  if (burnAmount.isZero()) {
+    log.error("Burn amount is zero for event: {}", [
+      event.transaction.hash.toHexString(),
+    ]);
+    return;
+  }
+
   let wallet = loadOrCreateWallet(event.params.user);
 
   wallet.totalStaked = wallet.totalStaked.minus(event.params.burnAmount);
   wallet.save();
 
-  let stakeIds = wallet.stakes.load();
+  let stakeRefs = wallet.stakes.load();
 
-  let allStakes: Stake[] = [];
-
-  for (let i = 0; i < stakeIds.length; i++) {
-    let stake = Stake.load(stakeIds[i].id);
-    if (stake) {
-      allStakes.push(stake);
+  for (let i = stakeRefs.length - 1; i >= 0; i--) {
+    if (burnAmount.isZero()) {
+      break;
     }
-  }
 
-  let remainingBurnAmount = burnAmount;
-  for (let i = allStakes.length - 1; i >= 0; i--) {
-    let stake = allStakes[i];
-    if (stake.amount.equals(BigInt.fromI32(0))) {
-      return;
+    let stakeEntity = Stake.load(stakeRefs[i].id);
+    if (!stakeEntity) {
+      continue;
+    }
+
+    let stakeBalance = stakeEntity.amount;
+    if (stakeBalance.isZero()) {
+      continue;
+    }
+
+    if (stakeBalance.ge(burnAmount)) {
+      stakeEntity.amount = stakeBalance.minus(burnAmount);
+      burnAmount = BigInt.zero();
     } else {
-      if (stake.amount.gt(remainingBurnAmount)) {
-        stake.amount = stake.amount.minus(remainingBurnAmount);
-        remainingBurnAmount = BigInt.fromI32(0);
-      } else {
-        remainingBurnAmount = remainingBurnAmount.minus(stake.amount);
-        stake.amount = BigInt.fromI32(0);
-      }
-      stake.save();
+      stakeEntity.amount = BigInt.zero();
+      burnAmount = burnAmount.minus(stakeBalance);
     }
+
+    stakeEntity.save();
   }
 }
 
@@ -65,7 +72,22 @@ export function handleStakeClaimed(event: StakeClaimedEvent): void {
     log.error("Stake not found for user: {}", [event.params.user.toHex()]);
     return;
   }
+
   stake.amount = event.params.klimaAllocation;
   stake.amount = event.params.klimaXAllocation;
   stake.save();
+
+  let wallet = Wallet.load(event.params.user);
+  if (!wallet) {
+    log.error("Wallet not found for user: {}", [event.params.user.toHex()]);
+    return;
+  }
+
+  wallet.klimaAllocation = wallet.klimaAllocation.plus(
+    event.params.klimaAllocation
+  );
+  wallet.klimaXAllocation = wallet.klimaXAllocation.plus(
+    event.params.klimaXAllocation
+  );
+  wallet.save();
 }
