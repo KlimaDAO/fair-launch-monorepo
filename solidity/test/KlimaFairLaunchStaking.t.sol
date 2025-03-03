@@ -74,6 +74,10 @@ contract KlimaFairLaunchStakingTest is Test {
     event KlimaXSupplySet(uint256 newValue);
 
     function setUp() public {
+        // Create and select Base fork
+        uint256 baseFork = vm.createFork("base");
+        vm.selectFork(baseFork);
+        
         owner = makeAddr("owner");
         user1 = makeAddr("user1");
         user2 = makeAddr("user2");
@@ -100,13 +104,8 @@ contract KlimaFairLaunchStakingTest is Test {
         staking = KlimaFairLaunchStaking(deployProxy(address(implementation)));
 
         // Deploy burn vault
-        KlimaFairLaunchBurnVault vaultImplementation = new KlimaFairLaunchBurnVault();
-        burnVault = KlimaFairLaunchBurnVault(deployBurnVaultProxy(address(vaultImplementation)));
+        setupBurnVault();
         
-        // Set staking address in burn vault
-        vm.prank(owner);
-        burnVault.setKlimaFairLaunchStaking(address(staking));
-
         // Replace the hardcoded KLIMA_V0 address with our mock
         bytes memory code = address(klimaV0).code;
         vm.etch(KLIMA_V0_ADDR, code);
@@ -124,12 +123,22 @@ contract KlimaFairLaunchStakingTest is Test {
         return address(new ERC1967Proxy(impl, initData));
     }
 
-    function deployBurnVaultProxy(address impl) internal returns (address) {
-        bytes memory initData = abi.encodeWithSelector(
+    function setupBurnVault() internal {
+        // Deploy burn vault implementation
+        KlimaFairLaunchBurnVault implementation = new KlimaFairLaunchBurnVault();
+        
+        // Deploy burn vault proxy with interchain token service
+        bytes memory vaultInitData = abi.encodeWithSelector(
             KlimaFairLaunchBurnVault.initialize.selector,
-            owner
+            owner,
+            makeAddr("interchainTokenService") // Use a mock address for the interchain token service
         );
-        return address(new ERC1967Proxy(impl, initData));
+        address proxyAddress = address(new ERC1967Proxy(address(implementation), vaultInitData));
+        burnVault = KlimaFairLaunchBurnVault(proxyAddress);
+        
+        // Set the staking contract in the burn vault
+        vm.prank(owner);
+        burnVault.setKlimaFairLaunchStaking(address(staking));
     }
 
     // =============================================================

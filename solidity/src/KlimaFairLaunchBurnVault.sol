@@ -30,8 +30,8 @@ contract KlimaFairLaunchBurnVault is Initializable, UUPSUpgradeable, OwnableUpgr
     mapping(address => uint256) public klimaAmountToBurn;
     uint256 public totalKlimaToBurn;
 
-    address public HelperContractOnPolygon;
-    address public InterchainTokenService = 0xB5FB4BE02232B1bBA4dC8f81dc24C26980dE9e3C;
+    address public helperContractOnPolygon;
+    address public interchainTokenService;
 
     // constants
     address constant KLIMA_V0 = 0xDCEFd8C8fCc492630B943ABcaB3429F12Ea9Fea2; // current klima address on Base
@@ -44,6 +44,8 @@ contract KlimaFairLaunchBurnVault is Initializable, UUPSUpgradeable, OwnableUpgr
     event AddedKlimaAmountToBurn(address indexed user, uint256 amount);
     event EmergencyWithdrawalEnabled();
     event EmergencyWithdrawal(address indexed user, uint256 amount);
+    event HelperContractOnPolygonSet(address indexed helperContractOnPolygon);
+    event InterchainTokenServiceSet(address indexed interchainTokenService);
 
     bool public emergencyWithdrawalEnabled;
 
@@ -52,11 +54,20 @@ contract KlimaFairLaunchBurnVault is Initializable, UUPSUpgradeable, OwnableUpgr
         _disableInitializers();
     }
 
-    /// @notice Initializes the contract with the initial owner
+    /// @notice Initializes the contract with the initial owner and interchain token service
     /// @param initialOwner Address that will be granted owner role
-    function initialize(address initialOwner) external initializer {
+    /// @param _interchainTokenService Address of the interchain token service
+    function initialize(
+        address initialOwner,
+        address _interchainTokenService
+    ) external initializer {
         __Ownable_init(initialOwner);
         __UUPSUpgradeable_init();
+        
+        require(_interchainTokenService != address(0), "Interchain token service cannot be zero address");
+        interchainTokenService = _interchainTokenService;
+        emit InterchainTokenServiceSet(_interchainTokenService);
+        
         emergencyWithdrawalEnabled = false;
     }
 
@@ -69,22 +80,22 @@ contract KlimaFairLaunchBurnVault is Initializable, UUPSUpgradeable, OwnableUpgr
     }
 
     function _AxelarBurn(uint256 amount) internal {
-        require(HelperContractOnPolygon != address(0), "Helper contract not set");
-        require(InterchainTokenService != address(0), "Interchain token service not set");
+        require(helperContractOnPolygon != address(0), "Helper contract not set");
+        require(interchainTokenService != address(0), "Interchain token service not set");
         require(amount > 0, "Amount must be greater than 0");
         
         // Approve the Interchain Token Service to spend our tokens
-        IERC20(KLIMA_V0).approve(InterchainTokenService, amount);
+        IERC20(KLIMA_V0).approve(interchainTokenService, amount);
         
         // Format the data according to Axelar's expected format
         // The first 4 bytes should be the metadata version (0)
         bytes memory metadata = abi.encodePacked(bytes4(0), abi.encode(amount, address(this)));
         
         // Call the Axelar Interchain Token Service with the updated interface
-        try IInterchainTokenService(InterchainTokenService).interchainTransfer{value: msg.value}(
+        try IInterchainTokenService(interchainTokenService).interchainTransfer{value: msg.value}(
             TOKEN_ID,
             DESTINATION_CHAIN,
-            abi.encodePacked(HelperContractOnPolygon),
+            abi.encodePacked(helperContractOnPolygon),
             amount,
             metadata,
             msg.value
@@ -99,12 +110,16 @@ contract KlimaFairLaunchBurnVault is Initializable, UUPSUpgradeable, OwnableUpgr
         }
     }
 
-    function setHelperContractOnPolygon(address _HelperContractOnPolygon) external onlyOwner {
-        HelperContractOnPolygon = _HelperContractOnPolygon;
+    function setHelperContractOnPolygon(address _helperContractOnPolygon) external onlyOwner {
+        require(_helperContractOnPolygon != address(0), "Helper contract cannot be zero address");
+        helperContractOnPolygon = _helperContractOnPolygon;
+        emit HelperContractOnPolygonSet(_helperContractOnPolygon);
     }
 
     function setInterchainTokenService(address _InterchainTokenService) external onlyOwner {
-        InterchainTokenService = _InterchainTokenService;
+        require(_InterchainTokenService != address(0), "Interchain token service cannot be zero address");
+        interchainTokenService = _InterchainTokenService;
+        emit InterchainTokenServiceSet(_InterchainTokenService);
     }
 
     function setKlimaFairLaunchStaking(address _klimaFairLaunchStaking) external onlyOwner {

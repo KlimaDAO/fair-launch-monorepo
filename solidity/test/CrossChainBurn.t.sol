@@ -75,7 +75,8 @@ contract CrossChainBurnTest is Test {
         // Deploy proxy with initialization data
         bytes memory initData = abi.encodeWithSelector(
             KlimaFairLaunchBurnVault.initialize.selector,
-            owner
+            owner,
+            address(baseInterchainService)
         );
         address proxyAddress = address(new ERC1967Proxy(address(implementation), initData));
         burnVault = KlimaFairLaunchBurnVault(proxyAddress);
