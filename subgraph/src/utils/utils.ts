@@ -11,3 +11,7 @@ export function loadOrCreateWallet(address: Bytes): Wallet {
   }
   return wallet;
 }
+
+export function loadWallet(address: Bytes): Wallet | null {
+  return Wallet.load(address);
+}

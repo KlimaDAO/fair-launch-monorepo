@@ -5,10 +5,9 @@ import {
   StakeCreated as StakeCreatedEvent,
 } from "../generated/KlimaFairLaunchStaking/KlimaFairLaunchStaking";
 import { Stake, Wallet } from "../generated/schema";
-import { loadOrCreateWallet } from "./utils/utils";
+import { loadOrCreateWallet, loadWallet } from "./utils/utils";
 
 export function handleStakeCreated(event: StakeCreatedEvent): void {
-  log.info("user: {}", [event.params.user.toHexString()]);
   let wallet = loadOrCreateWallet(event.params.user);
   wallet.totalStaked = wallet.totalStaked.plus(event.params.amount);
   wallet.save();
@@ -33,7 +32,7 @@ export function handleStakeBurned(event: StakeBurnedEvent): void {
     return;
   }
 
-  let wallet = Wallet.load(event.params.user);
+  let wallet = loadWallet(event.params.user);
   if (!wallet) {
     log.error("Wallet not found for use in burned event: {}", [
       event.transaction.hash.toHexString(),
@@ -47,6 +46,7 @@ export function handleStakeBurned(event: StakeBurnedEvent): void {
   let stakeRefs = wallet.stakes.load();
 
   let userStakes: Stake[] = [];
+  // load all stakes
   for (let i = 0; i < stakeRefs.length; i++) {
     let stake = Stake.load(stakeRefs[i].id);
     if (stake) {
@@ -54,7 +54,7 @@ export function handleStakeBurned(event: StakeBurnedEvent): void {
     }
   }
 
-  // ensure correct order
+  // ensure correct order newest to oldest
   userStakes.sort((a, b) => {
     if (a.startTimestamp.gt(b.startTimestamp)) return -1;
     if (a.startTimestamp.lt(b.startTimestamp)) return 1;
@@ -86,27 +86,15 @@ export function handleStakeBurned(event: StakeBurnedEvent): void {
 }
 
 export function handleStakeClaimed(event: StakeClaimedEvent): void {
-  let stake = Stake.load(event.transaction.hash);
-  if (!stake) {
-    log.error("Stake not found for user: {}", [event.params.user.toHex()]);
-    return;
-  }
-
-  stake.amount = event.params.klimaAllocation;
-  stake.amount = event.params.klimaXAllocation;
-  stake.save();
-
-  let wallet = Wallet.load(event.params.user);
+  let wallet = loadWallet(event.params.user);
   if (!wallet) {
     log.error("Wallet not found for user: {}", [event.params.user.toHex()]);
     return;
   }
 
-  wallet.klimaAllocation = wallet.klimaAllocation.plus(
-    event.params.klimaAllocation
-  );
-  wallet.klimaXAllocation = wallet.klimaXAllocation.plus(
-    event.params.klimaXAllocation
-  );
+  wallet.klimaAllocation = event.params.klimaAllocation;
+  wallet.klimaXAllocation = event.params.klimaXAllocation;
+  wallet.totalStaked = event.params.totalUserStaked;
+
   wallet.save();
 }
