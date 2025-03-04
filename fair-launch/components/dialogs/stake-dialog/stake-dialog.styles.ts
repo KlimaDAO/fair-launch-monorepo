@@ -1,6 +1,6 @@
 import { css } from '../../../styled-system/css';
 
-export const dialogOverlay = css({
+export const overlay = css({
   background: 'rgba(71, 85, 105, 0.4)',
   position: 'fixed',
   top: 0,
@@ -12,7 +12,7 @@ export const dialogOverlay = css({
   overflowY: 'auto'
 });
 
-export const dialogContent = css({
+export const content = css({
   minWidth: '30rem',
   background: 'white',
   borderRadius: 'sm',
@@ -30,7 +30,25 @@ export const dialogContent = css({
   gap: '2rem',
 });
 
-export const dialogTitle = css({
+export const icon = css({
+  backgroundColor: 'green.100',
+  borderRadius: '4xl',
+  padding: '0.8rem',
+  width: '4.8rem',
+  height: '4.8rem',
+  display: 'flex',
+  margin: '0 auto',
+  alignItems: 'center',
+  justifyContent: 'center',
+
+  '& svg': {
+    width: '2.4rem',
+    height: '2.4rem',
+    fill: 'green.900',
+  }
+});
+
+export const title = css({
   fontSize: 'base',
   lineHeight: 'base',
   fontWeight: 700,
@@ -38,7 +56,7 @@ export const dialogTitle = css({
   textAlign: 'center',
 });
 
-export const dialogDescription = css({
+export const description = css({
   fontSize: '1.4rem',
   lineHeight: '2rem',
   fontWeight: '400',
@@ -46,15 +64,29 @@ export const dialogDescription = css({
   textAlign: 'center',
 });
 
-export const dialogActions = css({
+export const actions = css({
   display: 'flex',
   flexDirection: 'column',
   gap: '0.8rem',
 });
 
-export const proceedButton = css({
+export const inputContainer = css({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '0.6rem',
+
+  '& label': {
+    fontSize: 'sm',
+    lineHeight: 'sm',
+    fontWeight: '500',
+    color: 'slate.950',
+    textAlign: 'left',
+  }
+});
+
+export const primaryButton = css({
   width: '100%',
-  backgroundColor: '#020617',
+  backgroundColor: 'slate.950',
   color: 'white',
   borderRadius: 'sm',
   border: 'none',
@@ -63,9 +95,10 @@ export const proceedButton = css({
   lineHeight: 'base',
   fontWeight: 500,
   height: '4rem',
+  cursor: 'pointer',
 });
 
-export const cancelButton = css({
+export const secondaryButton = css({
   width: '100%',
   backgroundColor: 'transparent',
   color: 'slate.950',
@@ -76,6 +109,7 @@ export const cancelButton = css({
   fontFamily: 'var(--font-inter)',
   fontWeight: 500,
   height: '4rem',
+  cursor: 'pointer',
 });
 
 export const fairLaunchButton = css({

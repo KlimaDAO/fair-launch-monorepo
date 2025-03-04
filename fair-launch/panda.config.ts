@@ -19,6 +19,9 @@ export default defineConfig({
         md: { value: '0.8rem' },
         lg: { value: '1.2rem' },
         xl: { value: '1.6rem' },
+        '2xl': { value: '2rem' },
+        '3xl': { value: '2.4rem' },
+        '4xl': { value: '3.2rem' },
       },
       colors: {
         white: { value: '#FFFFFF' },

@@ -6,12 +6,12 @@ import { Badge } from "../../components/badge/badge";
 import { Footer } from "../../components/footer/footer";
 import { Navbar } from "../../components/navbar/navbar";
 import { Sidebar } from "../../components/sidebar/sidebar";
-import { ParticipateDialog } from "../../components/dialogs/participate-dialog/participate-dialog";
+import { StakeDialog } from "../../components/dialogs/stake-dialog/stake-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/table/table';
 import * as styles from "./page.styles";
 
 const Page: FC = () => {
-  return (
+  return (  
     <div className={styles.container}>
       <Sidebar />
       <div className={styles.main}>
@@ -22,7 +22,7 @@ const Page: FC = () => {
               <h1 className={styles.title}>My Rewards</h1>
               <Badge title="Phase 1" />
             </div>
-            <ParticipateDialog />
+            <StakeDialog />
           </div>
           <div className={styles.card}>
             <div className={styles.cardInner}>
