@@ -52,6 +52,7 @@ contract KlimaFairLaunchStakingTest is Test {
     address owner;
     address user1;
     address user2;
+    address user3;
     address mockKlima;
     address mockKlimaX;
     MockKlimaV0 public klimaV0;
@@ -81,6 +82,7 @@ contract KlimaFairLaunchStakingTest is Test {
         owner = makeAddr("owner");
         user1 = makeAddr("user1");
         user2 = makeAddr("user2");
+        user3 = makeAddr("user3");
 
         // Deploy all mock tokens
         klimaV0 = new MockKlimaV0();
@@ -90,12 +92,6 @@ contract KlimaFairLaunchStakingTest is Test {
         // Store addresses
         mockKlima = address(klimaToken);
         mockKlimaX = address(klimaXToken);
-
-        // Mint tokens to owner for transfers
-        vm.startPrank(address(this));
-        klimaToken.transfer(owner, 17_500_000 * 1e18);   // Only transfer what we need
-        klimaXToken.transfer(owner, 40_000_000 * 1e18);  // Only transfer what we need
-        vm.stopPrank();
 
         // Deploy implementation contract
         KlimaFairLaunchStaking implementation = new KlimaFairLaunchStaking();
@@ -113,6 +109,23 @@ contract KlimaFairLaunchStakingTest is Test {
         // Give users some tokens
         deal(KLIMA_V0_ADDR, user1, INITIAL_BALANCE);
         deal(KLIMA_V0_ADDR, user2, INITIAL_BALANCE);
+        deal(KLIMA_V0_ADDR, user3, INITIAL_BALANCE);
+
+        // Set up basic contract configuration but don't enable staking yet
+        vm.startPrank(owner);
+        staking.setGrowthRate(274);
+        staking.setBurnVault(address(burnVault));
+        staking.setPreStakingWindow(3 days);
+        staking.setTokenAddresses(mockKlima, mockKlimaX);
+        staking.setKlimaSupply(17_500_000 * 1e18);
+        staking.setKlimaXSupply(40_000_000 * 1e18);
+        vm.stopPrank();
+
+        // Transfer tokens directly to staking contract
+        vm.startPrank(address(this));
+        klimaToken.transfer(address(staking), 17_500_000 * 1e18);
+        klimaXToken.transfer(address(staking), 40_000_000 * 1e18);
+        vm.stopPrank();
     }
 
     function deployProxy(address impl) internal returns (address) {
@@ -139,6 +152,46 @@ contract KlimaFairLaunchStakingTest is Test {
         // Set the staking contract in the burn vault
         vm.prank(owner);
         burnVault.setKlimaFairLaunchStaking(address(staking));
+    }
+
+    // Helper functions for test phases
+    function setupStaking() public {
+        // Enable staking if not already enabled
+        if (staking.startTimestamp() == 0) {
+            vm.prank(owner);
+            uint256 startTime = block.timestamp + 1 days;
+            staking.enableStaking(startTime);
+            
+            // Warp to start of staking
+            vm.warp(startTime);
+        }
+    }
+
+    function createStake(address user, uint256 amount) public {
+        vm.startPrank(user);
+        IERC20(KLIMA_V0_ADDR).approve(address(staking), amount);
+        staking.stake(amount);
+        vm.stopPrank();
+    }
+
+    function warpToFinalization() public {
+        // Warp to after freeze time (91 days from start)
+        vm.warp(staking.freezeTimestamp() + 1);
+    }
+
+    function finalizeStaking() public {
+        // Process batches until finalization is complete
+        warpToFinalization();
+        vm.startPrank(owner);
+        uint256 batchSize = 100;
+        
+        while (staking.finalizationComplete() == 0) {
+            staking.storeTotalPoints(batchSize);
+        }
+        vm.stopPrank();
+        
+        // Verify finalization is complete
+        require(staking.finalizationComplete() == 1, "Finalization failed");
     }
 
     // =============================================================
@@ -242,28 +295,20 @@ contract KlimaFairLaunchStakingTest is Test {
 
     /// @notice Test enabling staking without burn vault fails
     function test_RevertWhen_EnablingStakingWithoutBurnVault() public {
+        // Deploy a fresh instance without setting the burn vault
+        KlimaFairLaunchStaking implementation = new KlimaFairLaunchStaking();
+        KlimaFairLaunchStaking newStaking = KlimaFairLaunchStaking(deployProxy(address(implementation)));
+        
         uint256 futureTimestamp = block.timestamp + 1 days;
         
         vm.prank(owner);
         vm.expectRevert("Burn vault not set");
-        staking.enableStaking(futureTimestamp);
+        newStaking.enableStaking(futureTimestamp);
     }
 
     // Total Points Storage Tests
     /// @notice Test storing total points with single batch
     function test_StoreTotalPointsSingleBatch() public {
-        // Set token addresses first
-        vm.startPrank(owner);
-        staking.setTokenAddresses(mockKlima, mockKlimaX);
-
-        // Set growth rate to ensure point accumulation
-        staking.setGrowthRate(274); // Default growth rate
-
-        // Mint tokens to staking contract
-        klimaToken.transfer(address(staking), staking.KLIMA_SUPPLY() * 1e18);
-        klimaXToken.transfer(address(staking), staking.KLIMAX_SUPPLY() * 1e18);
-        vm.stopPrank();
-
         // Setup staking period
         vm.prank(owner);
         staking.setBurnVault(address(burnVault));
@@ -301,17 +346,6 @@ contract KlimaFairLaunchStakingTest is Test {
 
     /// @notice Test storing total points with multiple batches
     function test_StoreTotalPointsMultipleBatches() public {
-        // Set token addresses first
-        vm.startPrank(owner);
-        staking.setTokenAddresses(mockKlima, mockKlimaX);
-
-        // Set growth rate to ensure point accumulation
-        staking.setGrowthRate(274); // Default growth rate
-
-        // Mint tokens to staking contract
-        klimaToken.transfer(address(staking), staking.KLIMA_SUPPLY() * 1e18);
-        klimaXToken.transfer(address(staking), staking.KLIMAX_SUPPLY() * 1e18);
-        vm.stopPrank();
 
         // Setup staking period
         vm.prank(owner);
@@ -440,15 +474,6 @@ contract KlimaFairLaunchStakingTest is Test {
 
     /// @notice Test setting supplies after finalization fails
     function test_RevertWhen_SettingSuppliesAfterFinalization() public {
-        // Set token addresses first
-        vm.startPrank(owner);
-        staking.setTokenAddresses(mockKlima, mockKlimaX);
-
-        // Mint tokens to staking contract - Use the current supply amounts
-        klimaToken.transfer(address(staking), 17_500_000 * 1e18);  // Changed from 20M to 17.5M
-        klimaXToken.transfer(address(staking), 40_000_000 * 1e18);
-        vm.stopPrank();
-
         // Set up for finalization
         vm.prank(owner);
         staking.setBurnVault(address(burnVault));
@@ -493,7 +518,6 @@ contract KlimaFairLaunchStakingTest is Test {
     function test_StakeWeekOne() public {
         // Setup staking period
         vm.startPrank(owner);
-        staking.setBurnVault(address(burnVault));
         uint256 startTime = block.timestamp + 1 days;
         staking.enableStaking(startTime);
         vm.stopPrank();
@@ -529,7 +553,6 @@ contract KlimaFairLaunchStakingTest is Test {
     function test_StakeWeekTwo() public {
         // Setup staking period
         vm.startPrank(owner);
-        staking.setBurnVault(address(burnVault));
         uint256 startTime = block.timestamp + 1 days;
         staking.enableStaking(startTime);
         vm.stopPrank();
@@ -565,7 +588,6 @@ contract KlimaFairLaunchStakingTest is Test {
     function test_StakeWeekThreePlus() public {
         // Setup staking period
         vm.startPrank(owner);
-        staking.setBurnVault(address(burnVault));
         uint256 startTime = block.timestamp + 1 days;
         staking.enableStaking(startTime);
         vm.stopPrank();
@@ -598,11 +620,10 @@ contract KlimaFairLaunchStakingTest is Test {
     }
 
     /// @notice Test staking before start timestamp fails
-    function test_RevertWhen_StakingBeforeStart() public {
+    function test_RevertWhen_StakingBeforeStartofPreStakingPeriod() public {
         // Setup staking period
         vm.startPrank(owner);
-        staking.setBurnVault(address(burnVault));
-        uint256 startTime = block.timestamp + 1 days;
+        uint256 startTime = block.timestamp + 7 days;
         staking.enableStaking(startTime);
         vm.stopPrank();
 
@@ -620,7 +641,6 @@ contract KlimaFairLaunchStakingTest is Test {
     function test_RevertWhen_StakingAfterFreeze() public {
         // Setup staking period
         vm.startPrank(owner);
-        staking.setBurnVault(address(burnVault));
         uint256 startTime = block.timestamp + 1 days;
         staking.enableStaking(startTime);
         vm.stopPrank();
@@ -644,11 +664,6 @@ contract KlimaFairLaunchStakingTest is Test {
     function test_UnstakeBeforeFreeze() public {
         // Setup - in correct order
         vm.startPrank(owner);
-        staking.setTokenAddresses(mockKlima, mockKlimaX);
-        klimaToken.transfer(address(staking), staking.KLIMA_SUPPLY() * 1e18);
-        klimaXToken.transfer(address(staking), staking.KLIMAX_SUPPLY() * 1e18);
-        staking.setGrowthRate(274);
-        staking.setBurnVault(address(burnVault));
         uint256 startTime = block.timestamp + 1 days;
         staking.enableStaking(startTime);
         vm.stopPrank();
@@ -698,8 +713,6 @@ contract KlimaFairLaunchStakingTest is Test {
     function test_PartialUnstakeBeforeFreeze() public {
         // Setup
         vm.startPrank(owner);
-        staking.setBurnVault(address(burnVault));
-        staking.setGrowthRate(274);
         uint256 startTime = block.timestamp + 1 days;
         staking.enableStaking(startTime);
         vm.stopPrank();
@@ -763,11 +776,6 @@ contract KlimaFairLaunchStakingTest is Test {
     function test_ClaimAfterFreeze() public {
         // Setup
         vm.startPrank(owner);
-        staking.setTokenAddresses(mockKlima, mockKlimaX);
-        klimaToken.transfer(address(staking), staking.KLIMA_SUPPLY() * 1e18);
-        klimaXToken.transfer(address(staking), staking.KLIMAX_SUPPLY() * 1e18);
-        staking.setGrowthRate(274);
-        staking.setBurnVault(address(burnVault));
         uint256 startTime = block.timestamp + 1 days;
         staking.enableStaking(startTime);
         vm.stopPrank();
@@ -801,7 +809,6 @@ contract KlimaFairLaunchStakingTest is Test {
     function test_RevertWhen_ClaimingBeforeFinalization() public {
         // Setup staking period
         vm.startPrank(owner);
-        staking.setBurnVault(address(burnVault));
         uint256 startTime = block.timestamp + 1 days;
         staking.enableStaking(startTime);
         vm.stopPrank();
@@ -948,39 +955,74 @@ contract KlimaFairLaunchStakingTest is Test {
         uint256 user1Points = staking.previewUserPoints(user1);
         uint256 user2Points = staking.previewUserPoints(user2);
 
-        uint256 user1KlimaX = staking.calculateKlimaXAllocation(user1Points);
-        uint256 user2KlimaX = staking.calculateKlimaXAllocation(user2Points);
-
-        assertGt(user1KlimaX, 0, "User1 should get KLIMAX for staking");
+        // Calculate expected KLIMAX allocation
+        uint256 totalPoints = user1Points + user2Points; // This should match finalTotalPoints
+        uint256 klimaxSupply = staking.KLIMAX_SUPPLY();
         
-        // Update this assertion based on the intended behavior
-        assertEq(user2KlimaX, 0, "User2 should get no KLIMAX after unstaking all tokens");
+        uint256 expectedUser1KlimaX = (user1Points * klimaxSupply) / totalPoints;
+        uint256 expectedUser2KlimaX = (user2Points * klimaxSupply) / totalPoints;
+        
+        uint256 actualUser1KlimaX = staking.calculateKlimaXAllocation(user1Points);
+        uint256 actualUser2KlimaX = staking.calculateKlimaXAllocation(user2Points);
+
+        // Verify exact values
+        assertEq(actualUser1KlimaX, expectedUser1KlimaX, "User1 should get the correct KLIMAX allocation");
+        assertEq(actualUser2KlimaX, expectedUser2KlimaX, "User2 should get the correct KLIMAX allocation");
+        
+        // Since user2 unstaked everything, they should have no points and thus no KLIMAX
+        assertEq(user2Points, 0, "User2 should have no points after unstaking all tokens");
+        assertEq(actualUser2KlimaX, 0, "User2 should get no KLIMAX after unstaking all tokens");
     }
 
-    // =============================================================
-    //                       VIEW FUNCTION TESTS
-    // =============================================================
-
-    /// @notice Test KLIMA allocation calculation
+    /// @notice Test KLIMA allocation calculation with multiple users
     function test_CalculateKlimaAllocation() public {
-        // Setup staking with total staked
-        vm.startPrank(owner);
-        staking.setBurnVault(address(burnVault));
-        uint256 startTime = block.timestamp + 1 days;
-        staking.enableStaking(startTime);
-        vm.stopPrank();
-
-        // Create stake
-        vm.warp(startTime);
+        // Setup staking
+        setupStaking();
+        uint256 startTime = staking.startTimestamp();
+        
+        // User1 stakes during pre-staking period
+        vm.warp(startTime - 2 days);
         uint256 stakeAmount = 100 * 1e12;
-        vm.startPrank(user1);
-        IERC20(KLIMA_V0_ADDR).approve(address(staking), stakeAmount);
-        staking.stake(stakeAmount);
-        vm.stopPrank();
-
-        // Calculate allocation
-        uint256 allocation = staking.calculateKlimaAllocation(stakeAmount);
-        assertEq(allocation, staking.KLIMA_SUPPLY());
+        createStake(user1, stakeAmount);
+        
+        // User2 stakes during regular period (week 1)
+        vm.warp(startTime + 1 days);
+        createStake(user2, stakeAmount);
+        
+        // Calculate expected KLIMA allocations
+        uint256 totalStaked = staking.totalStaked();
+        uint256 klimaSupply = staking.KLIMA_SUPPLY();
+        
+        uint256 expectedUser1Klima = (stakeAmount * klimaSupply) / totalStaked;
+        uint256 expectedUser2Klima = (stakeAmount * klimaSupply) / totalStaked;
+        
+        // Get actual KLIMA allocations
+        uint256 actualUser1Klima = staking.calculateKlimaAllocation(stakeAmount);
+        uint256 actualUser2Klima = staking.calculateKlimaAllocation(stakeAmount);
+        
+        // Verify exact values
+        assertEq(actualUser1Klima, expectedUser1Klima, "User1 should get the correct KLIMA allocation");
+        assertEq(actualUser2Klima, expectedUser2Klima, "User2 should get the correct KLIMA allocation");
+        
+        // Since both users staked the same amount, they should get the same KLIMA allocation
+        assertEq(actualUser1Klima, actualUser2Klima, "Both users should get the same KLIMA allocation for equal stakes");
+        
+        // Warp forward to check points
+        vm.warp(startTime + 7 days);
+        
+        // User1 should have more points since their stake has been accruing for longer
+        uint256 user1Points = staking.previewUserPoints(user1);
+        uint256 user2Points = staking.previewUserPoints(user2);
+        
+        console.log("User1 points:", user1Points);
+        console.log("User2 points:", user2Points);
+        
+        assertGt(user1Points, user2Points, "Earlier staker should have more points");
+        
+        // The difference should be approximately 1 day of points
+        uint256 expectedDiff = (stakeAmount * 200 * 1 days * 274) / 100000;
+        uint256 actualDiff = user1Points - user2Points;
+        assertApproxEqRel(actualDiff, expectedDiff, 0.01e18); // Within 1%
     }
 
     /// @notice Test KLIMA_X allocation calculation
@@ -1000,23 +1042,30 @@ contract KlimaFairLaunchStakingTest is Test {
         vm.prank(user2);
         staking.unstake(stakeAmount);
 
-        // Advance to finalization period (after freeze time)
-        uint256 freezeTime = staking.freezeTimestamp();
-        vm.warp(freezeTime + 1 days); // Make sure we're past freeze time
-
-        // Try to finalize with correct number of users
-        vm.startPrank(owner);
-        staking.storeTotalPoints(2); // Pass correct number of users
-        vm.stopPrank();
-
-        // Verify finalization
-        require(staking.finalizationComplete() == 1, "Finalization failed");
-        assertGt(staking.finalTotalPoints(), 0, "Final points should be greater than 0");
+        // Finalize staking
+        finalizeStaking();
 
         // Compare points
         uint256 user1Points = staking.previewUserPoints(user1);
         uint256 user2Points = staking.previewUserPoints(user2);
-        assertGt(user1Points, user2Points);
+
+        // Calculate expected KLIMAX allocation
+        uint256 totalPoints = user1Points + user2Points; // This should match finalTotalPoints
+        uint256 klimaxSupply = staking.KLIMAX_SUPPLY();
+        
+        uint256 expectedUser1KlimaX = (user1Points * klimaxSupply) / totalPoints;
+        uint256 expectedUser2KlimaX = (user2Points * klimaxSupply) / totalPoints;
+        
+        uint256 actualUser1KlimaX = staking.calculateKlimaXAllocation(user1Points);
+        uint256 actualUser2KlimaX = staking.calculateKlimaXAllocation(user2Points);
+
+        // Verify exact values
+        assertEq(actualUser1KlimaX, expectedUser1KlimaX, "User1 should get the correct KLIMAX allocation");
+        assertEq(actualUser2KlimaX, expectedUser2KlimaX, "User2 should get the correct KLIMAX allocation");
+        
+        // Since user2 unstaked everything, they should have no points and thus no KLIMAX
+        assertEq(user2Points, 0, "User2 should have no points after unstaking all tokens");
+        assertEq(actualUser2KlimaX, 0, "User2 should get no KLIMAX after unstaking all tokens");
     }
 
     /// @notice Test point preview calculation
@@ -1082,12 +1131,6 @@ contract KlimaFairLaunchStakingTest is Test {
     function test_CompleteStakingLifecycle() public {
         // Setup
         vm.startPrank(owner);
-        staking.setTokenAddresses(mockKlima, mockKlimaX);
-        klimaToken.transfer(address(staking), staking.KLIMA_SUPPLY() * 1e18);
-        klimaXToken.transfer(address(staking), staking.KLIMAX_SUPPLY() * 1e18);
-        staking.setGrowthRate(274);
-        staking.setBurnVault(address(burnVault));
-        
         uint256 startTime = block.timestamp + 1 days;
         staking.enableStaking(startTime);
         vm.stopPrank();
@@ -1124,12 +1167,6 @@ contract KlimaFairLaunchStakingTest is Test {
     function test_MultipleUsersMultipleStakes() public {
         // Setup
         vm.startPrank(owner);
-        staking.setTokenAddresses(mockKlima, mockKlimaX);
-        klimaToken.transfer(address(staking), staking.KLIMA_SUPPLY() * 1e18);
-        klimaXToken.transfer(address(staking), staking.KLIMAX_SUPPLY() * 1e18);
-        staking.setGrowthRate(274);
-        staking.setBurnVault(address(burnVault));
-        
         uint256 startTime = block.timestamp + 1 days;
         staking.enableStaking(startTime);
         vm.stopPrank();
@@ -1188,50 +1225,6 @@ contract KlimaFairLaunchStakingTest is Test {
         staking.unstake(stakeAmount);
         
         // Further assertions on claimed rewards can follow here...
-    }
-
-    // Helper functions for test phases
-    function setupStaking() public {
-        vm.startPrank(owner);
-        staking.setGrowthRate(274);
-        staking.setBurnVault(address(burnVault));
-        
-        // Set token addresses
-        staking.setTokenAddresses(mockKlima, mockKlimaX);
-        
-        // Set supplies
-        staking.setKlimaSupply(17_500_000);
-        staking.setKlimaXSupply(40_000_000);
-        
-        // Transfer KLIMA tokens to the staking contract
-        klimaToken.transfer(address(staking), staking.KLIMA_SUPPLY() * 1e18);
-        klimaXToken.transfer(address(staking), staking.KLIMAX_SUPPLY() * 1e18);
-        
-        // Enable staking
-        uint256 startTime = block.timestamp + 1 days;
-        staking.enableStaking(startTime);
-        vm.stopPrank();
-        
-        // Warp to start of staking
-        vm.warp(startTime);
-    }
-
-    function createStake(address user, uint256 amount) public {
-        vm.startPrank(user);
-        IERC20(KLIMA_V0_ADDR).approve(address(staking), amount);
-        staking.stake(amount);
-        vm.stopPrank();
-    }
-
-    function warpToFinalization() public {
-        // Warp to after freeze time (91 days from start)
-        vm.warp(staking.startTimestamp() + 91 days);
-    }
-
-    function finalizeStaking() public {
-        vm.prank(owner);
-        staking.storeTotalPoints(1);
-        require(staking.finalizationComplete() == 1, "Finalization failed");
     }
 
     function test_MaximumBurn() public {
@@ -1425,13 +1418,11 @@ contract KlimaFairLaunchStakingTest is Test {
     function test_PauseStateAfterStakingPeriod() public {
         // Setup staking period
         vm.startPrank(owner);
-        staking.setBurnVault(address(burnVault));
         uint256 startTime = block.timestamp + 1 days;
         staking.enableStaking(startTime);
-        vm.stopPrank();
-
+        
         // Pause before staking period
-        vm.prank(owner);
+        
         staking.pause();
         assertTrue(staking.paused(), "Contract should be paused before staking period");
 
@@ -1442,9 +1433,9 @@ contract KlimaFairLaunchStakingTest is Test {
         assertTrue(staking.paused(), "Pause state should be maintained after staking period");
 
         // Unpause after staking period
-        vm.prank(owner);
         staking.unpause();
         assertFalse(staking.paused(), "Contract should be unpaused after staking period");
+        vm.stopPrank();
     }
 
     // =============================================================
@@ -1513,7 +1504,7 @@ contract KlimaFairLaunchStakingTest is Test {
     /// @notice Test extending freeze timestamp fails after finalization
     function test_RevertWhen_ExtendingAfterFinalization() public {
         // Setup staking with finalization
-        setupStaking();  // This already sets up token addresses and transfers tokens
+        setupStaking();
         
         // Create stake
         createStake(user1, 100 * 1e12);
@@ -1802,9 +1793,7 @@ contract KlimaFairLaunchStakingTest is Test {
     function test_PreStaking() public {
         // Setup staking period with pre-staking window
         vm.startPrank(owner);
-        staking.setBurnVault(address(burnVault));
         uint256 startTime = block.timestamp + 5 days;
-        staking.setPreStakingWindow(3 days); // 3 days pre-staking window
         staking.enableStaking(startTime);
         vm.stopPrank();
 
@@ -1837,9 +1826,7 @@ contract KlimaFairLaunchStakingTest is Test {
     function test_RevertWhen_StakingBeforePreStakingWindow() public {
         // Setup staking period with pre-staking window
         vm.startPrank(owner);
-        staking.setBurnVault(address(burnVault));
         uint256 startTime = block.timestamp + 5 days;
-        staking.setPreStakingWindow(3 days); // Changed from 2 days to 3 days (minimum allowed)
         staking.enableStaking(startTime);
         vm.stopPrank();
 
@@ -1859,7 +1846,6 @@ contract KlimaFairLaunchStakingTest is Test {
     function test_MinimumPreStakingWindow() public {
         // Setup staking period with minimum pre-staking window
         vm.startPrank(owner);
-        staking.setBurnVault(address(burnVault));
         uint256 startTime = block.timestamp + 5 days;
         staking.setPreStakingWindow(3 days); // Minimum allowed
         staking.enableStaking(startTime);
@@ -1889,8 +1875,6 @@ contract KlimaFairLaunchStakingTest is Test {
     /// @notice Test that setting pre-staking window to zero fails (as expected)
     function test_RevertWhen_ZeroPreStakingWindow() public {
         vm.startPrank(owner);
-        staking.setBurnVault(address(burnVault));
-        
         // Try to set pre-staking window to zero
         vm.expectRevert("Pre-staking window must be between 3 days and 7 days");
         staking.setPreStakingWindow(0);
@@ -1901,10 +1885,7 @@ contract KlimaFairLaunchStakingTest is Test {
     function test_NoPointsAccrualDuringPreStaking() public {
         // Setup staking period with pre-staking window
         vm.startPrank(owner);
-        staking.setBurnVault(address(burnVault));
-        staking.setGrowthRate(274); // Set growth rate
         uint256 startTime = block.timestamp + 5 days;
-        staking.setPreStakingWindow(3 days); // 3 days pre-staking window
         staking.enableStaking(startTime);
         vm.stopPrank();
 
@@ -1941,9 +1922,7 @@ contract KlimaFairLaunchStakingTest is Test {
     function test_PreStakingMultipleUsers() public {
         // Setup staking period with pre-staking window
         vm.startPrank(owner);
-        staking.setBurnVault(address(burnVault));
         uint256 startTime = block.timestamp + 5 days;
-        staking.setPreStakingWindow(3 days); // 3 days pre-staking window
         staking.enableStaking(startTime);
         vm.stopPrank();
 
@@ -1976,10 +1955,7 @@ contract KlimaFairLaunchStakingTest is Test {
     function test_PreStakingAndRegularStaking() public {
         // Setup staking period with pre-staking window
         vm.startPrank(owner);
-        staking.setBurnVault(address(burnVault));
-        staking.setGrowthRate(274); // Set growth rate
         uint256 startTime = block.timestamp + 5 days;
-        staking.setPreStakingWindow(3 days); // 3 days pre-staking window
         staking.enableStaking(startTime);
         vm.stopPrank();
 
@@ -2014,21 +1990,14 @@ contract KlimaFairLaunchStakingTest is Test {
 
     /// @notice Test unstaking during pre-staking period applies only base burn
     function test_UnstakeDuringPreStaking() public {
-        // Setup staking with pre-staking window
-        vm.startPrank(owner);
-        staking.setBurnVault(address(burnVault));
-        staking.setGrowthRate(274); // Set growth rate
-        uint256 startTime = block.timestamp + 5 days;
-        staking.setPreStakingWindow(3 days); // 3 days pre-staking window
-        staking.enableStaking(startTime);
-        vm.stopPrank();
-
+        // Setup staking
+        setupStaking();
+        uint256 startTime = staking.startTimestamp();
+        
         // User1 stakes during pre-staking period
         vm.warp(startTime - 2 days); // 2 days before official start
         uint256 stakeAmount = 100 * 1e12;
-        vm.startPrank(user1);
-        IERC20(KLIMA_V0_ADDR).approve(address(staking), stakeAmount);
-        staking.stake(stakeAmount);
+        createStake(user1, stakeAmount);
         
         // Check initial stake details
         (uint256 amount, uint256 stakeStartTime,,,,,,) = staking.userStakes(user1, 0);
@@ -2048,6 +2017,7 @@ contract KlimaFairLaunchStakingTest is Test {
         uint256 initialBurnVaultBalance = IERC20(KLIMA_V0_ADDR).balanceOf(address(burnVault));
         
         // Unstake during pre-staking period
+        vm.startPrank(user1);
         vm.expectEmit(true, true, true, true);
         emit StakeBurned(user1, expectedBurn, block.timestamp);
         staking.unstake(stakeAmount);
@@ -2073,22 +2043,14 @@ contract KlimaFairLaunchStakingTest is Test {
 
     /// @notice Test unstaking immediately after pre-staking period ends
     function test_UnstakeAfterPreStakingEnds() public {
-        // Setup staking with pre-staking window
-        vm.startPrank(owner);
-        staking.setBurnVault(address(burnVault));
-        staking.setGrowthRate(274); // Set growth rate
-        uint256 startTime = block.timestamp + 5 days;
-        staking.setPreStakingWindow(3 days); // 3 days pre-staking window
-        staking.enableStaking(startTime);
-        vm.stopPrank();
-
+        // Setup staking
+        setupStaking();
+        uint256 startTime = staking.startTimestamp();
+        
         // User1 stakes during pre-staking period
         vm.warp(startTime - 2 days); // 2 days before official start
         uint256 stakeAmount = 100 * 1e12;
-        vm.startPrank(user1);
-        IERC20(KLIMA_V0_ADDR).approve(address(staking), stakeAmount);
-        staking.stake(stakeAmount);
-        vm.stopPrank();
+        createStake(user1, stakeAmount);
         
         // Warp to just after official start
         vm.warp(startTime + 1 hours);
