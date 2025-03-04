@@ -10,7 +10,7 @@ type PointerDownOutsideEvent = CustomEvent<{ originalEvent: PointerEvent }>;
 
 export const DisclaimerDialog: FC = () => (
   <Dialog.Root>
-    <Dialog.Trigger className={styles.fairLaunchButton}>
+    <Dialog.Trigger>
       <MdCelebration />
       Risk Disclaimer
     </Dialog.Trigger>

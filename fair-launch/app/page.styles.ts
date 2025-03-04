@@ -21,22 +21,22 @@ export const content = css({
 });
 
 export const title = css({
-  color: '#020617',  // todo - variable
+  color: 'slate.950',  // todo - variable
   fontSize: '9.6rem',
   lineHeight: '9.6rem',
   fontWeight: '700',
 });
 
 export const subtitle = css({
-  color: '#020617', // todo - variable
+  color: 'slate.950', // todo - variable
   fontSize: '3rem',
   lineHeight: '3.6rem',
   fontWeight: '400',
 });
 
 export const connectButton = css({
-  backgroundColor: '#020617',
-  color: '#fff',
+  backgroundColor: 'slate.950',
+  color: 'white',
   borderRadius: '0.4rem',
   border: 'none',
   padding: '0.8rem 2.4rem',
@@ -48,7 +48,7 @@ export const connectButton = css({
 });
 
 export const learnMore = css({
-  color: '#020617',
+  color: 'slate.950',
   textDecoration: 'underline',
   fontSize: '1.4rem',
   fontWeight: '400',

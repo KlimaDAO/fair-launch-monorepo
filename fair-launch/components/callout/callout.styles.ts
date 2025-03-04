@@ -1,7 +1,7 @@
 import { css } from '../../styled-system/css';
 
 export const callout = css({
-  backgroundColor: '#020617',
+  backgroundColor: 'slate.950',
   padding: '2rem',
   borderRadius: '0.8rem',
 });

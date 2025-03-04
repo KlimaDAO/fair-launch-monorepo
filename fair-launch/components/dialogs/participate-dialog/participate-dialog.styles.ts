@@ -15,7 +15,7 @@ export const dialogOverlay = css({
 export const dialogContent = css({
   minWidth: '30rem',
   background: 'white',
-  borderRadius: '0.4rem',
+  borderRadius: 'sm',
   zIndex: 1000,
   position: 'fixed',
   top: '20%',
@@ -31,10 +31,10 @@ export const dialogContent = css({
 });
 
 export const dialogTitle = css({
-  fontSize: '1.6rem',
-  lineHeight: '2.4rem',
-  fontWeight: '700',
-  color: '#020617',
+  fontSize: 'base',
+  lineHeight: 'base',
+  fontWeight: 700,
+  color: 'slate.950',
   textAlign: 'center',
 });
 
@@ -42,7 +42,7 @@ export const dialogDescription = css({
   fontSize: '1.4rem',
   lineHeight: '2rem',
   fontWeight: '400',
-  color: '#020617',
+  color: 'slate.950',
   textAlign: 'center',
 });
 
@@ -55,38 +55,38 @@ export const dialogActions = css({
 export const proceedButton = css({
   width: '100%',
   backgroundColor: '#020617',
-  color: '#fff',
-  borderRadius: '0.4rem',
+  color: 'white',
+  borderRadius: 'sm',
   border: 'none',
-  // padding: '1rem',
   fontFamily: 'var(--font-inter)',
-
-  fontSize: '1.6rem',
-  fontWeight: '500',
+  fontSize: 'base',
+  lineHeight: 'base',
+  fontWeight: 500,
   height: '4rem',
 });
 
 export const cancelButton = css({
   width: '100%',
   backgroundColor: 'transparent',
-  color: '#020617',
+  color: 'slate.950',
   border: '0.1rem solid #020617',
-  borderRadius: '0.4rem',
-  // padding: '1rem',
-  fontSize: '1.6rem',
+  borderRadius: 'sm',
+  fontSize: 'base',
+  lineHeight: 'base',
   fontFamily: 'var(--font-inter)',
-  fontWeight: '500',
+  fontWeight: 500,
   height: '4rem',
 });
 
 export const fairLaunchButton = css({
-  backgroundColor: '#22c55e',
-  color: '#fff',
-  borderRadius: '0.4rem',
+  backgroundColor: 'green.500',
+  color: 'white',
+  borderRadius: 'sm',
   border: 'none',
-  padding: '0.8prem 2.4rem',
-  fontSize: '1.6rem',
-  fontWeight: '500',
+  padding: '0.8rem 2.4rem',
+  fontSize: 'base',
+  lineHeight: 'base',
+  fontWeight: 500,
   height: '5.2rem',
   display: 'flex',
   alignItems: 'center',

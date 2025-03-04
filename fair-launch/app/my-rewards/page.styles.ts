@@ -39,10 +39,10 @@ export const titleContainer = css({
 });
 
 export const title = css({
-  color: '#020617',  // todo - variable
-  fontSize: '3.6rem',
-  lineHeight: '4rem',
+  color: 'slate.950',
+  fontSize: '4xl',
   fontWeight: 700,
+  lineHeight: '4xl',
 });
 
 export const twoCols = css({
@@ -60,7 +60,7 @@ export const twoCols = css({
 
 export const card = css({
   width: '100%',
-  backgroundColor: '#fff',
+  backgroundColor: 'white',
 
   boxShadow: '0 0.1rem 0.2rem -0.1rem rgba(0, 0, 0, 0.1)',
   filter: 'drop-shadow(0 0.1rem 0.3rem rgba(0, 0, 0, 0.1))',
@@ -87,7 +87,7 @@ export const cardInner = css({
 export const divider = css({
   width: '100%',
   height: '0.1rem',
-  backgroundColor: '#cbd5e1',
+  backgroundColor: 'slate.300',
 
   lg: {
     width: '0.1rem',

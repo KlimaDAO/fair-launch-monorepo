@@ -34,7 +34,7 @@ export const title = css({
   fontSize: '1.6rem',
   lineHeight: '2.4rem',
   fontWeight: '700',
-  color: '#020617',
+  color: 'slate.950',
   textAlign: 'center',
 });
 
@@ -42,7 +42,7 @@ export const description = css({
   fontSize: '1.4rem',
   lineHeight: '2rem',
   fontWeight: '400',
-  color: '#020617',
+  color: 'slate.950',
   textAlign: 'center',
 });
 
@@ -54,8 +54,8 @@ export const actions = css({
 
 export const proceedButton = css({
   width: '100%',
-  backgroundColor: '#020617',
-  color: '#fff',
+  backgroundColor: 'slate.950',
+  color: 'white',
   borderRadius: '0.4rem',
   border: 'none',
   // padding: '1rem',
@@ -69,27 +69,11 @@ export const proceedButton = css({
 export const cancelButton = css({
   width: '100%',
   backgroundColor: 'transparent',
-  color: '#020617',
-  border: '0.1rem solid #020617',
+  color: 'slate.950',
+  border: '0.1rem solid slate.950',
   borderRadius: '0.4rem',
-  // padding: '1rem',
   fontSize: '1.6rem',
   fontFamily: 'var(--font-inter)',
   fontWeight: '500',
   height: '4rem',
-});
-
-export const fairLaunchButton = css({
-  backgroundColor: '#22c55e',
-  color: '#fff',
-  borderRadius: '4px',
-  border: 'none',
-  padding: '8px 24px',
-  fontSize: '16px',
-  fontWeight: '500',
-  height: '40px',
-  display: 'flex',
-  alignItems: 'center',
-  gap: '8px',
-  cursor: 'pointer',
 });

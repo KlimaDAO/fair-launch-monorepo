@@ -4,12 +4,12 @@ export const footer = css({
   width: '100%',
   height: '41.6rem',
   minHeight: '41.6rem',
-  backgroundColor: '#020617',
+  backgroundColor: 'slate.950',
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
   justifyContent: 'center',
-  color: '#fff',
+  color: 'white',
   gap: '3.2rem',
 
   lg: {
@@ -27,7 +27,7 @@ export const navLinks = css({
   gap: '1.6rem',
 
   '& a': {
-    color: '#fff',
+    color: 'white',
     fontSize: '1.4rem',
     fontWeight: 400,
 
@@ -50,7 +50,7 @@ export const socials = css({
   gap: '1.6rem',
 
   '& svg': {
-    fill: '#CBD5E1',
+    fill: 'slate.300',
     fontSize: '2rem',
   }
 });
@@ -58,5 +58,5 @@ export const socials = css({
 export const copyright = css({
   fontSize: '1.4rem',
   fontWeight: 400,
-  color: '#CBD5E1',
+  color: 'slate.300',
 });
