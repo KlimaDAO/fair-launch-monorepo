@@ -82,21 +82,22 @@ export const cancelButton = css({
 export const fairLaunchButton = css({
   backgroundColor: '#22c55e',
   color: '#fff',
-  borderRadius: '4px',
+  borderRadius: '0.4rem',
   border: 'none',
-  padding: '8px 24px',
-  fontSize: '16px',
+  padding: '0.8prem 2.4rem',
+  fontSize: '1.6rem',
   fontWeight: '500',
-  height: '40px',
+  height: '5.2rem',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  gap: '8px',
+  gap: '0.8rem',
   cursor: 'pointer',
   width: '100%',
 
   lg: {
     width: '100%',
-    maxWidth: '32rem'
+    maxWidth: '32rem',
+    height: '4rem',
   }
 });

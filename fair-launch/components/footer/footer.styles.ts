@@ -2,23 +2,29 @@ import { css } from '../../styled-system/css';
 
 export const footer = css({
   width: '100%',
-  height: '21.6rem',
-  minHeight: '21.6rem',
+  height: '41.6rem',
+  minHeight: '41.6rem',
   backgroundColor: '#020617',
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
   justifyContent: 'center',
   color: '#fff',
-  gap: '4rem',
+  gap: '3.2rem',
+
+  lg: {
+    gap: '4rem',
+    height: '21.6rem',
+    minHeight: '21.6rem',
+  }
 });
 
 export const navLinks = css({
   display: 'flex',
-  flexDirection: 'row',
+  flexDirection: 'column',
   alignItems: 'center',
   justifyContent: 'center',
-  gap: '4rem',
+  gap: '1.6rem',
 
   '& a': {
     color: '#fff',
@@ -29,6 +35,11 @@ export const navLinks = css({
       textDecoration: 'underline',
     }
   },
+
+  lg: {
+    gap: '4rem',
+    flexDirection: 'row',
+  }
 });
 
 export const socials = css({

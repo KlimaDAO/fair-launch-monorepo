@@ -85,7 +85,12 @@ export const cardInner = css({
 });
 
 export const divider = css({
-  height: '100%',
-  width: '0.1rem',
+  width: '100%',
+  height: '0.1rem',
   backgroundColor: '#cbd5e1',
+
+  lg: {
+    width: '0.1rem',
+    height: '100%',
+  }
 });
