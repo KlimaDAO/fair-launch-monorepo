@@ -1,0 +1,26 @@
+import type { FC } from "react";
+import Link from "next/link";
+import { Footer } from "../components/footer/footer";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { Tooltip } from "../components/tooltip/tooltip";
+import * as styles from "./page.styles";
+
+const Page: FC = () => (
+  <div className={styles.container}>
+    <div className={styles.main}>
+      <div className={styles.content}>
+        <h1 className={styles.title}>Welcome</h1>
+        <p className={styles.subtitle}>To Klima Fair Launch 2025.</p>
+        <p>Connect a wallet to get started.</p>
+        <ConnectButton />
+        <Link className={styles.learnMore} href="/my-rewards">
+          Learn more about Klima Fair Launch
+        </Link>
+      </div>
+      <Footer />
+    </div>
+  </div>
+);
+
+
+export default Page;

@@ -1,0 +1,17 @@
+import { css } from '../../styled-system/css';
+
+export const button = css({
+  width: '100%',
+  backgroundColor: '#64748B',
+  cursor: 'pointer',
+  padding: '0.8rem 1.6rem',
+  borderRadius: '3.6rem',
+  fontSize: '1.5rem',
+  fontWeight: '400',
+  fontFamily: 'var(--font-inter)',
+  textAlign: 'center',
+  color: '#fff',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '0.8rem',
+})
