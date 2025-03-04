@@ -2,7 +2,6 @@ import type { FC } from "react";
 import Link from "next/link";
 import { Footer } from "../components/footer/footer";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { Tooltip } from "../components/tooltip/tooltip";
 import * as styles from "./page.styles";
 
 const Page: FC = () => (

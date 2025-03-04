@@ -62,6 +62,9 @@ export const description = css({
   fontWeight: '400',
   color: 'slate.950',
   textAlign: 'center',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '2rem',
 });
 
 export const actions = css({

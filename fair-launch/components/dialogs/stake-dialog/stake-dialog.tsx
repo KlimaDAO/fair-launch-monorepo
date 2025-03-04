@@ -6,15 +6,13 @@ import { Dialog } from "radix-ui";
 import { MdCelebration, MdLibraryAdd } from "react-icons/md";
 import { Input } from "../../input/input";
 import * as styles from './stake-dialog.styles';
+import { Alert } from "../../alert/alert";
 
 type FocusOutsideEvent = CustomEvent<{ originalEvent: FocusEvent }>;
 type PointerDownOutsideEvent = CustomEvent<{ originalEvent: PointerEvent }>;
 
-
 export const StakeDialog: FC = () => {
-
   const [shouldProceed, setShouldProceed] = useState(false);
-
   return (
     <Dialog.Root>
       <Dialog.Trigger className={styles.fairLaunchButton}>
@@ -69,6 +67,10 @@ export const StakeDialog: FC = () => {
                   </label>
                   <Input id="stake-amount" placeholder="0.00" />
                 </div>
+                <Alert variant="default">
+                  <strong>Note:</strong> 
+                  It is best to leave this amount staked until the end of the Fair Launch period. Unstaking your KLIMA early will result in a penalty.
+                </Alert>
               </Dialog.Description>
               <div className={styles.actions}>
                 <button className={styles.primaryButton}>
