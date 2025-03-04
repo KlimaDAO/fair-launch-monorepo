@@ -2012,4 +2012,115 @@ contract KlimaFairLaunchStakingTest is Test {
         assertApproxEqRel(actualDiff, expectedDiff, 0.01e18); // Within 1%
     }
 
+    /// @notice Test unstaking during pre-staking period applies only base burn
+    function test_UnstakeDuringPreStaking() public {
+        // Setup staking with pre-staking window
+        vm.startPrank(owner);
+        staking.setBurnVault(address(burnVault));
+        staking.setGrowthRate(274); // Set growth rate
+        uint256 startTime = block.timestamp + 5 days;
+        staking.setPreStakingWindow(3 days); // 3 days pre-staking window
+        staking.enableStaking(startTime);
+        vm.stopPrank();
+
+        // User1 stakes during pre-staking period
+        vm.warp(startTime - 2 days); // 2 days before official start
+        uint256 stakeAmount = 100 * 1e12;
+        vm.startPrank(user1);
+        IERC20(KLIMA_V0_ADDR).approve(address(staking), stakeAmount);
+        staking.stake(stakeAmount);
+        
+        // Check initial stake details
+        (uint256 amount, uint256 stakeStartTime,,,,,,) = staking.userStakes(user1, 0);
+        assertEq(amount, stakeAmount, "Stake amount should match");
+        assertEq(stakeStartTime, startTime, "Stake start time should be set to official start time");
+        
+        // Calculate expected burn amount (should be 25% base burn only)
+        uint256 expectedBurn = (stakeAmount * 25) / 100; // 25% base burn
+        
+        // Verify that calculateBurn returns the expected amount
+        uint256 calculatedBurn = staking.calculateBurn(stakeAmount, stakeStartTime);
+        assertEq(calculatedBurn, expectedBurn, "During pre-staking, burn should be 25% base burn only");
+        
+        // Get initial balances
+        uint256 initialUserBalance = IERC20(KLIMA_V0_ADDR).balanceOf(user1);
+        uint256 initialContractBalance = IERC20(KLIMA_V0_ADDR).balanceOf(address(staking));
+        uint256 initialBurnVaultBalance = IERC20(KLIMA_V0_ADDR).balanceOf(address(burnVault));
+        
+        // Unstake during pre-staking period
+        vm.expectEmit(true, true, true, true);
+        emit StakeBurned(user1, expectedBurn, block.timestamp);
+        staking.unstake(stakeAmount);
+        vm.stopPrank();
+        
+        // Verify user received correct amount back (stake amount - burn amount)
+        uint256 expectedReturn = stakeAmount - expectedBurn;
+        uint256 actualReturn = IERC20(KLIMA_V0_ADDR).balanceOf(user1) - initialUserBalance;
+        assertEq(actualReturn, expectedReturn, "User should receive stake amount minus burn amount");
+        
+        // Verify burn vault received the burn amount
+        uint256 burnVaultReceived = IERC20(KLIMA_V0_ADDR).balanceOf(address(burnVault)) - initialBurnVaultBalance;
+        assertEq(burnVaultReceived, expectedBurn, "Burn vault should receive the burn amount");
+        
+        // Verify contract balance decreased by stake amount
+        uint256 contractBalanceDecrease = initialContractBalance - IERC20(KLIMA_V0_ADDR).balanceOf(address(staking));
+        assertEq(contractBalanceDecrease, stakeAmount, "Contract balance should decrease by stake amount");
+        
+        // Verify stake was removed
+        (uint256 remainingAmount,,,,,,,) = staking.userStakes(user1, 0);
+        assertEq(remainingAmount, 0, "Stake should be fully unstaked");
+    }
+
+    /// @notice Test unstaking immediately after pre-staking period ends
+    function test_UnstakeAfterPreStakingEnds() public {
+        // Setup staking with pre-staking window
+        vm.startPrank(owner);
+        staking.setBurnVault(address(burnVault));
+        staking.setGrowthRate(274); // Set growth rate
+        uint256 startTime = block.timestamp + 5 days;
+        staking.setPreStakingWindow(3 days); // 3 days pre-staking window
+        staking.enableStaking(startTime);
+        vm.stopPrank();
+
+        // User1 stakes during pre-staking period
+        vm.warp(startTime - 2 days); // 2 days before official start
+        uint256 stakeAmount = 100 * 1e12;
+        vm.startPrank(user1);
+        IERC20(KLIMA_V0_ADDR).approve(address(staking), stakeAmount);
+        staking.stake(stakeAmount);
+        vm.stopPrank();
+        
+        // Warp to just after official start
+        vm.warp(startTime + 1 hours);
+        
+        // Calculate expected burn amount (should be 25% base burn + minimal time-based burn)
+        uint256 baseBurn = (stakeAmount * 25) / 100; // 25% base burn
+        // Instead of dividing hours by days directly, use whole numbers
+        uint256 hoursStaked = 1;
+        uint256 hoursInYear = 24 * 365;
+        uint256 timeBasedBurnPercent = (hoursStaked * 75) / hoursInYear;
+        uint256 timeBasedBurn = (stakeAmount * timeBasedBurnPercent) / 100;
+        uint256 expectedBurn = baseBurn + timeBasedBurn;
+        
+        // Verify that calculateBurn returns the expected amount
+        uint256 calculatedBurn = staking.calculateBurn(stakeAmount, startTime);
+        assertEq(calculatedBurn, expectedBurn, "Just after staking starts, burn should be 25% base burn + minimal time-based burn");
+        
+        // Unstake after pre-staking period
+        vm.startPrank(user1);
+        vm.expectEmit(true, true, true, true);
+        emit StakeBurned(user1, calculatedBurn, block.timestamp);
+        staking.unstake(stakeAmount);
+        vm.stopPrank();
+        
+        // Verify user received correct amount back (stake amount - burn amount)
+        uint256 expectedReturn = stakeAmount - calculatedBurn;
+        assertApproxEqRel(
+            IERC20(KLIMA_V0_ADDR).balanceOf(user1), 
+            INITIAL_BALANCE - stakeAmount + expectedReturn, 
+            0.01e18, // Within 1%
+            "User should receive stake amount minus burn amount"
+        );
+    }
+
 } 

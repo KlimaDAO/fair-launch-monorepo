@@ -180,8 +180,11 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     /// @dev Before freezeTimestamp: tokens are partially burned based on stake duration
     /// @dev After freezeTimestamp: converts stake to KLIMA and KLIMA_X tokens
     function unstake(uint256 amount) public whenNotPaused {
-        // Update user's points before unstaking
-        _updateUser(msg.sender);
+        // Skip point updates during pre-staking to prevent errors
+        if (block.timestamp >= startTimestamp) {
+            // Only update points if we're not in pre-staking
+            _updateUser(msg.sender);
+        }
 
         // Route to appropriate unstake function based on timestamp
         if (block.timestamp < freezeTimestamp) {
@@ -468,8 +471,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
             Stake[] memory stakes = userStakes[staker];
             
             // Update points for this staker's stakes
-            _updateOrganicPoints(staker);
-            _updateBurnDistribution(staker);
+            _updateUser(staker);
 
             // Reload stakes after updates
             stakes = userStakes[staker];
@@ -569,14 +571,19 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     /// @param amount Amount of tokens being unstaked
     /// @param stakeStartTime Timestamp when the stake was created
     /// @return Amount of tokens to burn
-    /// @dev Base burn is 25%, additional burn up to 75% based on stake duration
+    /// @dev Base burn is 25% of amount, additional burn up to 75% based on stake duration to total 100% max burn
     function calculateBurn(uint256 amount, uint256 stakeStartTime) public view returns (uint256) {
         // Base burn is 25% of amount
         uint256 baseBurn = (amount * 25) / 100;
 
-        // Calculate time-based burn percentage (capped at 75%)
-        uint256 daysStaked = (block.timestamp - stakeStartTime) / 1 days;
-        uint256 timeBasedBurnPercent = (daysStaked * 75) / 365;
+        // If we're still in pre-staking period, only apply base burn
+        if (block.timestamp < startTimestamp || stakeStartTime > block.timestamp) {
+            return baseBurn;
+        }
+
+        // Calculate time-based burn percentage with higher precision (capped at 75%)
+        // Use hours instead of days for more precision
+        uint256 timeBasedBurnPercent = (((block.timestamp - stakeStartTime) / 1 hours) * 75) / (24 * 365);
         if (timeBasedBurnPercent > 75) timeBasedBurnPercent = 75;
 
         // Calculate time-based burn amount
