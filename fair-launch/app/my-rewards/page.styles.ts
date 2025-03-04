@@ -48,12 +48,12 @@ export const title = css({
 export const twoCols = css({
   gap: '2rem',
   display: 'flex',
-  alignItems: 'baseline',
+  alignItems: 'center',
   flexDirection: 'column',
   justifyContent: 'space-between',
 
   lg: {
-    alignItems: 'center',
+    alignItems: 'flex-start',
     flexDirection: 'row',
   }
 });
