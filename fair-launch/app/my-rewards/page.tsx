@@ -1,15 +1,14 @@
 import Image from 'next/image';
 import type { FC } from "react";
+import klimav1Logo from "../../public/tokens/klima-v1.svg";
+import gklimaLogo from "../../public/tokens/g-klima.svg";
+import { Badge } from "../../components/badge/badge";
 import { Footer } from "../../components/footer/footer";
 import { Navbar } from "../../components/navbar/navbar";
 import { Sidebar } from "../../components/sidebar/sidebar";
-import { Badge } from "../../components/badge/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/table/table';
 import { ParticipateDialog } from "../../components/dialogs/participate-dialog/participate-dialog";
-
-import styles from "./styles.module.css";
-import gklimaLogo from "../../public/tokens/g-klima.svg";
-import klimav1Logo from "../../public/tokens/klima-v1.svg";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/table/table';
+import * as styles from "./page.styles";
 
 const Page: FC = () => {
   return (

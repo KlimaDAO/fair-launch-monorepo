@@ -6,9 +6,12 @@ import { Sidebar } from "../../components/sidebar/sidebar";
 import klimav1Logo from "../../public/tokens/klima-v1.svg";
 import { Dropdown } from '../../components/dropdown/dropdown';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/table/table';
-import styles from "./styles.module.css";
+import * as styles from "./page.styles";
 
-const dropdownItems = [{ value: '1', label: 'Points - high to low' }, { value: '2', label: 'Points - low to high' }];
+const dropdownItems = [
+  { value: '1', label: 'Points - high to low' },
+  { value: '2', label: 'Points - low to high' }
+];
 
 const Page: FC = () => {
   return (
