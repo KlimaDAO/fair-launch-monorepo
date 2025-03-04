@@ -27,8 +27,8 @@ const Page: FC = () => {
           </div>
           <div className={styles.card}>
             <div className={styles.cardInner}>
-              <h5 style={{ fontSize: '16px', fontWeight: '400', color: '#64748B' }}>My KLIMA(v0) Deposited</h5>
-              <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <h5 className={styles.cardTitle}>My KLIMA(v0) Deposited</h5>
+              <div className={styles.cardContents}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '20px', fontWeight: '700' }} id='step1'>
                   <Image src={klimav1Logo} alt="Klima V1 Logo" />
                   21,340,466
@@ -38,15 +38,15 @@ const Page: FC = () => {
             </div>
             <div className={styles.divider} />
             <div className={styles.cardInner}>
-              <h5 style={{ fontSize: '16px', fontWeight: '400', color: '#64748B' }}>$TVL</h5>
-              <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <h5 className={styles.cardTitle}>$TVL</h5>
+              <div className={styles.cardContents}>
                 <div style={{ fontSize: '20px', fontWeight: '700' }} id='step3'>$14,000,000</div>
               </div>
             </div>
             <div className={styles.divider} />
             <div className={styles.cardInner}>
-              <h5 style={{ fontSize: '16px', fontWeight: '400', color: '#64748B' }}>KLIMA(v1) Burned</h5>
-              <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <h5 className={styles.cardTitle}>KLIMA(v1) Burned</h5>
+              <div className={styles.cardContents}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '20px', fontWeight: '700' }} id='step1'>
                   <Image src={klimav1Logo} alt="Klima V1 Logo" />
                   40,000,000
@@ -57,8 +57,8 @@ const Page: FC = () => {
 
           <div className={styles.card}>
             <div className={styles.cardInner}>
-              <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h5 style={{ fontSize: '16px', fontWeight: '400', color: '#64748B' }}>Leaderboard</h5>
+              <div className={styles.cardContents}>
+                <h5 className={styles.cardTitle}>Leaderboard</h5>
                 <Dropdown
                   selected={dropdownItems[0]}
                   items={[

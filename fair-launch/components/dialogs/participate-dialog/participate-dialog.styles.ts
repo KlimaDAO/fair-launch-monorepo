@@ -90,6 +90,13 @@ export const fairLaunchButton = css({
   height: '40px',
   display: 'flex',
   alignItems: 'center',
+  justifyContent: 'center',
   gap: '8px',
   cursor: 'pointer',
+  width: '100%',
+
+  lg: {
+    width: '100%',
+    maxWidth: '32rem'
+  }
 });

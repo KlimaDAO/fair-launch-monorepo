@@ -2,13 +2,17 @@ import { css } from '../../styled-system/css';
 
 export const sidebar = css({
   width: '22.4rem',
+  display: 'none',
   height: '100%',
   padding: '2.4rem 1.2rem',
   backgroundColor: '#fff',
   borderRight: '0.1rem solid #cbd5e1',
-  display: 'flex',
   flexDirection: 'column',
-  gap: '4rem'
+  gap: '4rem',
+  
+  lg: {
+    display: 'flex',
+  }
 });
 
 export const title = css({

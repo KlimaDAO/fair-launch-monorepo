@@ -17,16 +17,25 @@ export const content = css({
   flex: 1,
   gap: '2rem',
   display: 'flex',
-  padding: '3.6rem 4rem',
+  padding: '3.2rem 1.6rem',
   flexDirection: 'column',
+
+  lg: {
+    padding: '3.6rem 4rem',
+  }
 });
 
 export const titleContainer = css({
-  display: 'flex',
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'center',
+  width: '100%',
   gap: '2.4rem',
+  display: 'flex',
+  alignItems: 'center',
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+
+  lg: {
+    justifyContent: 'flex-start'
+  }
 });
 
 export const title = css({
@@ -40,8 +49,13 @@ export const twoCols = css({
   gap: '2rem',
   display: 'flex',
   alignItems: 'baseline',
-  flexDirection: 'row',
+  flexDirection: 'column',
   justifyContent: 'space-between',
+
+  lg: {
+    alignItems: 'center',
+    flexDirection: 'row',
+  }
 });
 
 export const card = css({
@@ -53,8 +67,12 @@ export const card = css({
   borderRadius: '0.8rem',
 
   display: 'flex',
-  flexDirection: 'row',
-  justifyContent: 'space-between'
+  flexDirection: 'column',
+  justifyContent: 'space-between',
+
+  lg: {
+    flexDirection: 'row',
+  }
 });
 
 export const cardInner = css({
@@ -70,15 +88,4 @@ export const divider = css({
   height: '100%',
   width: '0.1rem',
   backgroundColor: '#cbd5e1',
-});
-
-export const fairLaunchButton = css({
-  backgroundColor: '#22c55e',
-  color: '#fff',
-  borderRadius: '0.4rem',
-  border: 'none',
-  padding: '0.8rem 2.4rem',
-  fontSize: '1.6rem',
-  fontWeight: 500,
-  height: '4rem',
 });
