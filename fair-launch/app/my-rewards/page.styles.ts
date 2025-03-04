@@ -10,7 +10,7 @@ export const main = css({
   gap: 0,
   display: 'flex',
   flexDirection: 'column',
-  width: 'calc(100% - 224px)'
+  width: 'calc(100% - var(--sidebar-width))'
 });
 
 export const content = css({

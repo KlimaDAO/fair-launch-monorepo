@@ -9,6 +9,9 @@ export default defineConfig({
     "./components/**/*.{js,jsx,ts,tsx}",
   ],
   outdir: "styled-system",
+  globalVars: {
+    'sidebar-width': { value: '22.4rem' },
+  },
   theme: {
     tokens: {
       radii: {
