@@ -5,11 +5,11 @@ export const sidebar = css({
   display: 'none',
   height: '100%',
   padding: '2.4rem 1.2rem',
-  backgroundColor: '#fff',
+  backgroundColor: 'white',
   borderRight: '0.1rem solid #cbd5e1',
   flexDirection: 'column',
   gap: '4rem',
-  
+
   lg: {
     display: 'flex',
   }
@@ -17,8 +17,8 @@ export const sidebar = css({
 
 export const title = css({
   fontSize: '1.8rem',
-  fontWeight: '400',
-  color: '#16A34A',
+  fontWeight: 400,
+  color: 'green.600',
   textAlign: 'center',
   fontFamily: 'var(--font-fira-code)',
   borderTop: '0.1rem solid #CBD5E1',
