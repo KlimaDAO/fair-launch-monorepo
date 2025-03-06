@@ -8,7 +8,8 @@
     "create-local": "graph create --node http://localhost:8020/ fair-launch-subgraph",
     "remove-local": "graph remove --node http://localhost:8020/ fair-launch-subgraph",
     "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 fair-launch-subgraph",
-    "test": "graph test"
+    "test": "graph test",
+    "fork": "make local-fork"
   },
   "dependencies": {
     "@graphprotocol/graph-cli": "0.71.0",

@@ -17,3 +17,6 @@ docs/
 
 # Ignore solidity/lib
 solidity/lib/
+
+# Ignore subgraph test files
+subgraph/tests/.bin
