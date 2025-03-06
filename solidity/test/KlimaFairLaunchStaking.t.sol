@@ -191,6 +191,7 @@ contract KlimaFairLaunchStakingTest is Test {
         
         // Verify finalization is complete
         require(staking.finalizationComplete() == 1, "Finalization failed");
+        require(IERC20(KLIMA_V0_ADDR).balanceOf(address(staking)) == 0, "Staking should have no KLIMA_V0 tokens");
     }
 
     // =============================================================
@@ -765,10 +766,7 @@ contract KlimaFairLaunchStakingTest is Test {
         createStake(user1, stakeAmount);
 
         // Finalize
-        vm.warp(startTime + 91 days);
-        vm.startPrank(owner);
-        staking.storeTotalPoints(1);
-        vm.stopPrank();
+        finalizeStaking();
 
         // Calculate expected amounts
         uint256 klimaAmount = staking.calculateKlimaAllocation(stakeAmount);
@@ -866,6 +864,7 @@ contract KlimaFairLaunchStakingTest is Test {
         staking.storeTotalPoints(2);
         
         require(staking.finalizationComplete() == 1, "Finalization failed");
+        require(IERC20(KLIMA_V0_ADDR).balanceOf(address(staking)) == 0, "Staking should have no KLIMA_V0 tokens");
     }
 
     /// @notice Test burn calculation with different durations

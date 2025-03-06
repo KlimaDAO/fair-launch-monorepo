@@ -322,12 +322,6 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         // Require at least one unclaimed stake
         require(hasUnclaimedStakes, "No unclaimed stakes found");
         
-        // Only process KLIMA_V0 burn if there are tokens to burn
-        if (totalUserStaked > 0) {
-            require(IERC20(KLIMA_V0).approve(burnVault, totalUserStaked), "Approve failed");
-            IKlimaFairLaunchBurnVault(burnVault).addKlimaAmountToBurn(msg.sender, totalUserStaked);
-        }
-        
         // Calculate allocations using the view functions
         uint256 klimaAllocation = calculateKlimaAllocation(totalUserStaked);
         uint256 klimaXAllocation = calculateKlimaXAllocation(totalUserPoints);
@@ -466,19 +460,29 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         for (uint256 i = finalizeIndex; i < endIndex; i++) {
             address staker = stakerAddresses[i];
             
-            // Load stakes into memory
-            Stake[] memory stakes = userStakes[staker];
-            
             // Update points for this staker's stakes
             _updateUser(staker);
 
-            // Reload stakes after updates
-            stakes = userStakes[staker];
+            // Load stakes into memory
+            Stake[] memory stakes = userStakes[staker];
+            
+            // Track per-user burn amount - reset for each user
+            uint256 userBurnTotal = 0;
 
             // Sum all stakes' points for this user
             for (uint256 j = 0; j < stakes.length; j++) {
+                // Skip zero stakes
+                if (stakes[j].amount == 0 || stakes[j].organicPoints == 0) continue;
+
                 // Include both organic points and burn accrued points
                 newFinalTotalPoints += stakes[j].organicPoints + stakes[j].burnAccrued;
+                userBurnTotal += stakes[j].amount;
+            }
+
+            // Burn this user's KLIMA_V0 tokens
+            if (userBurnTotal > 0) {
+                require(IERC20(KLIMA_V0).approve(burnVault, userBurnTotal), "Approve failed");
+                IKlimaFairLaunchBurnVault(burnVault).addKlimaAmountToBurn(staker, userBurnTotal);
             }
         }
 
