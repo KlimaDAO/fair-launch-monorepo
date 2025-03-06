@@ -1,0 +1,11 @@
+{
+  "network": "base",
+  "FairLaunch": {
+    "address": "0x91a1eee63f300b8f41ae6af67edea2e2ed8c3f79",
+    "startBlock": "22763812"
+  },
+  "BurnVault": {
+    "address": "0x3e63e9c64942399e987a04f0663a5c1cba9c148a",
+    "startBlock": "22763812"
+  }
+}

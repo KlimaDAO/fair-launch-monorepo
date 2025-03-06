@@ -31,11 +31,14 @@ contract Deploy is Script {
         ERC1967Proxy stakingProxy = new ERC1967Proxy(address(fairLaunchStakingImplementation), stakingInitData);
         console2.log("KlimaFairLaunchStaking proxy deployed");
         console2.logAddress(address(stakingProxy));
-        console2.logAddress(msg.sender);
 
-        new KlimaFairLaunchBurnVault();
+        KlimaFairLaunchBurnVault burnVaultImplementation = new KlimaFairLaunchBurnVault();
         console2.log("KlimaFairLaunchBurnVault implementation deployed");
-        console2.logAddress(address(new KlimaFairLaunchBurnVault()));
-        vm.stopBroadcast();
+        console2.logAddress(address(burnVaultImplementation));
+
+        bytes memory burnVaultInitData = abi.encodeWithSelector(KlimaFairLaunchBurnVault.initialize.selector, msg.sender);
+        ERC1967Proxy burnVaultProxy = new ERC1967Proxy(address(burnVaultImplementation), burnVaultInitData);
+        console2.log("KlimaFairLaunchBurnVault proxy deployed");
+        console2.logAddress(address(burnVaultProxy));
     }
 }
