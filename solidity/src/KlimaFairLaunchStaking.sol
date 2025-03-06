@@ -363,17 +363,25 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         // Process all stakes in memory
         for (uint256 i = 0; i < stakes.length; i++) {
             Stake memory currentStake = stakes[i];
+            
+            // Skip if lastUpdateTime is already at or after freeze timestamp
+            if (currentStake.lastUpdateTime >= freezeTimestamp) {
+                updatedStakes[i] = currentStake;
+                continue;
+            }
 
-            // Only accrue points up to the cutoff time (freezeTimestamp at maximum)
-            uint256 endTime = currentStake.lastUpdateTime < cutoffTime ? cutoffTime : currentStake.lastUpdateTime;
-            uint256 timeElapsed = endTime - currentStake.lastUpdateTime;
+            // Only accrue points up to the cutoff time (always capped at freezeTimestamp)
+            uint256 timeElapsed = 0;
+            if (cutoffTime > currentStake.lastUpdateTime) {
+                timeElapsed = cutoffTime - currentStake.lastUpdateTime;
+            }
             
             uint256 newPoints = 
                 (currentStake.amount * currentStake.bonusMultiplier * timeElapsed * GROWTH_RATE) / GROWTH_DENOMINATOR;
 
             newTotalOrganicPoints += newPoints;
             currentStake.organicPoints += newPoints;
-            currentStake.lastUpdateTime = endTime;
+            currentStake.lastUpdateTime = cutoffTime; // Always use cutoffTime (max freezeTimestamp)
             
             updatedStakes[i] = currentStake;
         }
@@ -632,37 +640,62 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         // Load stakes into memory once
         Stake[] memory stakes = userStakes[user];
 
+        // If finalization is complete, simply use the stored points
+        if (finalizationComplete == 1) {
+            for (uint256 i = 0; i < stakes.length; i++) {
+                Stake memory currentStake = stakes[i];
+                if (currentStake.amount == 0) continue;
+                totalPoints += currentStake.organicPoints + currentStake.burnAccrued;
+            }
+            return totalPoints;
+        }
+
         // Determine the timestamp to calculate points up to
         uint256 calculationTimestamp = block.timestamp;
-        
-        // If finalization is complete, only calculate points up to the freeze timestamp
-        if (finalizationComplete == 1 && freezeTimestamp < block.timestamp) {
+        if (freezeTimestamp < block.timestamp) {
             calculationTimestamp = freezeTimestamp;
         }
 
-        // For each stake, simulate organic and burn point updates
+        // First simulate organic points update for all stakes
+        Stake[] memory updatedStakes = new Stake[](stakes.length);
         for (uint256 i = 0; i < stakes.length; i++) {
             Stake memory currentStake = stakes[i];
-            
-            // Skip stakes with zero amount or already claimed
             if (currentStake.amount == 0) continue;
+            
+            // Skip if lastUpdateTime is already at or after freeze timestamp
+            if (currentStake.lastUpdateTime >= freezeTimestamp) {
+                updatedStakes[i] = currentStake;
+                continue;
+            }
 
-            // Simulate organic points update
-            // Add check to prevent underflow during pre-staking period
+            // Calculate time elapsed up to calculation timestamp
             uint256 timeElapsed = 0;
             if (calculationTimestamp > currentStake.lastUpdateTime) {
                 timeElapsed = calculationTimestamp - currentStake.lastUpdateTime;
             }
             
-            uint256 newOrganicPoints = currentStake.organicPoints
-                + (currentStake.amount * currentStake.bonusMultiplier * timeElapsed * GROWTH_RATE) / GROWTH_DENOMINATOR;
-
-            // Simulate burn points update
+            // Update organic points
+            uint256 newPoints = (currentStake.amount * currentStake.bonusMultiplier * timeElapsed * GROWTH_RATE) / GROWTH_DENOMINATOR;
+            currentStake.organicPoints += newPoints;
+            currentStake.lastUpdateTime = calculationTimestamp;
+            
+            updatedStakes[i] = currentStake;
+        }
+        
+        // Then simulate burn distribution for all stakes
+        for (uint256 i = 0; i < updatedStakes.length; i++) {
+            Stake memory currentStake = updatedStakes[i];
+            if (currentStake.amount == 0) continue;
+            
+            // Calculate burn points
             uint256 burnRatioDiff = burnRatio - currentStake.burnRatioSnapshot;
-            uint256 newBurnPoints = (newOrganicPoints * burnRatioDiff) / GROWTH_DENOMINATOR;
-
-            // Add both types of points to total
-            totalPoints += newOrganicPoints + (currentStake.burnAccrued + newBurnPoints);
+            if (burnRatioDiff > 0) {
+                uint256 newBurnAccrual = (currentStake.organicPoints * burnRatioDiff) / GROWTH_DENOMINATOR;
+                currentStake.burnAccrued += newBurnAccrual;
+            }
+            
+            // Add to total points
+            totalPoints += currentStake.organicPoints + currentStake.burnAccrued;
         }
         
         return totalPoints;
