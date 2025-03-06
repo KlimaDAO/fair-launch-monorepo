@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {Script} from "forge-std/Script.sol";
 
 import {BaseERC20} from "../src/token/BaseERC20.sol";
-
+import {ERC1967Proxy} from "openzeppelin-contracts/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import {KlimaFairLaunchStaking} from "../src/KlimaFairLaunchStaking.sol";
 import {KlimaFairLaunchBurnVault} from "../src/KlimaFairLaunchBurnVault.sol";
 import {console2} from "forge-std/console2.sol";
@@ -29,15 +29,19 @@ contract Deploy is Script {
         BaseERC20 klimaX = new BaseERC20("KlimaX", "KLIMAX", 1000000 * 10 ** 18);
         console2.log("KlimaX deployed at:", address(klimaX));
 
-        KlimaFairLaunchStaking fairLaunchStaking = new KlimaFairLaunchStaking();
-        console2.log("KlimaFairLaunchStaking deployed");
-        console2.logAddress(address(fairLaunchStaking));
+        KlimaFairLaunchStaking fairLaunchStakingImplementation = new KlimaFairLaunchStaking();
+        console2.log("KlimaFairLaunchStaking implementation deployed");
+        console2.logAddress(address(fairLaunchStakingImplementation));
 
-        fairLaunchStaking.initialize(msg.sender);
+        bytes memory stakingInitData = abi.encodeWithSelector(KlimaFairLaunchStaking.initialize.selector, msg.sender);
+        ERC1967Proxy stakingProxy = new ERC1967Proxy(address(fairLaunchStakingImplementation), stakingInitData);
+        console2.log("KlimaFairLaunchStaking proxy deployed");
+        console2.logAddress(address(stakingProxy));
+        console2.logAddress(msg.sender);
 
-        // new KlimaFairLaunchBurnVault();
-        // console2.log("KlimaFairLaunchBurnVault deployed");
-        // console2.logAddress(address(new KlimaFairLaunchBurnVault()));
-        // vm.stopBroadcast();
+        new KlimaFairLaunchBurnVault();
+        console2.log("KlimaFairLaunchBurnVault implementation deployed");
+        console2.logAddress(address(new KlimaFairLaunchBurnVault()));
+        vm.stopBroadcast();
     }
 }
