@@ -175,7 +175,6 @@ contract KlimaFairLaunchStakingTest is Test {
     }
 
     function warpToFinalization() public {
-        // Warp to after freeze time (91 days from start)
         vm.warp(staking.freezeTimestamp() + 1);
     }
 
@@ -727,7 +726,7 @@ contract KlimaFairLaunchStakingTest is Test {
         // Try to unstake half
         vm.prank(user1);
         staking.unstake(unstakeAmount);
-        
+
         // Verify partial unstake
         (uint256 remainingAmount,,,,,,,) = staking.userStakes(user1, 0);
         assertEq(remainingAmount, stakeAmount - unstakeAmount, "Should have half amount remaining");
@@ -915,22 +914,27 @@ contract KlimaFairLaunchStakingTest is Test {
         vm.prank(user2);
         staking.unstake(stakeAmount);
 
-        // Advance to finalization period
+        // Advance to finalization period but first capture user1's points at freeze time
+        // This is key - we need to check points at freeze time, not after
+        uint256 user2PointsAtFreeze = staking.previewUserPoints(user2);
+        
         vm.warp(staking.freezeTimestamp() + 1 days);
 
         // Finalize staking
-        vm.startPrank(owner);
-        staking.storeTotalPoints(2);
-        vm.stopPrank();
+        finalizeStaking();
 
-        // Both users should get KLIMAX based on their staking duration
+        // Points should not have changed after freezeTimestamp
         uint256 user1Points = staking.previewUserPoints(user1);
         uint256 user2Points = staking.previewUserPoints(user2);
+        
+        // Check that points didn't change after freeze
+        assertEq(user2Points, user2PointsAtFreeze, "User2 points should not increase after freeze");
 
-        // Calculate expected KLIMAX allocation
-        uint256 totalPoints = user1Points + user2Points; // This should match finalTotalPoints
+        // Get final total points from contract
+        uint256 totalPoints = staking.finalTotalPoints();
         uint256 klimaxSupply = staking.KLIMAX_SUPPLY();
         
+        // Calculate expected allocations based on final points
         uint256 expectedUser1KlimaX = (user1Points * klimaxSupply) / totalPoints;
         uint256 expectedUser2KlimaX = (user2Points * klimaxSupply) / totalPoints;
         
@@ -1022,7 +1026,7 @@ contract KlimaFairLaunchStakingTest is Test {
         uint256 user2Points = staking.previewUserPoints(user2);
 
         // Calculate expected KLIMAX allocation
-        uint256 totalPoints = user1Points + user2Points; // This should match finalTotalPoints
+        uint256 totalPoints = staking.finalTotalPoints();
         uint256 klimaxSupply = staking.KLIMAX_SUPPLY();
         
         uint256 expectedUser1KlimaX = (user1Points * klimaxSupply) / totalPoints;

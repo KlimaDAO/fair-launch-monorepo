@@ -180,9 +180,9 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     /// @dev Before freezeTimestamp: tokens are partially burned based on stake duration
     /// @dev After freezeTimestamp: converts stake to KLIMA and KLIMA_X tokens
     function unstake(uint256 amount) public whenNotPaused {
-        // Skip point updates during pre-staking to prevent errors
-        if (block.timestamp >= startTimestamp) {
-            // Only update points if we're not in pre-staking
+        // Skip point updates during pre-staking or after freeze
+        if (block.timestamp >= startTimestamp && block.timestamp < freezeTimestamp) {
+            // Only update points if we're between startTimestamp and freezeTimestamp
             _updateUser(msg.sender);
         }
 
@@ -307,16 +307,6 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
                 continue;
             }
             
-            // Update points before calculating allocations
-            uint256 timeElapsed = block.timestamp - currentStake.lastUpdateTime;
-            currentStake.organicPoints += (currentStake.amount * currentStake.bonusMultiplier * timeElapsed * GROWTH_RATE) / GROWTH_DENOMINATOR;
-            currentStake.lastUpdateTime = block.timestamp;
-            
-            uint256 burnRatioDiff = burnRatio - currentStake.burnRatioSnapshot;
-            uint256 newBurnPoints = (currentStake.organicPoints * burnRatioDiff) / GROWTH_DENOMINATOR;
-            currentStake.burnAccrued += newBurnPoints;
-            currentStake.burnRatioSnapshot = burnRatio;
-            
             // Add to totals
             totalUserStaked += currentStake.amount;
             totalUserPoints += currentStake.organicPoints + currentStake.burnAccrued;
@@ -370,17 +360,26 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         Stake[] memory updatedStakes = new Stake[](stakes.length);
         uint256 newTotalOrganicPoints = totalOrganicPoints;
 
+        // Determine the cutoff time for point accrual
+        uint256 cutoffTime = block.timestamp;
+        if (block.timestamp > freezeTimestamp) {
+            cutoffTime = freezeTimestamp;
+        }
+
         // Process all stakes in memory
         for (uint256 i = 0; i < stakes.length; i++) {
             Stake memory currentStake = stakes[i];
 
-            uint256 timeElapsed = block.timestamp - currentStake.lastUpdateTime;
+            // Only accrue points up to the cutoff time (freezeTimestamp at maximum)
+            uint256 endTime = currentStake.lastUpdateTime < cutoffTime ? cutoffTime : currentStake.lastUpdateTime;
+            uint256 timeElapsed = endTime - currentStake.lastUpdateTime;
+            
             uint256 newPoints = 
                 (currentStake.amount * currentStake.bonusMultiplier * timeElapsed * GROWTH_RATE) / GROWTH_DENOMINATOR;
 
             newTotalOrganicPoints += newPoints;
             currentStake.organicPoints += newPoints;
-            currentStake.lastUpdateTime = block.timestamp;
+            currentStake.lastUpdateTime = endTime;
             
             updatedStakes[i] = currentStake;
         }
