@@ -1,5 +1,6 @@
 'use client';
 
+import clsx from 'clsx';
 import type { FC } from "react";
 import { useState } from "react";
 import { Dialog } from "radix-ui";
@@ -13,6 +14,7 @@ type PointerDownOutsideEvent = CustomEvent<{ originalEvent: PointerEvent }>;
 
 export const StakeDialog: FC = () => {
   const [shouldProceed, setShouldProceed] = useState(false);
+  const [confirmScreen, setConfirmScreen] = useState(false);
   return (
     <Dialog.Root>
       <Dialog.Trigger className={styles.fairLaunchButton}>
@@ -20,7 +22,9 @@ export const StakeDialog: FC = () => {
         Participate in Klima Fair Launch
       </Dialog.Trigger>
       <Dialog.Portal>
-        <Dialog.Overlay className={styles.overlay} />
+        <Dialog.Overlay className={clsx(styles.overlay, {
+          [styles.confirmOverlay]: confirmScreen,
+        })} />
         <Dialog.Content
           className={styles.content}
           onInteractOutside={(e: PointerDownOutsideEvent | FocusOutsideEvent) => {
@@ -52,6 +56,37 @@ export const StakeDialog: FC = () => {
                 </Dialog.Close>
               </div>
             </>
+          ) : confirmScreen ? (
+            <>
+              <Dialog.Title className={styles.title}>
+                Confirm your transaction
+              </Dialog.Title>
+              <div className={styles.description}>
+                <p>Give the transaction one final review before submitting to the blockchain.</p>
+                <div className={styles.inputContainer}>
+                  <label htmlFor="stake-amount">
+                    Contract Address
+                  </label>
+                  <Input id="stake-amount" placeholder="0.00" />
+                </div>
+                <div className={styles.inputContainer}>
+                  <label htmlFor="stake-amount">
+                    You are sending
+                  </label>
+                  <Input id="stake-amount" placeholder="0.00" />
+                </div>
+              </div>
+              <div className={styles.actions}>
+                <button className={styles.primaryButton}>
+                  Submit
+                </button>
+                <Dialog.Close asChild>
+                  <button className={styles.secondaryButton}>
+                    Cancel
+                  </button>
+                </Dialog.Close>
+              </div>
+            </>
           ) : (
             <>
               <div className={styles.icon}>
@@ -60,7 +95,7 @@ export const StakeDialog: FC = () => {
               <Dialog.Title className={styles.title}>
                 Stake KLIMA
               </Dialog.Title>
-              <Dialog.Description className={styles.description}>
+              <div className={styles.description}>
                 <div className={styles.inputContainer}>
                   <label htmlFor="stake-amount">
                     Amount
@@ -68,12 +103,17 @@ export const StakeDialog: FC = () => {
                   <Input id="stake-amount" placeholder="0.00" />
                 </div>
                 <Alert variant="default">
-                  <strong>Note:</strong> 
+                  <strong>Note:</strong>
                   It is best to leave this amount staked until the end of the Fair Launch period. Unstaking your KLIMA early will result in a penalty.
                 </Alert>
-              </Dialog.Description>
+              </div>
               <div className={styles.actions}>
-                <button className={styles.primaryButton}>
+                <button
+                  className={styles.primaryButton}
+                  onClick={() => {
+                    setShouldProceed(true);
+                    setConfirmScreen(true);
+                  }}>
                   Stake
                 </button>
                 <Dialog.Close asChild>

@@ -12,10 +12,14 @@ export const overlay = css({
   overflowY: 'auto'
 });
 
+export const confirmOverlay = css({
+  background: 'rgba(248, 250, 252, 1)',
+});
+
 export const content = css({
   minWidth: '30rem',
   background: 'white',
-  borderRadius: 'sm',
+  borderRadius: 'md',
   zIndex: 1000,
   position: 'fixed',
   top: '20%',
@@ -28,6 +32,7 @@ export const content = css({
   display: 'flex',
   flexDirection: 'column',
   gap: '2rem',
+  boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
 });
 
 export const icon = css({
