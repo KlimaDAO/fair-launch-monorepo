@@ -9,9 +9,10 @@ import { Sidebar } from "../../components/sidebar/sidebar";
 import { StakeDialog } from "../../components/dialogs/stake-dialog/stake-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/table/table';
 import * as styles from "./page.styles";
+import { Tooltip } from '../../components/tooltip/tooltip';
 
 const Page: FC = () => {
-  return (  
+  return (
     <div className={styles.container}>
       <Sidebar />
       <div className={styles.main}>
@@ -20,7 +21,9 @@ const Page: FC = () => {
           <div className={styles.twoCols}>
             <div className={styles.titleContainer}>
               <h1 className={styles.title}>My Rewards</h1>
-              <Badge title="Phase 1" />
+              <Tooltip content="Lorem ipsum dolor sit amet consectetur. Nisl rhoncus vitae lectus sit est sed urna varius.">
+                <Badge title="Phase 1" />
+              </Tooltip>
             </div>
             <StakeDialog />
           </div>

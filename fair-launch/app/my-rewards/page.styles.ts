@@ -13,6 +13,10 @@ export const main = css({
   width: 'calc(100% - var(--sidebar-width))'
 });
 
+export const tooltip = css({
+  maxWidth: '10rem',
+});
+
 export const content = css({
   flex: 1,
   gap: '2rem',

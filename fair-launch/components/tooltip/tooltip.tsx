@@ -1,5 +1,8 @@
+'use client';
+
 import type { FC } from 'react';
 import { Tooltip as TooltipPrimitive } from "radix-ui";
+import * as styles from './tooltip.styles';
 
 interface Props {
   open?: boolean;
@@ -12,19 +15,29 @@ interface Props {
 export const Tooltip: FC<Props> = (props) => {
   const { open, defaultOpen, onOpenChange, children, content, ...rest } = props;
   return (
-    <TooltipPrimitive.Provider>
+    <TooltipPrimitive.Provider delayDuration={100}>
       <TooltipPrimitive.Root
         open={open}
         defaultOpen={defaultOpen}
         onOpenChange={onOpenChange}
       >
         <TooltipPrimitive.Trigger asChild>
-          {children}
+          <div>{children}</div>
         </TooltipPrimitive.Trigger>
-        <TooltipPrimitive.Content side="top" align="center" {...rest}>
-          {content}
-          <TooltipPrimitive.Arrow width={11} height={5} />
-        </TooltipPrimitive.Content>
+        <TooltipPrimitive.Portal>
+          <TooltipPrimitive.Content
+            className={styles.tooltipContent}
+            align="center"
+            {...rest}
+          >
+            {content}
+            <TooltipPrimitive.Arrow
+              width={11}
+              height={5}
+              className={styles.tooltipArrow}
+            />
+          </TooltipPrimitive.Content>
+        </TooltipPrimitive.Portal>
       </TooltipPrimitive.Root>
     </TooltipPrimitive.Provider>
   );
