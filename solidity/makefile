@@ -7,8 +7,8 @@ KLIMA_VO=0xDCEFd8C8fCc492630B943ABcaB3429F12Ea9Fea2
 # base klima whale
 KLIMA_WHALE=0xfF961eD9c48FBEbDEf48542432D21efA546ddb89
 
-# local
-FAIR_LAUNCH_STAKING=0x4Dd5336F3C0D70893A7a86c6aEBe9B953E87c891
+# local @todo these need to be set when deployed locally. need better solution
+FAIR_LAUNCH_STAKING_PROXY=0x91A1EeE63f300B8f41AE6AF67eDEa2e2ed8c3f79
 BURN_VAULT=0xBe6Eb4ACB499f992ba2DaC7CAD59d56DA9e0D823
 
 # tokens
@@ -26,6 +26,9 @@ RPC_URL = http://localhost:8545
 fork:
 	anvil --fork-url $(BASE_URL) --host 0.0.0.0 --no-storage-caching
 
+deploy:
+	rm -rf cache && source .env && forge script script/deploy.s.sol --rpc-url http://localhost:8545 --private-key $(ANVIL_PRIVATE_KEY) --broadcast --ffi
+
 impersonate:
 	cast rpc anvil_impersonateAccount $(ANVIL_PUBLIC_WALLET) --rpc-url $(RPC_URL)
 	cast rpc anvil_impersonateAccount $(KLIMA_WHALE) --rpc-url $(RPC_URL)
@@ -33,9 +36,6 @@ impersonate:
 	cast rpc anvil_impersonateAccount $(USER_3) --rpc-url $(RPC_URL)
 	cast rpc anvil_impersonateAccount $(USER_4) --rpc-url $(RPC_URL)
 	cast rpc anvil_impersonateAccount $(USER_5) --rpc-url $(RPC_URL)
-
-deploy:
-	rm -rf cache && source .env && forge script script/deploy.s.sol --rpc-url http://localhost:8545 --private-key $(ANVIL_PRIVATE_KEY) --broadcast --ffi
 
 distribute-old-klima:	
 	cast call $(KLIMA_VO) "balanceOf(address)(uint256)" $(KLIMA_WHALE)
@@ -51,37 +51,37 @@ distribute-old-klima:
 	cast send $(KLIMA_VO) --rpc-url $(RPC_URL) --unlocked --from $(KLIMA_WHALE) "transfer(address,uint256)(bool)" $(USER_5) 100000
 
 enable-staking:
-	cast send $(FAIR_LAUNCH_STAKING) --rpc-url $(RPC_URL) --unlocked --from $(ANVIL_PUBLIC_WALLET) "setBurnVault(address)" $(BURN_VAULT)
+	cast send $(FAIR_LAUNCH_STAKING_PROXY) --rpc-url $(RPC_URL) --unlocked --from $(ANVIL_PUBLIC_WALLET) "setBurnVault(address)" $(BURN_VAULT)
 
-	cast send $(FAIR_LAUNCH_STAKING) --rpc-url $(RPC_URL) --unlocked --from $(ANVIL_PUBLIC_WALLET) "enableStaking(uint256)(bool)" $$(date +%s)
+	cast send $(FAIR_LAUNCH_STAKING_PROXY) --rpc-url $(RPC_URL) --unlocked --from $(ANVIL_PUBLIC_WALLET) "enableStaking(uint256)(bool)" $$(date +%s)
 
 go:
 	make impersonate
+	make deploy
 	make distribute-old-klima
 	make enable-staking
 
 stake:
 
-	cast call $(FAIR_LAUNCH_STAKING) --rpc-url $(RPC_URL)  "startTimestamp()(uint256)"
+	cast call $(FAIR_LAUNCH_STAKING_PROXY) --rpc-url $(RPC_URL)  "startTimestamp()(uint256)"
 
 # approvals
+	cast send $(KLIMA_VO) --rpc-url $(RPC_URL) --unlocked --from $(USER_2) "approve(address,uint256)(bool)" $(FAIR_LAUNCH_STAKING_PROXY) 1000000000000000000000
 
-	cast send $(KLIMA_VO) --rpc-url $(RPC_URL) --unlocked --from $(USER_2) "approve(address,uint256)(bool)" $(FAIR_LAUNCH_STAKING) 1000000000000000000000
+	cast send $(KLIMA_VO) --rpc-url $(RPC_URL) --unlocked --from $(USER_3) "approve(address,uint256)(bool)" $(FAIR_LAUNCH_STAKING_PROXY) 1000000000000000000000
 
-	# cast send $(KLIMA_VO) --rpc-url $(RPC_URL) --unlocked --from $(USER_3) "approve(address,uint256)(bool)" $(FAIR_LAUNCH_STAKING) 1000000000000000000000
+	cast send $(KLIMA_VO) --rpc-url $(RPC_URL) --unlocked --from $(USER_4) "approve(address,uint256)(bool)" $(FAIR_LAUNCH_STAKING_PROXY) 1000000000000000000000
 
-	# cast send $(KLIMA_VO) --rpc-url $(RPC_URL) --unlocked --from $(USER_4) "approve(address,uint256)(bool)" $(FAIR_LAUNCH_STAKING) 1000000000000000000000
+	cast send $(KLIMA_VO) --rpc-url $(RPC_URL) --unlocked --from $(USER_5) "approve(address,uint256)(bool)" $(FAIR_LAUNCH_STAKING_PROXY) 1000000000000000000000
 
-	# cast send $(KLIMA_VO) --rpc-url $(RPC_URL) --unlocked --from $(USER_5) "approve(address,uint256)(bool)" $(FAIR_LAUNCH_STAKING) 1000000000000000000000
+# stakes
+	cast send $(FAIR_LAUNCH_STAKING_PROXY) --rpc-url $(RPC_URL) --unlocked --from $(USER_2) "stake(uint256)(bool)" 200
 
-# # stakes
-# 	cast send $(FAIR_LAUNCH_STAKING) --rpc-url $(RPC_URL) --unlocked --from $(USER_2) "stake(uint256)(bool)" 200
+	cast send $(FAIR_LAUNCH_STAKING_PROXY) --rpc-url $(RPC_URL) --unlocked --from $(USER_3) "stake(uint256)(bool)" 300
 
-# 	cast send $(FAIR_LAUNCH_STAKING) --rpc-url $(RPC_URL) --unlocked --from $(USER_3) "stake(uint256)(bool)" 300
+	cast send $(FAIR_LAUNCH_STAKING_PROXY) --rpc-url $(RPC_URL) --unlocked --from $(USER_4) "stake(uint256)(bool)" 400
 
-# 	cast send $(FAIR_LAUNCH_STAKING) --rpc-url $(RPC_URL) --unlocked --from $(USER_4) "stake(uint256)(bool)" 400
-
-# 	cast send $(FAIR_LAUNCH_STAKING) --rpc-url $(RPC_URL) --unlocked --from $(USER_5) "stake(uint256)(bool)" 500
+	cast send $(FAIR_LAUNCH_STAKING_PROXY) --rpc-url $(RPC_URL) --unlocked --from $(USER_5) "stake(uint256)(bool)" 500
 
 
 
