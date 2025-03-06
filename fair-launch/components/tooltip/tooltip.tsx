@@ -15,13 +15,13 @@ interface Props {
 export const Tooltip: FC<Props> = (props) => {
   const { open, defaultOpen, onOpenChange, children, content, ...rest } = props;
   return (
-    <TooltipPrimitive.Provider delayDuration={100}>
+    <TooltipPrimitive.Provider delayDuration={10}>
       <TooltipPrimitive.Root
         open={open}
         defaultOpen={defaultOpen}
         onOpenChange={onOpenChange}
       >
-        <TooltipPrimitive.Trigger asChild>
+        <TooltipPrimitive.Trigger className={styles.tooltipTrigger} asChild>
           <div>{children}</div>
         </TooltipPrimitive.Trigger>
         <TooltipPrimitive.Portal>

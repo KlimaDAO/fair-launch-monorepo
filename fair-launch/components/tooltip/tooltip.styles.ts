@@ -1,5 +1,9 @@
 import { css } from '../../styled-system/css';
 
+export const tooltipTrigger = css({
+  cursor: 'default',
+});
+
 export const tooltipContent = css({
   overflow: 'hidden',
   rounded: 'sm',
