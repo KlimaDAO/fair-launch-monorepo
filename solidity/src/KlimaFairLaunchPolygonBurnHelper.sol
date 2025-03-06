@@ -10,7 +10,7 @@ interface IKLIMA_V0_TOKEN {
 }
 
 contract KlimaFairLaunchPolygonBurnHelper is InterchainTokenExecutable, OwnableUpgradeable, UUPSUpgradeable {
-    address public KLIMA;
+    address public immutable KLIMA;
     bytes32 public immutable EXPECTED_TOKEN_ID;
 
     constructor(address interchainTokenService_, address KLIMA_, bytes32 expectedTokenId_) InterchainTokenExecutable(interchainTokenService_) {
@@ -32,11 +32,6 @@ contract KlimaFairLaunchPolygonBurnHelper is InterchainTokenExecutable, OwnableU
     /// @dev Validates that the new implementation address is not zero
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {
         require(newImplementation != address(0), "New implementation cannot be zero address");
-    }
-
-    function setKLIMA(address _KLIMA) external onlyOwner {
-        require(_KLIMA != address(0), "KLIMA cannot be zero address");
-        KLIMA = _KLIMA;
     }
 
     /**
