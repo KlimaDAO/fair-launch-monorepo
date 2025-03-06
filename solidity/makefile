@@ -74,7 +74,7 @@ stake:
 
 	cast send $(KLIMA_VO) --rpc-url $(RPC_URL) --unlocked --from $(USER_5) "approve(address,uint256)(bool)" $(FAIR_LAUNCH_STAKING_PROXY) 1000000000000000000000
 
-# stakes
+# # stakes
 	cast send $(FAIR_LAUNCH_STAKING_PROXY) --rpc-url $(RPC_URL) --unlocked --from $(USER_2) "stake(uint256)(bool)" 200
 
 	cast send $(FAIR_LAUNCH_STAKING_PROXY) --rpc-url $(RPC_URL) --unlocked --from $(USER_3) "stake(uint256)(bool)" 300
