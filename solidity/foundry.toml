@@ -1,0 +1,17 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+remappings = [
+    "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+    "@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/",
+    "@axelar-network/interchain-token-service/contracts/=lib/interchain-token-service/contracts/",
+    "forge-std/=lib/forge-std/src/",
+    "lib/=lib/"
+]
+
+[rpc_endpoints]
+base = "https://mainnet.base.org"
+polygon = "https://polygon.llamarpc.com"
+
+# See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options

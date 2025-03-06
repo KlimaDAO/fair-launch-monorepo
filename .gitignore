@@ -1,0 +1,19 @@
+# Compiler files
+solidity/cache/
+solidity/out/
+
+# Ignores development broadcast logs
+!/solidity/broadcast
+/solidity/broadcast/*/31337/
+/solidity/broadcast/**/dry-run/
+
+# Docs
+docs/
+
+# Dotenv files
+.env
+.env.*
+!.env.example
+
+# Ignore solidity/lib
+solidity/lib/
