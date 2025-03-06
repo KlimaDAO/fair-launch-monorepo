@@ -632,6 +632,14 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         // Load stakes into memory once
         Stake[] memory stakes = userStakes[user];
 
+        // Determine the timestamp to calculate points up to
+        uint256 calculationTimestamp = block.timestamp;
+        
+        // If finalization is complete, only calculate points up to the freeze timestamp
+        if (finalizationComplete == 1 && freezeTimestamp < block.timestamp) {
+            calculationTimestamp = freezeTimestamp;
+        }
+
         // For each stake, simulate organic and burn point updates
         for (uint256 i = 0; i < stakes.length; i++) {
             Stake memory currentStake = stakes[i];
@@ -642,8 +650,8 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
             // Simulate organic points update
             // Add check to prevent underflow during pre-staking period
             uint256 timeElapsed = 0;
-            if (block.timestamp > currentStake.lastUpdateTime) {
-                timeElapsed = block.timestamp - currentStake.lastUpdateTime;
+            if (calculationTimestamp > currentStake.lastUpdateTime) {
+                timeElapsed = calculationTimestamp - currentStake.lastUpdateTime;
             }
             
             uint256 newOrganicPoints = currentStake.organicPoints
