@@ -47,7 +47,8 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
 
     // constants
     uint256 constant GROWTH_DENOMINATOR = 100000;
-    address constant KLIMA_V0 = 0xDCEFd8C8fCc492630B943ABcaB3429F12Ea9Fea2; // current klima address on Base
+    // address constant KLIMA_V0 = 0xDCEFd8C8fCc492630B943ABcaB3429F12Ea9Fea2; // current klima address on Base
+    address constant KLIMA_V0 = 0x3E63e9c64942399e987A04f0663A5c1Cba9c148A; // base-sepolia klima_v0 address
     
     uint256 public GROWTH_RATE;
 
