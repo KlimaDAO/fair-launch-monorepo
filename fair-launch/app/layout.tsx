@@ -18,14 +18,27 @@ interface Props {
 
 const RootLayout: FC<Props> = async (props) => {
   const cookie = (await headers()).get("cookie");
+  // let wagmiStoreCookie = null;
+
+  // if (cookie) {
+  //   const cookies = cookie.split('; ');
+  //   wagmiStoreCookie = cookies.find(cook => cook.startsWith('wagmi.store='));
+
+  //   if (wagmiStoreCookie) {
+  //     const cookieValue = wagmiStoreCookie.split('=')[1];
+  //     const parsed = JSON.parse(decodeURIComponent(cookieValue));
+  //     console.log('parsed', parsed.state.connections.value);
+  //   }
+  // }
+
   return (
     <html lang="en">
       <body className={`${inter.variable} ${firaCode.variable}`}>
-        <IntroStepProvider>
-          <WalletProvider cookie={cookie}>
+        <WalletProvider cookie={cookie}>
+          <IntroStepProvider>
             {props.children}
-          </WalletProvider>
-        </IntroStepProvider>
+          </IntroStepProvider>
+        </WalletProvider>
       </body>
     </html>
   )

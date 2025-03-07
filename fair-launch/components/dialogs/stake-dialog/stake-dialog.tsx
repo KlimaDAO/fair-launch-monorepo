@@ -103,7 +103,7 @@ export const StakeDialog: FC = () => {
                   <Input id="stake-amount" placeholder="0.00" />
                 </div>
                 <Alert variant="default">
-                  <strong>Note:</strong>
+                  <strong>Note:</strong>{' '}
                   It is best to leave this amount staked until the end of the Fair Launch period. Unstaking your KLIMA early will result in a penalty.
                 </Alert>
               </div>
