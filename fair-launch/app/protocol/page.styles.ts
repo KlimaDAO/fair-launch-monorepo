@@ -39,7 +39,7 @@ export const titleContainer = css({
 });
 
 export const title = css({
-  color: 'slate.950',
+  color: 'void.80',
   fontSize: '4xl',
   fontWeight: 700,
   lineHeight: '4xl',
@@ -88,7 +88,7 @@ export const cardTitle = css({
   fontSize: 'base',
   lineHeight: 'base',
   fontWeight: 400,
-  color: 'slate.500',
+  color: 'void.80',
 });
 
 export const cardContents = css({

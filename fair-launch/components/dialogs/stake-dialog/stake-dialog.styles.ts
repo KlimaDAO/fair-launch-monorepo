@@ -1,7 +1,7 @@
 import { css } from '../../../styled-system/css';
 
 export const overlay = css({
-  background: 'rgba(71, 85, 105, 0.4)',
+  background: 'rgba(70, 70, 70, 0.6)',
   position: 'fixed',
   top: 0,
   left: 0,
@@ -36,7 +36,7 @@ export const content = css({
 });
 
 export const icon = css({
-  backgroundColor: 'green.100',
+  backgroundColor: 'green.20',
   borderRadius: '4xl',
   padding: '0.8rem',
   width: '4.8rem',
@@ -49,7 +49,7 @@ export const icon = css({
   '& svg': {
     width: '2.4rem',
     height: '2.4rem',
-    fill: 'green.900',
+    fill: 'green.80',
   }
 });
 
@@ -57,7 +57,7 @@ export const title = css({
   fontSize: 'base',
   lineHeight: 'base',
   fontWeight: 700,
-  color: 'slate.950',
+  color: 'void.80',
   textAlign: 'center',
 });
 
@@ -65,7 +65,7 @@ export const description = css({
   fontSize: '1.4rem',
   lineHeight: '2rem',
   fontWeight: '400',
-  color: 'slate.950',
+  color: 'void.80',
   textAlign: 'center',
   display: 'flex',
   flexDirection: 'column',
@@ -87,14 +87,14 @@ export const inputContainer = css({
     fontSize: 'sm',
     lineHeight: 'sm',
     fontWeight: '500',
-    color: 'slate.950',
+    color: 'void.80',
     textAlign: 'left',
   }
 });
 
 export const primaryButton = css({
   width: '100%',
-  backgroundColor: 'slate.950',
+  backgroundColor: 'void.80',
   color: 'white',
   borderRadius: 'sm',
   border: 'none',
@@ -109,7 +109,7 @@ export const primaryButton = css({
 export const secondaryButton = css({
   width: '100%',
   backgroundColor: 'transparent',
-  color: 'slate.950',
+  color: 'void.80',
   border: '0.1rem solid #020617',
   borderRadius: 'sm',
   fontSize: 'base',
@@ -121,7 +121,7 @@ export const secondaryButton = css({
 });
 
 export const fairLaunchButton = css({
-  backgroundColor: 'green.500',
+  backgroundColor: 'green.40',
   color: 'white',
   borderRadius: 'sm',
   border: 'none',

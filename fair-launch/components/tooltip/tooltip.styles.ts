@@ -8,15 +8,15 @@ export const tooltipContent = css({
   overflow: 'hidden',
   rounded: 'sm',
   padding: '1rem 1.2rem',
-  zIndex: '5000',
+  zIndex: 5000,
   maxWidth: '24rem',
   fontSize: 'sm',
   lineHeight: 'sm',
-  background: 'slate.500',
+  background: 'void.70',
   color: 'white',
   textAlign: 'center',
 });
 
 export const tooltipArrow = css({
-  fill: 'slate.500',
+  fill: 'void.70',
 });

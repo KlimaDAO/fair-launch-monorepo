@@ -4,7 +4,7 @@ export const footer = css({
   width: '100%',
   height: '41.6rem',
   minHeight: '41.6rem',
-  backgroundColor: 'slate.950',
+  backgroundColor: 'void.80',
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
@@ -50,7 +50,7 @@ export const socials = css({
   gap: '1.6rem',
 
   '& svg': {
-    fill: 'slate.300',
+    fill: 'void.20',
     fontSize: '2rem',
   }
 });
@@ -58,5 +58,5 @@ export const socials = css({
 export const copyright = css({
   fontSize: '1.4rem',
   fontWeight: 400,
-  color: 'slate.300',
+  color: 'void.20',
 });

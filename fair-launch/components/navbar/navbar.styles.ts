@@ -2,7 +2,7 @@ import { css } from '../../styled-system/css';
 
 export const navbar = css({
   height: '5.2rem',
-  backgroundColor: 'slate.950',
+  backgroundColor: 'void.80',
   alignItems: 'center',
   display: 'none', // hide for now...
 });
@@ -15,6 +15,6 @@ export const marquee = css({
     alignItems: 'center',
     fontSize: '1.4rem',
     fontWeight: 400,
-    color: 'slate.500'
+    color: 'white'
   }
 });

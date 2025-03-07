@@ -43,7 +43,7 @@ export const titleContainer = css({
 });
 
 export const title = css({
-  color: 'slate.950',
+  color: 'void.80',
   fontSize: '4xl',
   fontWeight: 700,
   lineHeight: '4xl',
@@ -91,7 +91,7 @@ export const cardInner = css({
 export const divider = css({
   width: '100%',
   height: '0.1rem',
-  backgroundColor: 'slate.300',
+  backgroundColor: 'void.20',
 
   lg: {
     width: '0.1rem',

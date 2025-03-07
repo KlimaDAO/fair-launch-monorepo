@@ -6,8 +6,8 @@ export const input = css({
   height: '4rem',
   width: '100%',
   borderRadius: 'sm',
-  border: '0.1rem solid #94A3B8',
-  background: 'slate.50',
+  border: '0.1rem solid #666666',
+  background: 'void.10',
   padding: '1rem 1.2rem',
   fontSize: 'base',
 });

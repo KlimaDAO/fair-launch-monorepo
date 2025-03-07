@@ -14,9 +14,9 @@ export const alertVariants = cva({
   variants: {
     variant: {
       default: { 
-        bg: 'green.50', 
+        bg: 'green.10', 
         color: 'black',
-        borderColor: 'green.500',
+        borderColor: 'green.40',
        },
     },
   },

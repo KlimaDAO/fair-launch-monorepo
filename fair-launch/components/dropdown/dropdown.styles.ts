@@ -13,9 +13,9 @@ export const trigger = css({
   gap: '5px',
   minWidth: '20rem',
   backgroundColor: 'white',
-  color: '#64748B',
+  color: 'void.60',
   cursor: 'pointer',
-  border: '0.1rem solid #94A3B8',
+  border: '0.1rem solid #666666',
 
   '&:hover': {
     // backgroundColor: 'grey',
@@ -24,13 +24,13 @@ export const trigger = css({
     // boxShadow: '0 0 0 0.1rem #94A3B8',
   },
   '&[data-placeholder]': {
-    color: '#64748B',
+    color: 'void.60',
   }
 });
 
 export const icon = css({
   fontSize: '2rem',
-  color: '#64748B',
+  color: 'void.80',
 });
 
 export const content = css({ 
@@ -40,7 +40,7 @@ export const content = css({
   borderRadius: '0.4rem',
   width: 'var(--radix-select-trigger-width)',
 	maxHeight: 'var(--radix-select-content-available-height)',
-  border: '0.1rem solid #94A3B8',
+  border: '0.1rem solid #666666',
   boxShadow:
     '0px 10px 38px -10px rgba(22, 23, 24, 0.35), 0px 10px 20px -15px rgba(22, 23, 24, 0.2)',
 
@@ -56,7 +56,7 @@ export const viewport = css({
 export const item = css({
   fontSize: '1.4rem',
   lineHeight: '2rem',
-  color: '#64748B',
+  color: 'void.60',
   display: 'flex',
   alignItems: 'center',
   height: '35px',
@@ -70,7 +70,7 @@ export const item = css({
   '&[data-highlighted]': {
     outline: 'none',
     backgroundColor: '#64748',
-    color: '#64748B'
+    color: 'void.60'
   }
 });
 
@@ -89,6 +89,6 @@ export const scrollButton = css({
   justifyContent: 'center',
   height: '25px',
   backgroundColor: 'white',
-  color: '#64748B',
+  color: 'void.60',
   cursor: 'default',
 });
