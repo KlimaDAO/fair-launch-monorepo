@@ -10,7 +10,7 @@ import { IntroWalkthrough } from "../intro-walkthrough/intro";
 import { IoTrophySharp } from "react-icons/io5";
 import { MdDashboard, MdLogout } from "react-icons/md";
 import * as styles from './sidebar.styles';
-import { useAccount } from "wagmi";
+import { useAccount, useDisconnect } from "wagmi";
 
 const navLinks = [
   { href: '/my-rewards', icon: <IoTrophySharp />, label: 'My Rewards' },
@@ -20,6 +20,7 @@ const navLinks = [
 export const Sidebar: FC = () => {
   const pathname = usePathname();
   const { address } = useAccount();
+  const { disconnect } = useDisconnect();
 
   return (
     <div className={styles.sidebar}>
@@ -41,12 +42,16 @@ export const Sidebar: FC = () => {
           </Link>
         ))}
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: 'auto' }}>
+      <div className={styles.sidebarFooter}>
         <IntroWalkthrough />
-        {address && <button className={styles.logoutButton}>
-          <MdLogout />
-          <span>Logout</span>
-        </button>}
+        {address && (
+          <button
+            onClick={() => disconnect()}
+            className={styles.logoutButton}>
+            <MdLogout />
+            <span>Logout</span>
+          </button>
+        )}
       </div>
     </div>
   )

@@ -63,6 +63,7 @@ export const sidebarFooter = css({
 });
 
 export const logoutButton = css({
+  cursor: 'pointer',
   backgroundColor: 'transparent',
   color: 'void.80',
   borderRadius: 'sm',
