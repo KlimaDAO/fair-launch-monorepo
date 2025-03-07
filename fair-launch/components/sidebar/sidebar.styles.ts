@@ -6,7 +6,7 @@ export const sidebar = css({
   height: '100%',
   padding: '2.4rem 1.2rem',
   backgroundColor: 'white',
-  borderRight: '0.1rem solid #C3C3C3',
+  borderRight: '0.1rem solid token(colors.void.20)',
   flexDirection: 'column',
   gap: '4rem',
 
@@ -21,8 +21,8 @@ export const title = css({
   color: 'green.70',
   textAlign: 'center',
   fontFamily: 'var(--font-fira-code)',
-  borderTop: '0.1rem solid #C3C3C3',
-  borderBottom: '0.1rem solid #C3C3C3',
+  borderTop: '0.1rem solid token(colors.void.20)',
+  borderBottom: '0.1rem solid token(colors.void.20)',
   padding: '2rem 0'
 });
 
@@ -52,5 +52,34 @@ export const navLink = css({
   '& svg': {
     fontSize: '2rem',
     fill: 'void.50'
+  }
+});
+
+export const sidebarFooter = css({
+  gap: '1rem',
+  display: 'flex',
+  flexDirection: 'column',
+  marginTop: 'auto',
+});
+
+export const logoutButton = css({
+  backgroundColor: 'transparent',
+  color: 'void.80',
+  borderRadius: 'sm',
+  height: '4rem',
+  width: '100%',
+  fontSize: 'base',
+  lineHeight: 'base',
+  fontWeight: 500,
+  border: '0.1rem solid token(colors.void.80)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: '0.8rem',
+  fontFamily: 'var(--font-inter)',
+
+  '& svg': {
+    fontSize: '1.6rem',
+    fill: 'void.80'
   }
 });

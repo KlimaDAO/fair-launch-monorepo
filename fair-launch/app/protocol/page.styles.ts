@@ -101,7 +101,7 @@ export const cardContents = css({
 export const divider = css({
   width: '100%',
   height: '0.1rem',
-  backgroundColor: 'slate.300',
+  backgroundColor: 'void.20',
 
   lg: {
     width: '0.1rem',

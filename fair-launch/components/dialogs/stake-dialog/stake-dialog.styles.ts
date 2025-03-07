@@ -13,7 +13,7 @@ export const overlay = css({
 });
 
 export const confirmOverlay = css({
-  background: 'rgba(248, 250, 252, 1)',
+  background: 'void.10',
 });
 
 export const content = css({

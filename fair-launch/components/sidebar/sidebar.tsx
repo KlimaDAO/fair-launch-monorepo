@@ -8,7 +8,7 @@ import { usePathname } from 'next/navigation';
 import klimaLogo from "../../public/kp-logo.svg";
 import { IntroWalkthrough } from "../intro-walkthrough/intro";
 import { IoTrophySharp } from "react-icons/io5";
-import { MdDashboard } from "react-icons/md";
+import { MdDashboard, MdLogout } from "react-icons/md";
 import * as styles from './sidebar.styles';
 import { useAccount } from "wagmi";
 
@@ -40,10 +40,13 @@ export const Sidebar: FC = () => {
             {link.label}
           </Link>
         ))}
-        {/* {address} */}
       </div>
-      <div style={{ marginTop: 'auto' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: 'auto' }}>
         <IntroWalkthrough />
+        {address && <button className={styles.logoutButton}>
+          <MdLogout />
+          <span>Logout</span>
+        </button>}
       </div>
     </div>
   )
