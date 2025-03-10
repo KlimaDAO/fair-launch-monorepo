@@ -13,10 +13,12 @@ export const table = css({
 });
 
 export const tableHead = css({
-  color: '#020617',
+  color: 'void.40',
   fontSize: '1.4rem',
   textAlign: 'left',
   verticalAlign: 'middle',
+  padding: '2.4rem 0 1.2rem 0',
+  borderBottom: '1px solid token(colors.void.20)',
   '& th': {
     fontWeight: '400',
   },
@@ -32,6 +34,6 @@ export const tableCell = css({
   verticalAlign: 'middle',
   fontWeight: '400',
   fontSize: '1.4rem',
-  color: '#020617',
-  borderBottom: '1px solid #E2E8F0',
+  color: 'void.80',
+  borderBottom: '1px solid token(colors.void.20)',
 });

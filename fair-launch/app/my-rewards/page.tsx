@@ -17,6 +17,20 @@ import * as styles from "./page.styles";
 
 const SUBGRAPH_URL = 'https://api.studio.thegraph.com/query/28985/fair-launch-sepolia/version/latest';
 
+function formatTimestamp(timestamp: number): string {
+  const date = new Date(timestamp * 1000); // Convert to milliseconds
+  const options: Intl.DateTimeFormatOptions = {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true
+  };
+  return date.toLocaleString('en', options).replace(',', '');
+}
+
+
 export const fetchUserStakes = async (address: string): Promise<UserStakes> => {
   return await request(
     SUBGRAPH_URL,
@@ -68,7 +82,7 @@ const Page: FC = async () => {
           </div>
           <div className={styles.card}>
             <div className={styles.cardInner}>
-              <h5 style={{ fontSize: '16px', fontWeight: '400', color: '#64748B' }}>My KLIMA(v1) Deposited</h5>
+              <h5 style={{ fontSize: '16px', fontWeight: '400', color: 'void.80' }}>My KLIMA(v1) Deposited</h5>
               <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '20px', fontWeight: '700' }} id='step1'>
                   <Image src={klimav1Logo} alt="Klima V1 Logo" />
@@ -79,7 +93,7 @@ const Page: FC = async () => {
             </div>
             <div className={styles.divider} />
             <div className={styles.cardInner}>
-              <h5 style={{ fontSize: '16px', fontWeight: '400', color: '#64748B' }}>My Points Accumulated</h5>
+              <h5 style={{ fontSize: '16px', fontWeight: '400', color: 'void.80' }}>My Points Accumulated</h5>
               <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ fontSize: '20px', fontWeight: '700' }} id='step3'>0</div>
                 <div style={{ fontSize: '14px', fontWeight: '400', color: '#64748B' }}><strong>&lt;1%</strong> of <strong>12.49</strong> B</div>
@@ -89,7 +103,7 @@ const Page: FC = async () => {
 
           <div className={styles.card}>
             <div className={styles.cardInner}>
-              <h5 style={{ fontSize: '16px', fontWeight: '400', color: '#64748B' }}>Stake History</h5>
+              <h5 style={{ fontSize: '16px', fontWeight: '400', color: 'void.80' }}>Stake History</h5>
               <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Table>
                   <TableHeader>
@@ -106,8 +120,8 @@ const Page: FC = async () => {
                     <TableBody>
                       {userStakes.stakes.map((stake: Stake) => (
                         <TableRow key={stake.id}>
-                          <TableCell>{stake.startTimestamp}</TableCell>
-                          <TableCell>{stake.amount}</TableCell>
+                          <TableCell>{formatTimestamp(parseInt(stake.startTimestamp))}</TableCell>
+                          <TableCell><strong>{stake.amount}</strong></TableCell>
                           <TableCell>12,345</TableCell>
                           <TableCell>-75 KLIMA</TableCell>
                           <TableCell>80,000 KLIMAX</TableCell>
@@ -130,7 +144,7 @@ const Page: FC = async () => {
           <div className={styles.twoCols}>
             <div className={styles.card}>
               <div className={styles.cardInner}>
-                <h5 style={{ fontSize: '16px', fontWeight: '400', color: '#64748B' }}>Leaderboard</h5>
+                <h5 style={{ fontSize: '16px', fontWeight: '400', color: 'void.80' }}>Leaderboard</h5>
                 <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
 
                   <Table>
@@ -164,7 +178,7 @@ const Page: FC = async () => {
               <div className={styles.cardInner}>
                 <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '10px' }}>
                   <Image src={gklimaLogo} alt="Klima Logo" />
-                  <h5 style={{ fontSize: '16px', fontWeight: '400', color: '#64748B' }}>
+                  <h5 style={{ fontSize: '16px', fontWeight: '400', color: 'void.80' }}>
                     KLIMAX Allocation Value at:
                   </h5>
                 </div>
