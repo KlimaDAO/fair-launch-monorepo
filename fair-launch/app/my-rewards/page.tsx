@@ -5,13 +5,52 @@ import gklimaLogo from "../../public/tokens/g-klima.svg";
 import { Badge } from "../../components/badge/badge";
 import { Footer } from "../../components/footer/footer";
 import { Navbar } from "../../components/navbar/navbar";
+import { config } from '../../utils/wagmi';
 import { Sidebar } from "../../components/sidebar/sidebar";
+import { request } from 'graphql-request';
+import { headers } from 'next/headers'
+import { Tooltip } from '../../components/tooltip/tooltip';
 import { StakeDialog } from "../../components/dialogs/stake-dialog/stake-dialog";
+import { cookieToInitialState } from 'wagmi'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/table/table';
 import * as styles from "./page.styles";
-import { Tooltip } from '../../components/tooltip/tooltip';
 
-const Page: FC = () => {
+const SUBGRAPH_URL = 'https://api.studio.thegraph.com/query/28985/fair-launch-sepolia/version/latest';
+
+export const fetchUserStakes = async (address: string): Promise<UserStakes> => {
+  return await request(
+    SUBGRAPH_URL,
+    `query ($address: String!) {
+      stakes(first: 100, where: { wallet: $address }) {
+        id
+        amount
+        startTimestamp
+        stakeCreationHash
+        multiplier
+      }
+    }`,
+    { address: address.toLowerCase() }
+  );
+};
+
+interface Stake {
+  id: string;
+  amount: string;
+  multiplier: string;
+  startTimestamp: string;
+  stakeCreationHash: string;
+}
+
+interface UserStakes {
+  stakes?: Stake[];
+}
+
+const Page: FC = async () => {
+  const cookie = (await headers()).get('cookie');
+  const initialState = cookieToInitialState(config, cookie);
+  const walletAddress = initialState?.current && initialState.connections.get(initialState?.current)?.accounts[0];
+  const userStakes = walletAddress ? await fetchUserStakes(walletAddress) : { stakes: [] };
+
   return (
     <div className={styles.container}>
       <Sidebar />
@@ -63,32 +102,26 @@ const Page: FC = () => {
                       <TableHead>&nbsp;</TableHead>
                     </TableRow>
                   </TableHeader>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell>02/01/2025 12:01 am</TableCell>
-                      <TableCell>100</TableCell>
-                      <TableCell>12,345</TableCell>
-                      <TableCell>-75 KLIMA</TableCell>
-                      <TableCell>80,000 KLIMAX</TableCell>
-                      <TableCell>Unstake</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>02/01/2025 12:01 am</TableCell>
-                      <TableCell>100</TableCell>
-                      <TableCell>12,345</TableCell>
-                      <TableCell>-75 KLIMA</TableCell>
-                      <TableCell>80,000 KLIMAX</TableCell>
-                      <TableCell>Unstake</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>02/01/2025 12:01 am</TableCell>
-                      <TableCell>100</TableCell>
-                      <TableCell>12,345</TableCell>
-                      <TableCell>-75 KLIMA</TableCell>
-                      <TableCell>80,000 KLIMAX</TableCell>
-                      <TableCell>Unstake</TableCell>
-                    </TableRow>
-                  </TableBody>
+                  {userStakes.stakes && userStakes.stakes.length > 0 ? (
+                    <TableBody>
+                      {userStakes.stakes.map((stake: Stake) => (
+                        <TableRow key={stake.id}>
+                          <TableCell>{stake.startTimestamp}</TableCell>
+                          <TableCell>{stake.amount}</TableCell>
+                          <TableCell>12,345</TableCell>
+                          <TableCell>-75 KLIMA</TableCell>
+                          <TableCell>80,000 KLIMAX</TableCell>
+                          <TableCell>Unstake</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  ) : (
+                    <TableBody>
+                      <TableRow>
+                        <TableCell colSpan={6}>None yet</TableCell>
+                      </TableRow>
+                    </TableBody>
+                  )}
                 </Table>
               </div>
             </div>

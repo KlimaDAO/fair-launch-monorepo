@@ -2,19 +2,67 @@
 
 import clsx from 'clsx';
 import type { FC } from "react";
-import { useState } from "react";
-import { Dialog } from "radix-ui";
-import { MdCelebration, MdLibraryAdd } from "react-icons/md";
-import { Input } from "../../input/input";
-import * as styles from './stake-dialog.styles';
 import { Alert } from "../../alert/alert";
+import { Input } from "../../input/input";
+import { Dialog } from "radix-ui";
+import { useState } from "react";
+import { parseEther } from 'viem'
+import { useAccount, useReadContract, useWriteContract } from "wagmi";
+import { MdCelebration, MdLibraryAdd } from "react-icons/md";
+import { abi } from '../../../abi/klima-fair-launch';
+import { abi as erc20Abi } from '../../../abi/erc20';
+import * as styles from './stake-dialog.styles';
 
 type FocusOutsideEvent = CustomEvent<{ originalEvent: FocusEvent }>;
 type PointerDownOutsideEvent = CustomEvent<{ originalEvent: PointerEvent }>;
 
+// TODO - move to constants...
+const contractAddress = '0x5D7c2a994Ca46c2c12a605699E65dcbafDeae80c';
+const klimaTokenAddress = '0x3E63e9c64942399e987A04f0663A5c1Cba9c148A';
+
+const allowanceConfig = {
+  abi: erc20Abi,
+  functionName: 'allowance',
+  address: klimaTokenAddress,
+} as const;
+
 export const StakeDialog: FC = () => {
+  const { address } = useAccount();
   const [shouldProceed, setShouldProceed] = useState(false);
   const [confirmScreen, setConfirmScreen] = useState(false);
+  const { data: stakeData, writeContract: stakeContract } = useWriteContract()
+  const { data: approveData, writeContract: approveContract } = useWriteContract();
+  const { data: allowanceData } = useReadContract({
+    ...allowanceConfig, args: [address, contractAddress],
+  });
+
+  console.log('|---allowanceData---|', allowanceData);
+
+  const approve = async () => {
+    await approveContract({
+      abi: erc20Abi,
+      functionName: 'approve',
+      address: klimaTokenAddress,
+      args: [contractAddress, parseEther('10')],
+    });
+  };
+
+  const stake = async () => {
+    await stakeContract({
+      abi,
+      functionName: 'stake',
+      address: contractAddress,
+      args: [parseEther('0.00000000000000005')],
+    });
+  };
+
+  const handleStake = async () => {
+    // approve the contract to spend the KLIMA
+    // await approve();
+    // stake the KLIMA
+    await stake();
+  };
+
   return (
     <Dialog.Root>
       <Dialog.Trigger className={styles.fairLaunchButton}>
@@ -77,7 +125,10 @@ export const StakeDialog: FC = () => {
                 </div>
               </div>
               <div className={styles.actions}>
-                <button className={styles.primaryButton}>
+                <button className={styles.primaryButton} onClick={() => {
+                  setShouldProceed(false);
+                  setConfirmScreen(false);
+                }}>
                   Submit
                 </button>
                 <Dialog.Close asChild>
@@ -110,10 +161,7 @@ export const StakeDialog: FC = () => {
               <div className={styles.actions}>
                 <button
                   className={styles.primaryButton}
-                  onClick={() => {
-                    setShouldProceed(true);
-                    setConfirmScreen(true);
-                  }}>
+                  onClick={handleStake}>
                   Stake
                 </button>
                 <Dialog.Close asChild>
