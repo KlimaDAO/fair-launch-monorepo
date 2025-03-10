@@ -17,6 +17,7 @@ import * as styles from "./page.styles";
 
 const SUBGRAPH_URL = 'https://api.studio.thegraph.com/query/28985/fair-launch-sepolia/version/latest';
 
+// @todo - move to utils
 function formatTimestamp(timestamp: number): string {
   const date = new Date(timestamp * 1000); // Convert to milliseconds
   const options: Intl.DateTimeFormatOptions = {
@@ -30,7 +31,7 @@ function formatTimestamp(timestamp: number): string {
   return date.toLocaleString('en', options).replace(',', '');
 }
 
-
+// @todo - move these to a utils file
 export const fetchUserStakes = async (address: string): Promise<UserStakes> => {
   return await request(
     SUBGRAPH_URL,
@@ -47,6 +48,34 @@ export const fetchUserStakes = async (address: string): Promise<UserStakes> => {
   );
 };
 
+// @todo - move these to a utils file
+export const fetchLeaderboard = async (): Promise<UserStakes> => {
+  return await request(
+    SUBGRAPH_URL,
+    `query {
+      wallets(first: 100) {
+        id
+        klimaAllocation
+        klimaXAllocation
+        totalStaked
+        stakes(first: 100) {
+          id
+          multiplier
+          amount
+          startTimestamp
+          stakeCreationHash
+        }
+      }
+    }`
+  );
+};
+
+// @todo - move to utils
+function shortenWalletAddress(address: string): string {
+  if (address.length <= 10) return address; // Return the address if it's already short
+  return `${address.slice(0, 5)}...${address.slice(-3)}`;
+}
+
 interface Stake {
   id: string;
   amount: string;
@@ -59,11 +88,23 @@ interface UserStakes {
   stakes?: Stake[];
 }
 
+interface Leaderboard {
+  wallets: {
+    id: string;
+    klimaAllocation: string;
+    klimaXAllocation: string;
+    totalStaked: string;
+    stakes: Stake[];
+  };
+}
+
+
 const Page: FC = async () => {
   const cookie = (await headers()).get('cookie');
   const initialState = cookieToInitialState(config, cookie);
   const walletAddress = initialState?.current && initialState.connections.get(initialState?.current)?.accounts[0];
   const userStakes = walletAddress ? await fetchUserStakes(walletAddress) : { stakes: [] };
+  const leaderboard = await fetchLeaderboard() || { leaderboard: [] };
 
   return (
     <div className={styles.container}>
@@ -146,7 +187,6 @@ const Page: FC = async () => {
               <div className={styles.cardInner}>
                 <h5 style={{ fontSize: '16px', fontWeight: '400', color: 'void.80' }}>Leaderboard</h5>
                 <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -156,20 +196,24 @@ const Page: FC = async () => {
                         <TableHead>Points</TableHead>
                       </TableRow>
                     </TableHeader>
-                    <TableBody>
-                      <TableRow>
-                        <TableCell>1</TableCell>
-                        <TableCell>0x1234567890</TableCell>
-                        <TableCell>100.26</TableCell>
-                        <TableCell>100.26</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell>2</TableCell>
-                        <TableCell>0x1234567890</TableCell>
-                        <TableCell>100.26</TableCell>
-                        <TableCell>100.26</TableCell>
-                      </TableRow>
-                    </TableBody>
+                    {leaderboard.wallets && leaderboard.wallets.length > 0 ? (
+                      <TableBody>
+                        {leaderboard.wallets.map((wallet: any) => (
+                          <TableRow key={wallet.id}>
+                            <TableCell>1</TableCell>
+                            <TableCell>{shortenWalletAddress(wallet.id)}</TableCell>
+                            <TableCell>{wallet.totalStaked}</TableCell>
+                            <TableCell>-</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    ) : (
+                      <TableBody>
+                        <TableRow>
+                          <TableCell colSpan={4}>None yet</TableCell>
+                        </TableRow>
+                      </TableBody>
+                    )}
                   </Table>
                 </div>
               </div>
