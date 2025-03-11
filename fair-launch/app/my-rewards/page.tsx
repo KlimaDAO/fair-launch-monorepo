@@ -7,15 +7,13 @@ import { Footer } from "../../components/footer/footer";
 import { Navbar } from "../../components/navbar/navbar";
 import { config } from '../../utils/wagmi';
 import { Sidebar } from "../../components/sidebar/sidebar";
-import { request } from 'graphql-request';
 import { headers } from 'next/headers'
 import { Tooltip } from '../../components/tooltip/tooltip';
 import { StakeDialog } from "../../components/dialogs/stake-dialog/stake-dialog";
 import { cookieToInitialState } from 'wagmi'
+import { fetchUserStakes, fetchLeaderboard, Stake } from '../../utils/queries';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/table/table';
 import * as styles from "./page.styles";
-
-const SUBGRAPH_URL = 'https://api.studio.thegraph.com/query/28985/fair-launch-sepolia/version/latest';
 
 // @todo - move to utils
 function formatTimestamp(timestamp: number): string {
@@ -31,80 +29,18 @@ function formatTimestamp(timestamp: number): string {
   return date.toLocaleString('en', options).replace(',', '');
 }
 
-// @todo - move these to a utils file
-export const fetchUserStakes = async (address: string): Promise<UserStakes> => {
-  return await request(
-    SUBGRAPH_URL,
-    `query ($address: String!) {
-      stakes(first: 100, where: { wallet: $address }) {
-        id
-        amount
-        startTimestamp
-        stakeCreationHash
-        multiplier
-      }
-    }`,
-    { address: address.toLowerCase() }
-  );
-};
-
-// @todo - move these to a utils file
-export const fetchLeaderboard = async (): Promise<UserStakes> => {
-  return await request(
-    SUBGRAPH_URL,
-    `query {
-      wallets(first: 100) {
-        id
-        klimaAllocation
-        klimaXAllocation
-        totalStaked
-        stakes(first: 100) {
-          id
-          multiplier
-          amount
-          startTimestamp
-          stakeCreationHash
-        }
-      }
-    }`
-  );
-};
-
 // @todo - move to utils
 function shortenWalletAddress(address: string): string {
   if (address.length <= 10) return address; // Return the address if it's already short
   return `${address.slice(0, 5)}...${address.slice(-3)}`;
 }
 
-interface Stake {
-  id: string;
-  amount: string;
-  multiplier: string;
-  startTimestamp: string;
-  stakeCreationHash: string;
-}
-
-interface UserStakes {
-  stakes?: Stake[];
-}
-
-interface Leaderboard {
-  wallets: {
-    id: string;
-    klimaAllocation: string;
-    klimaXAllocation: string;
-    totalStaked: string;
-    stakes: Stake[];
-  };
-}
-
-
 const Page: FC = async () => {
   const cookie = (await headers()).get('cookie');
   const initialState = cookieToInitialState(config, cookie);
   const walletAddress = initialState?.current && initialState.connections.get(initialState?.current)?.accounts[0];
   const userStakes = walletAddress ? await fetchUserStakes(walletAddress) : { stakes: [] };
-  const leaderboard = await fetchLeaderboard() || { leaderboard: [] };
+  const leaderboard = await fetchLeaderboard() || { wallets: [] };
 
   return (
     <div className={styles.container}>
@@ -196,9 +132,9 @@ const Page: FC = async () => {
                         <TableHead>Points</TableHead>
                       </TableRow>
                     </TableHeader>
-                    {leaderboard.wallets && leaderboard.wallets.length > 0 ? (
+                    {leaderboard?.wallets && leaderboard?.wallets?.length > 0 ? (
                       <TableBody>
-                        {leaderboard.wallets.map((wallet: any) => (
+                        {leaderboard?.wallets?.map((wallet: any) => (
                           <TableRow key={wallet.id}>
                             <TableCell>1</TableCell>
                             <TableCell>{shortenWalletAddress(wallet.id)}</TableCell>

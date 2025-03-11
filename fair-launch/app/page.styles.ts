@@ -6,8 +6,8 @@ export const container = css({
 });
 
 export const main = css({
-  flex: 1,
   gap: 0,
+  flex: 1,
   display: 'flex',
   flexDirection: 'column',
 });
@@ -21,17 +21,17 @@ export const content = css({
 });
 
 export const title = css({
-  color: 'slate.950',  // todo - variable
+  color: 'slate.950',
   fontSize: '9.6rem',
   lineHeight: '9.6rem',
-  fontWeight: '700',
+  fontWeight: 700,
 });
 
 export const subtitle = css({
-  color: 'slate.950', // todo - variable
+  color: 'slate.950',
   fontSize: '3rem',
   lineHeight: '3.6rem',
-  fontWeight: '400',
+  fontWeight: 400,
 });
 
 export const connectButton = css({
@@ -41,7 +41,7 @@ export const connectButton = css({
   border: 'none',
   padding: '0.8rem 2.4rem',
   fontSize: '1.6rem',
-  fontWeight: '500',
+  fontWeight: 500,
   height: '4.8rem',
   width: 'max-content',
   cursor: 'pointer',
@@ -51,6 +51,6 @@ export const learnMore = css({
   color: 'slate.950',
   textDecoration: 'underline',
   fontSize: '1.4rem',
-  fontWeight: '400',
+  fontWeight: 400,
   width: 'fit-content',
 });

@@ -1,0 +1,64 @@
+import { request } from "graphql-request";
+import { SUBGRAPH_URL } from "./constants";
+
+export interface Stake {
+  id: string;
+  amount: string;
+  multiplier: string;
+  startTimestamp: string;
+  stakeCreationHash: string;
+}
+
+interface Leaderboard {
+  wallets: {
+    id: string;
+    klimaAllocation: string;
+    klimaXAllocation: string;
+    totalStaked: string;
+    stakes: Stake[];
+  }[];
+}
+
+/**
+ * Fetch user stakes  
+ * @param address - The address of the user
+ * @returns The user stakes
+ */
+export const fetchUserStakes = async (address: string): Promise<{ stakes?: Stake[] }> =>
+  await request(
+    SUBGRAPH_URL,
+    `query ($address: String!) {
+      stakes(first: 100, where: { wallet: $address }) {
+        id
+        amount
+        startTimestamp
+        stakeCreationHash
+        multiplier
+      }
+    }`,
+    { address: address.toLowerCase() }
+  );
+
+/**
+ * Fetch the current leaderboard
+ * @returns The leaderboard
+ */
+export const fetchLeaderboard = async (): Promise<Leaderboard> =>
+  await request(
+    SUBGRAPH_URL,
+    `query {
+      wallets(first: 100) {
+        id
+        klimaAllocation
+        klimaXAllocation
+        totalStaked
+        stakes(first: 100) {
+          id
+          multiplier
+          amount
+          startTimestamp
+          stakeCreationHash
+        }
+      }
+    }`
+  );
