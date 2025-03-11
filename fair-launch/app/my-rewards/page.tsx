@@ -14,6 +14,7 @@ import { cookieToInitialState } from 'wagmi'
 import { fetchUserStakes, fetchLeaderboard } from '@utils/queries';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@components/table/table';
 import * as styles from "./page.styles";
+import { UnstakeDialog } from '@components/dialogs/unstake-dialog/unstake-dialog';
 
 // @todo - move to utils
 function formatTimestamp(timestamp: number): string {
@@ -106,7 +107,9 @@ const Page: FC = async () => {
                           <TableCell>12,345</TableCell>
                           <TableCell>-75 KLIMA</TableCell>
                           <TableCell>80,000 KLIMAX</TableCell>
-                          <TableCell>Unstake</TableCell>
+                          <TableCell>
+                            <UnstakeDialog />
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>

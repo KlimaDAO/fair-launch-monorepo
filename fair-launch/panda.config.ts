@@ -25,7 +25,7 @@ export default defineConfig({
       },
       colors: {
         white: { value: '#FFFFFF' },
-        'red.600': { value: '#FC3503' },
+        'red.600': { value: '#DC2626' },
         'green.10': { value: '#E6FAEB' },
         'green.20': { value: '#D9F7E0' },
         'green.30': { value: '#B0EFC0' },
