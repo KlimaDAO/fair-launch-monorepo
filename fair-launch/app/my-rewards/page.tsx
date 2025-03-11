@@ -1,18 +1,18 @@
 import Image from 'next/image';
 import type { FC } from "react";
-import klimav1Logo from "../../public/tokens/klima-v1.svg";
-import gklimaLogo from "../../public/tokens/g-klima.svg";
-import { Badge } from "../../components/badge/badge";
-import { Footer } from "../../components/footer/footer";
-import { Navbar } from "../../components/navbar/navbar";
-import { config } from '../../utils/wagmi';
-import { Sidebar } from "../../components/sidebar/sidebar";
+import gklimaLogo from "@public/tokens/g-klima.svg";
+import klimav1Logo from "@public/tokens/klima-v1.svg";
+import { Badge } from "@components/badge/badge";
+import { Footer } from "@components/footer/footer";
+import { Navbar } from "@components/navbar/navbar";
+import { config } from '@utils/wagmi';
+import { Sidebar } from "@components/sidebar/sidebar";
 import { headers } from 'next/headers'
-import { Tooltip } from '../../components/tooltip/tooltip';
-import { StakeDialog } from "../../components/dialogs/stake-dialog/stake-dialog";
+import { Tooltip } from '@components/tooltip/tooltip';
+import { StakeDialog } from "@components/dialogs/stake-dialog/stake-dialog";
 import { cookieToInitialState } from 'wagmi'
-import { fetchUserStakes, fetchLeaderboard, Stake } from '../../utils/queries';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/table/table';
+import { fetchUserStakes, fetchLeaderboard } from '@utils/queries';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@components/table/table';
 import * as styles from "./page.styles";
 
 // @todo - move to utils
@@ -31,7 +31,7 @@ function formatTimestamp(timestamp: number): string {
 
 // @todo - move to utils
 function shortenWalletAddress(address: string): string {
-  if (address.length <= 10) return address; // Return the address if it's already short
+  if (address.length <= 10) return address;
   return `${address.slice(0, 5)}...${address.slice(-3)}`;
 }
 
@@ -93,12 +93,16 @@ const Page: FC = async () => {
                       <TableHead>&nbsp;</TableHead>
                     </TableRow>
                   </TableHeader>
-                  {userStakes.stakes && userStakes.stakes.length > 0 ? (
+                  {userStakes.stakes && !!userStakes.stakes.length ? (
                     <TableBody>
-                      {userStakes.stakes.map((stake: Stake) => (
+                      {userStakes.stakes.map((stake) => (
                         <TableRow key={stake.id}>
-                          <TableCell>{formatTimestamp(parseInt(stake.startTimestamp))}</TableCell>
-                          <TableCell><strong>{stake.amount}</strong></TableCell>
+                          <TableCell>
+                            {formatTimestamp(parseInt(stake.startTimestamp))}
+                          </TableCell>
+                          <TableCell>
+                            <strong>{stake.amount}</strong>
+                          </TableCell>
                           <TableCell>12,345</TableCell>
                           <TableCell>-75 KLIMA</TableCell>
                           <TableCell>80,000 KLIMAX</TableCell>
@@ -132,9 +136,9 @@ const Page: FC = async () => {
                         <TableHead>Points</TableHead>
                       </TableRow>
                     </TableHeader>
-                    {leaderboard?.wallets && leaderboard?.wallets?.length > 0 ? (
+                    {leaderboard?.wallets && !!leaderboard.wallets.length ? (
                       <TableBody>
-                        {leaderboard?.wallets?.map((wallet: any) => (
+                        {leaderboard.wallets.map((wallet) => (
                           <TableRow key={wallet.id}>
                             <TableCell>1</TableCell>
                             <TableCell>{shortenWalletAddress(wallet.id)}</TableCell>

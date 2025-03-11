@@ -9,14 +9,12 @@ export interface Stake {
   stakeCreationHash: string;
 }
 
-interface Leaderboard {
-  wallets: {
-    id: string;
-    klimaAllocation: string;
-    klimaXAllocation: string;
-    totalStaked: string;
-    stakes: Stake[];
-  }[];
+export interface Wallet {
+  id: string;
+  klimaAllocation: string;
+  klimaXAllocation: string;
+  totalStaked: string;
+  stakes: Stake[];
 }
 
 /**
@@ -43,7 +41,7 @@ export const fetchUserStakes = async (address: string): Promise<{ stakes?: Stake
  * Fetch the current leaderboard
  * @returns The leaderboard
  */
-export const fetchLeaderboard = async (): Promise<Leaderboard> =>
+export const fetchLeaderboard = async (): Promise<{ wallets: Wallet[] }> =>
   await request(
     SUBGRAPH_URL,
     `query {

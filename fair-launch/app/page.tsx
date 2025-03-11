@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import Link from "next/link";
-import { Footer } from "../components/footer/footer";
+import { Footer } from "@components/footer/footer";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import * as styles from "./page.styles";
 

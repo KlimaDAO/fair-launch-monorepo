@@ -1,11 +1,11 @@
 import Image from 'next/image';
 import type { FC } from "react";
-import { Footer } from "../../components/footer/footer";
-import { Navbar } from "../../components/navbar/navbar";
-import { Sidebar } from "../../components/sidebar/sidebar";
-import klimav1Logo from "../../public/tokens/klima-v1.svg";
-import { Dropdown } from '../../components/dropdown/dropdown';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/table/table';
+import klimav1Logo from "@public/tokens/klima-v1.svg";
+import { Footer } from "@components/footer/footer";
+import { Navbar } from "@components/navbar/navbar";
+import { Sidebar } from "@components/sidebar/sidebar";
+import { Dropdown } from '@components/dropdown/dropdown';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@components/table/table';
 import * as styles from "./page.styles";
 
 const dropdownItems = [

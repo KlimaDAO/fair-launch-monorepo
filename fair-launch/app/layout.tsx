@@ -1,10 +1,10 @@
-import "../styles/globals.css";
+import "@styles/globals.css";
 import type { Metadata } from "next";
 import type { FC, ReactNode } from "react";
 import { headers } from 'next/headers'
-import { WalletProvider } from '../providers/wallet-provider';
-import { inter, firaCode } from '../utils/fonts';
-import { IntroStepProvider } from '../providers/intro-step-provider';
+import { WalletProvider } from '@providers/wallet-provider';
+import { inter, firaCode } from '@utils/fonts';
+import { IntroStepProvider } from '@providers/intro-step-provider';
 import '@rainbow-me/rainbowkit/styles.css';
 
 export const metadata: Metadata = {
