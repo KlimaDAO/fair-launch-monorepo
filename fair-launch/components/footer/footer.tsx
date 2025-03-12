@@ -1,32 +1,45 @@
 'use client';
 
-import type { FC } from 'react';
 import Link from 'next/link';
+import type { FC } from 'react';
 import { FaTelegramPlane, FaLinkedinIn } from 'react-icons/fa';
 import { FaXTwitter, FaDiscord, FaYoutube } from "react-icons/fa6";
 import * as styles from './footer.styles';
 
-export const Footer: FC = () => (
-  <div className={styles.footer}>
-    <div className={styles.navLinks}>
-      <Link href="/">$KLIMA</Link>
-      <Link href="/">Governance</Link>
-      <Link href="/">Infrastructure</Link>
-      <Link href="/">Ecosystem</Link>
-      <Link href="/">Builders</Link>
-      <Link href="/">Resources</Link>
-      <Link href="/">Disclaimer</Link>
+export const Footer: FC = () => {
+  const currentYear = new Date().getFullYear();
+  return (
+    <div className={styles.footer}>
+      <div className={styles.navLinks}>
+        <Link href="#">$KLIMA</Link>
+        <Link href="#">Governance</Link>
+        <Link href="#">Infrastructure</Link>
+        <Link href="#">Ecosystem</Link>
+        <Link href="#">Builders</Link>
+        <Link href="#">Resources</Link>
+        <Link href="#">Disclaimer</Link>
+      </div>
+      <div className={styles.socials}>
+        <Link href="#">
+          <FaXTwitter />
+        </Link>
+        <Link href="#">
+          <FaYoutube />
+        </Link>
+        <Link href="#">
+          <FaLinkedinIn />
+        </Link>
+        <Link href="#">
+          <FaDiscord />
+        </Link>
+        <Link href="#">
+          <FaTelegramPlane />
+        </Link>
+      </div>
+      <div className={styles.copyright}>
+        © {currentYear} Klima Protocol. All rights reserved.
+      </div>
     </div>
-    <div className={styles.socials}>
-      <FaXTwitter />
-      <FaYoutube />
-      <FaLinkedinIn />
-      <FaDiscord />
-      <FaTelegramPlane />
-    </div>
-    <p className={styles.copyright}>
-      © 2020 Klima Protocol. All rights reserved.
-    </p>
-  </div>
-);
+  )
+};
 

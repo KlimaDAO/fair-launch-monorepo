@@ -16,6 +16,12 @@ export const confirmOverlay = css({
   background: 'void.10',
 });
 
+export const disabled = css({
+  backgroundColor: 'void.20',
+  color: 'void.40',
+  cursor: 'not-allowed',
+});
+
 export const content = css({
   minWidth: '30rem',
   background: 'white',
