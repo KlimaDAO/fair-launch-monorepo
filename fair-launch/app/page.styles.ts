@@ -3,6 +3,7 @@ import { css } from '../styled-system/css';
 export const container = css({
   display: 'flex',
   height: '100vh',
+  backgroundColor: 'black',
 });
 
 export const main = css({
@@ -21,36 +22,31 @@ export const content = css({
 });
 
 export const title = css({
-  color: 'slate.950',
-  fontSize: '9.6rem',
-  lineHeight: '9.6rem',
+  color: 'white',
+  fontSize: '8xl',
+  lineHeight: '8xl',
   fontWeight: 700,
 });
 
 export const subtitle = css({
-  color: 'slate.950',
-  fontSize: '3rem',
-  lineHeight: '3.6rem',
+  color: 'white',
+  fontSize: '3xl',
+  lineHeight: '3xl',
   fontWeight: 400,
 });
 
-export const connectButton = css({
-  backgroundColor: 'slate.950',
+export const description = css({
   color: 'white',
-  borderRadius: '0.4rem',
-  border: 'none',
-  padding: '0.8rem 2.4rem',
-  fontSize: '1.6rem',
-  fontWeight: 500,
-  height: '4.8rem',
-  width: 'max-content',
-  cursor: 'pointer',
+  fontSize: 'xl',
+  lineHeight: 'xl',
+  fontWeight: 400,
 });
 
 export const learnMore = css({
-  color: 'slate.950',
+  color: 'white !important',
   textDecoration: 'underline',
-  fontSize: '1.4rem',
+  fontSize: 'sm',
+  lineHeight: 'sm',
   fontWeight: 400,
   width: 'fit-content',
 });

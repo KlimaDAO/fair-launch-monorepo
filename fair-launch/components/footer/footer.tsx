@@ -20,19 +20,19 @@ export const Footer: FC = () => {
         <Link href="#">Disclaimer</Link>
       </div>
       <div className={styles.socials}>
-        <Link href="#">
+        <Link href="#" aria-label="Follow us on X">
           <FaXTwitter />
         </Link>
-        <Link href="#">
+        <Link href="#" aria-label="Follow us on Youtube">
           <FaYoutube />
         </Link>
-        <Link href="#">
+        <Link href="#" aria-label="Follow us on LinkedIn">
           <FaLinkedinIn />
         </Link>
-        <Link href="#">
+        <Link href="#" aria-label="Join our Discord">
           <FaDiscord />
         </Link>
-        <Link href="#">
+        <Link href="#" aria-label="Join our Telegram">
           <FaTelegramPlane />
         </Link>
       </div>

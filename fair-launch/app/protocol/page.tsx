@@ -1,5 +1,6 @@
+'use client';
+
 import Image from 'next/image';
-import type { FC } from "react";
 import klimav1Logo from "@public/tokens/klima-v1.svg";
 import { Footer } from "@components/footer/footer";
 import { config } from '@utils/wagmi';
@@ -8,6 +9,7 @@ import { Sidebar } from "@components/sidebar/sidebar";
 import { Dropdown } from '@components/dropdown/dropdown';
 import { readContract } from '@wagmi/core'
 import { fetchLeaderboard } from '@utils/queries';
+import { type FC, useState } from "react";
 import { abi as klimaFairLaunchAbi } from '@abi/klima-fair-launch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@components/table/table';
 import * as styles from "./page.styles";
@@ -21,7 +23,15 @@ const dropdownItems = [
 ];
 
 const Page: FC = async () => {
-  const leaderboard = await fetchLeaderboard() || { wallets: [] };
+
+  // const [selectedDropdown, setSelectedDropdown] = useState(
+  //   dropdownItems[0]
+  // );
+
+  // console.log('selectedDropdown', selectedDropdown);
+
+  // replace this call with react-query? 
+  // const leaderboard = await fetchLeaderboard() || { wallets: [] };
   const totalStaked = await readContract(config, {
     abi: klimaFairLaunchAbi,
     address: contractAddress,
@@ -80,6 +90,7 @@ const Page: FC = async () => {
                   Leaderboard
                 </div>
                 <Dropdown
+                  // onValueChange={(item) => console.log('item', item)}
                   selected={dropdownItems[0]}
                   items={[
                     { value: '1', label: 'Points - high to low' },
@@ -96,7 +107,7 @@ const Page: FC = async () => {
                       <TableHead>Points</TableHead>
                     </TableRow>
                   </TableHeader>
-                  {leaderboard?.wallets && !!leaderboard.wallets.length ? (
+                  {/* {leaderboard?.wallets && !!leaderboard.wallets.length ? (
                     <TableBody>
                       {leaderboard.wallets.map((wallet) => (
                         <TableRow key={wallet.id}>
@@ -113,7 +124,7 @@ const Page: FC = async () => {
                         <TableCell colSpan={4}>None yet</TableCell>
                       </TableRow>
                     </TableBody>
-                  )}
+                  )} */}
                 </Table>
               </div>
             </div>

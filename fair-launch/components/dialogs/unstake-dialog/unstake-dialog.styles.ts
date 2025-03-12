@@ -122,18 +122,21 @@ export const secondaryButton = css({
 
 export const unstakeButton = css({
   backgroundColor: 'transparent',
-  color: 'black',
+  color: 'void.50',
   border: 'none',
-  fontSize: 'base',
-  lineHeight: 'base',
-  fontWeight: 500,
-  height: '5.2rem',
+  fontSize: 'sm',
+  lineHeight: 'sm',
+  fontWeight: 700,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
   gap: '0.8rem',
   cursor: 'pointer',
   width: '100%',
+
+  '&:hover': {
+    color: 'void.80',
+  },
 
   lg: {
     width: '100%',

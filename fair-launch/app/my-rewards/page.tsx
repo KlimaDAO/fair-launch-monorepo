@@ -71,6 +71,8 @@ const Page: FC = async () => {
     ? await fetchUserStakes(walletAddress)
     : { stakes: [] };
   const leaderboard = (await fetchLeaderboard()) || { wallets: [] };
+  console.log("userStakes", userStakes);
+  console.log("leaderboard", leaderboard);
 
   const tokenPercentage = calculateTokenPercentage(
     totalUserStakes(userStakes.stakes || []),
