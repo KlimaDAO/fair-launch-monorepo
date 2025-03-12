@@ -96,7 +96,19 @@ export const cardContents = css({
   alignItems: 'center',
   flexDirection: 'row',
   justifyContent: 'space-between'
-})
+});
+
+export const mainText = css({
+  fontSize: '2rem',
+  fontWeight: 700,
+  color: 'void.80',
+});
+
+export const secondaryText = css({
+  fontSize: '1.4rem',
+  fontWeight: 400,
+  color: 'void.50',
+});
 
 export const divider = css({
   width: '100%',

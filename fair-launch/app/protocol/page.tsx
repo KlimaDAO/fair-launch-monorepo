@@ -2,25 +2,23 @@ import Image from 'next/image';
 import type { FC } from "react";
 import klimav1Logo from "@public/tokens/klima-v1.svg";
 import { Footer } from "@components/footer/footer";
+import { config } from '@utils/wagmi';
 import { Navbar } from "@components/navbar/navbar";
 import { Sidebar } from "@components/sidebar/sidebar";
 import { Dropdown } from '@components/dropdown/dropdown';
+import { readContract } from '@wagmi/core'
+import { fetchLeaderboard } from '@utils/queries';
+import { abi as klimaFairLaunchAbi } from '../../abi/klima-fair-launch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@components/table/table';
 import * as styles from "./page.styles";
-import { fetchLeaderboard } from '@utils/queries';
-import { readContract } from '@wagmi/core'
-import { config } from '@utils/wagmi';
-import { abi as klimaFairLaunchAbi } from '../../abi/klima-fair-launch';
-import { formatUnits } from 'viem';
 
+// @todo - move to utils
 const contractAddress = '0x5D7c2a994Ca46c2c12a605699E65dcbafDeae80c';
-
 
 const dropdownItems = [
   { value: '1', label: 'Points - high to low' },
   { value: '2', label: 'Points - low to high' }
 ];
-
 
 const Page: FC = async () => {
   const leaderboard = await fetchLeaderboard() || { wallets: [] };
@@ -45,27 +43,31 @@ const Page: FC = async () => {
             <div className={styles.cardInner}>
               <h5 className={styles.cardTitle}>My KLIMA(v0) Deposited</h5>
               <div className={styles.cardContents}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '20px', fontWeight: '700' }} id='step1'>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Image src={klimav1Logo} alt="Klima V1 Logo" />
-                  {BigInt(totalStaked)}
+                  <div className={styles.mainText}>
+                    {BigInt(totalStaked)}
+                  </div>
                 </div>
-                <div style={{ fontSize: '14px', fontWeight: '400', color: '#64748B' }} id='step2'><strong>50%</strong> of <strong>42</strong> MM</div>
+                <div className={styles.secondaryText}>
+                  <strong>50%</strong> of <strong>42</strong> MM
+                </div>
               </div>
             </div>
             <div className={styles.divider} />
             <div className={styles.cardInner}>
               <h5 className={styles.cardTitle}>$TVL</h5>
               <div className={styles.cardContents}>
-                <div style={{ fontSize: '20px', fontWeight: '700' }} id='step3'>$14,000,000</div>
+                <div className={styles.mainText}>$14,000,000</div>
               </div>
             </div>
             <div className={styles.divider} />
             <div className={styles.cardInner}>
               <h5 className={styles.cardTitle}>KLIMA(v1) Burned</h5>
               <div className={styles.cardContents}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '20px', fontWeight: '700' }} id='step1'>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Image src={klimav1Logo} alt="Klima V1 Logo" />
-                  40,000,000
+                  <div className={styles.mainText}>40,000,000</div>
                 </div>
               </div>
             </div>
@@ -73,8 +75,18 @@ const Page: FC = async () => {
 
           <div className={styles.card}>
             <div className={styles.cardInner}>
-              <div className={styles.cardTitle}>Leaderboard</div>
-              <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div className={styles.cardContents}>
+                <div className={styles.cardTitle}>
+                  Leaderboard
+                </div>
+                <Dropdown
+                  selected={dropdownItems[0]}
+                  items={[
+                    { value: '1', label: 'Points - high to low' },
+                    { value: '2', label: 'Points - low to high' }
+                  ]} />
+              </div>
+              <div className={styles.cardContents}>
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -106,48 +118,6 @@ const Page: FC = async () => {
               </div>
             </div>
           </div>
-
-
-          {/* <div className={styles.card}>
-            <div className={styles.cardInner}>
-              <div className={styles.cardContents}>
-                <h5 className={styles.cardTitle}>Leaderboard</h5>
-                <Dropdown
-                  selected={dropdownItems[0]}
-                  items={[
-                    { value: '1', label: 'Points - high to low' },
-                    { value: '2', label: 'Points - low to high' }
-                  ]} />
-              </div>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Place</TableHead>
-                    <TableHead>Wallet</TableHead>
-                    <TableHead>KLIMA(v0) Staked</TableHead>
-                    <TableHead>Points</TableHead>
-                    <TableHead>&nbsp;</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <TableRow>
-                    <TableCell>1</TableCell>
-                    <TableCell>0x1234567890</TableCell>
-                    <TableCell>100.26</TableCell>
-                    <TableCell>100.26</TableCell>
-                    <TableCell>&nbsp;</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>2</TableCell>
-                    <TableCell>0x1234567890</TableCell>
-                    <TableCell>100.26</TableCell>
-                    <TableCell>100.26</TableCell>
-                    <TableCell>&nbsp;</TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </div>
-          </div> */}
         </div>
         <Footer />
       </div>
