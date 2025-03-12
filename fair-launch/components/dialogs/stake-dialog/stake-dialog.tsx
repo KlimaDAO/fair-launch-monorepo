@@ -57,8 +57,10 @@ export const StakeDialog: FC = () => {
   };
 
   const handleStake = async () => {
-    // approve the contract to spend the KLIMA
-    // await approve();
+    if (!allowanceData) {
+      // approve the contract to spend the KLIMA
+      await approve();
+    }
     // stake the KLIMA
     await stake();
   };

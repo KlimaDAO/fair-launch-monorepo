@@ -10,14 +10,14 @@ import { Sidebar } from "@components/sidebar/sidebar";
 import { headers } from 'next/headers'
 import { Tooltip } from '@components/tooltip/tooltip';
 import { StakeDialog } from "@components/dialogs/stake-dialog/stake-dialog";
+import { UnstakeDialog } from '@components/dialogs/unstake-dialog/unstake-dialog';
 import { cookieToInitialState } from 'wagmi'
 import { fetchUserStakes, fetchLeaderboard } from '@utils/queries';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@components/table/table';
 import * as styles from "./page.styles";
-import { UnstakeDialog } from '@components/dialogs/unstake-dialog/unstake-dialog';
 
 // @todo - move to utils
-function formatTimestamp(timestamp: number): string {
+const formatTimestamp = (timestamp: number): string => {
   const date = new Date(timestamp * 1000); // Convert to milliseconds
   const options: Intl.DateTimeFormatOptions = {
     day: '2-digit',
@@ -31,10 +31,20 @@ function formatTimestamp(timestamp: number): string {
 }
 
 // @todo - move to utils
-function shortenWalletAddress(address: string): string {
+const shortenWalletAddress = (address: string): string => {
   if (address.length <= 10) return address;
   return `${address.slice(0, 5)}...${address.slice(-3)}`;
 }
+
+// @todo - move to utils
+const formatCurrency = (value: number) =>
+  new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(value);
+
+const totalUserStakes = (stakes: { amount: string }[]): number =>
+  stakes.reduce((total, stake) => total + parseFloat(stake.amount), 0);
 
 const Page: FC = async () => {
   const cookie = (await headers()).get('cookie');
@@ -60,11 +70,11 @@ const Page: FC = async () => {
           </div>
           <div className={styles.card}>
             <div className={styles.cardInner}>
-              <h5 style={{ fontSize: '16px', fontWeight: '400', color: 'void.80' }}>My KLIMA(v1) Deposited</h5>
+              <h5 style={{ fontSize: '16px', fontWeight: '400', color: 'void.80' }}>My KLIMA(v0) Deposited</h5>
               <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '20px', fontWeight: '700' }} id='step1'>
                   <Image src={klimav1Logo} alt="Klima V1 Logo" />
-                  0.00
+                  {totalUserStakes(userStakes.stakes || [])}
                 </div>
                 <div style={{ fontSize: '14px', fontWeight: '400', color: '#64748B' }} id='step2'><strong>&lt;1%</strong> of <strong>21.34</strong> MM</div>
               </div>
@@ -102,7 +112,7 @@ const Page: FC = async () => {
                             {formatTimestamp(parseInt(stake.startTimestamp))}
                           </TableCell>
                           <TableCell>
-                            <strong>{stake.amount}</strong>
+                            <strong>{formatCurrency(parseFloat(stake.amount))}</strong>
                           </TableCell>
                           <TableCell>12,345</TableCell>
                           <TableCell>-75 KLIMA</TableCell>
@@ -144,8 +154,12 @@ const Page: FC = async () => {
                         {leaderboard.wallets.map((wallet) => (
                           <TableRow key={wallet.id}>
                             <TableCell>1</TableCell>
-                            <TableCell>{shortenWalletAddress(wallet.id)}</TableCell>
-                            <TableCell>{wallet.totalStaked}</TableCell>
+                            <TableCell>
+                              {shortenWalletAddress(wallet.id)}
+                            </TableCell>
+                            <TableCell>
+                              {formatCurrency(parseFloat(wallet.totalStaked))}
+                            </TableCell>
                             <TableCell>-</TableCell>
                           </TableRow>
                         ))}
@@ -161,6 +175,7 @@ const Page: FC = async () => {
                 </div>
               </div>
             </div>
+
             <div className={styles.card}>
               <div className={styles.cardInner}>
                 <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '10px' }}>
