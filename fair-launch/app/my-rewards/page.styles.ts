@@ -86,6 +86,32 @@ export const cardInner = css({
   justifyContent: 'space-between'
 });
 
+export const cardTitle = css({
+  fontSize: 'base',
+  lineHeight: 'base',
+  fontWeight: 400,
+  color: 'void.80',
+});
+
+export const cardContents = css({
+  display: 'flex',
+  alignItems: 'center',
+  flexDirection: 'row',
+  justifyContent: 'space-between'
+});
+
+export const mainText = css({
+  fontSize: '2rem',
+  fontWeight: 700,
+  color: 'void.80',
+});
+
+export const secondaryText = css({
+  fontSize: '1.4rem',
+  fontWeight: 400,
+  color: 'void.50',
+});
+
 export const divider = css({
   width: '100%',
   height: '0.1rem',

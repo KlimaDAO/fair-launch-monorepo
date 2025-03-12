@@ -49,6 +49,7 @@ const totalUserStakes = (stakes: { amount: string }[]): number =>
 const Page: FC = async () => {
   const cookie = (await headers()).get('cookie');
   const initialState = cookieToInitialState(config, cookie);
+
   const walletAddress = initialState?.current && initialState.connections.get(initialState?.current)?.accounts[0];
   const userStakes = walletAddress ? await fetchUserStakes(walletAddress) : { stakes: [] };
   const leaderboard = await fetchLeaderboard() || { wallets: [] };
@@ -70,29 +71,35 @@ const Page: FC = async () => {
           </div>
           <div className={styles.card}>
             <div className={styles.cardInner}>
-              <h5 style={{ fontSize: '16px', fontWeight: '400', color: 'void.80' }}>My KLIMA(v0) Deposited</h5>
-              <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '20px', fontWeight: '700' }} id='step1'>
+              <h5 className={styles.cardTitle}>My KLIMA(v0) Deposited</h5>
+              <div className={styles.cardContents}>
+                <div id="step1" style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
                   <Image src={klimav1Logo} alt="Klima V1 Logo" />
-                  {totalUserStakes(userStakes.stakes || [])}
+                  <div className={styles.mainText}>
+                    {totalUserStakes(userStakes.stakes || [])}
+                  </div>
                 </div>
-                <div style={{ fontSize: '14px', fontWeight: '400', color: '#64748B' }} id='step2'><strong>&lt;1%</strong> of <strong>21.34</strong> MM</div>
+                <div id="step2" className={styles.secondaryText}>
+                  <strong>&lt;1%</strong> of <strong>21.34</strong> MM
+                </div>
               </div>
             </div>
             <div className={styles.divider} />
             <div className={styles.cardInner}>
-              <h5 style={{ fontSize: '16px', fontWeight: '400', color: 'void.80' }}>My Points Accumulated</h5>
-              <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ fontSize: '20px', fontWeight: '700' }} id='step3'>0</div>
-                <div style={{ fontSize: '14px', fontWeight: '400', color: '#64748B' }}><strong>&lt;1%</strong> of <strong>12.49</strong> B</div>
+              <h5 className={styles.cardTitle}>My Points Accumulated</h5>
+              <div className={styles.cardContents}>
+                <div id="step3" className={styles.mainText}>0</div>
+                <div className={styles.secondaryText}>
+                  <strong>&lt;1%</strong> of <strong>12.49</strong> B
+                </div>
               </div>
             </div>
           </div>
 
           <div className={styles.card}>
             <div className={styles.cardInner}>
-              <h5 style={{ fontSize: '16px', fontWeight: '400', color: 'void.80' }}>Stake History</h5>
-              <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <h5 className={styles.cardTitle}>Stake History</h5>
+              <div className={styles.cardContents}>
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -138,8 +145,8 @@ const Page: FC = async () => {
           <div className={styles.twoCols}>
             <div className={styles.card}>
               <div className={styles.cardInner}>
-                <h5 style={{ fontSize: '16px', fontWeight: '400', color: 'void.80' }}>Leaderboard</h5>
-                <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <h5 className={styles.cardTitle}>Leaderboard</h5>
+                <div className={styles.cardContents}>
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -151,9 +158,11 @@ const Page: FC = async () => {
                     </TableHeader>
                     {leaderboard?.wallets && !!leaderboard.wallets.length ? (
                       <TableBody>
-                        {leaderboard.wallets.map((wallet) => (
+                        {leaderboard.wallets.map((wallet, index) => (
                           <TableRow key={wallet.id}>
-                            <TableCell>1</TableCell>
+                            <TableCell>
+                              {index + 1}
+                            </TableCell>
                             <TableCell>
                               {shortenWalletAddress(wallet.id)}
                             </TableCell>
@@ -178,9 +187,9 @@ const Page: FC = async () => {
 
             <div className={styles.card}>
               <div className={styles.cardInner}>
-                <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '10px' }}>
+                <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '1rem' }}>
                   <Image src={gklimaLogo} alt="Klima Logo" />
-                  <h5 style={{ fontSize: '16px', fontWeight: '400', color: 'void.80' }}>
+                  <h5 className={styles.cardTitle}>
                     KLIMAX Allocation Value at:
                   </h5>
                 </div>
