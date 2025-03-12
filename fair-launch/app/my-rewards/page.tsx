@@ -1,44 +1,57 @@
-import Image from 'next/image';
+import Image from "next/image";
 import type { FC } from "react";
 import gklimaLogo from "@public/tokens/g-klima.svg";
 import klimav1Logo from "@public/tokens/klima-v1.svg";
 import { Badge } from "@components/badge/badge";
 import { Footer } from "@components/footer/footer";
 import { Navbar } from "@components/navbar/navbar";
-import { config } from '@utils/wagmi';
+import { config } from "@utils/wagmi";
 import { Sidebar } from "@components/sidebar/sidebar";
-import { headers } from 'next/headers'
-import { Tooltip } from '@components/tooltip/tooltip';
+import { headers } from "next/headers";
+import { Tooltip } from "@components/tooltip/tooltip";
 import { StakeDialog } from "@components/dialogs/stake-dialog/stake-dialog";
-import { UnstakeDialog } from '@components/dialogs/unstake-dialog/unstake-dialog';
-import { cookieToInitialState } from 'wagmi'
-import { fetchUserStakes, fetchLeaderboard } from '@utils/queries';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@components/table/table';
+import { UnstakeDialog } from "@components/dialogs/unstake-dialog/unstake-dialog";
+import { cookieToInitialState } from "wagmi";
+import { fetchUserStakes, fetchLeaderboard } from "@utils/queries";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@components/table/table";
 import * as styles from "./page.styles";
+
+// @todo - move to utils
+const calculateTokenPercentage = (tokens: number, totalSupply: number) => {
+  if (totalSupply === 0) return 0;
+  return (tokens / totalSupply) * 100;
+};
 
 // @todo - move to utils
 const formatTimestamp = (timestamp: number): string => {
   const date = new Date(timestamp * 1000); // Convert to milliseconds
   const options: Intl.DateTimeFormatOptions = {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
   };
-  return date.toLocaleString('en', options).replace(',', '');
-}
+  return date.toLocaleString("en", options).replace(",", "");
+};
 
 // @todo - move to utils
 const shortenWalletAddress = (address: string): string => {
   if (address.length <= 10) return address;
   return `${address.slice(0, 5)}...${address.slice(-3)}`;
-}
+};
 
 // @todo - move to utils
 const formatCurrency = (value: number) =>
-  new Intl.NumberFormat('en-US', {
+  new Intl.NumberFormat("en-US", {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   }).format(value);
@@ -47,12 +60,23 @@ const totalUserStakes = (stakes: { amount: string }[]): number =>
   stakes.reduce((total, stake) => total + parseFloat(stake.amount), 0);
 
 const Page: FC = async () => {
-  const cookie = (await headers()).get('cookie');
+  const cookie = (await headers()).get("cookie");
   const initialState = cookieToInitialState(config, cookie);
 
-  const walletAddress = initialState?.current && initialState.connections.get(initialState?.current)?.accounts[0];
-  const userStakes = walletAddress ? await fetchUserStakes(walletAddress) : { stakes: [] };
-  const leaderboard = await fetchLeaderboard() || { wallets: [] };
+  const walletAddress =
+    initialState?.current &&
+    initialState.connections.get(initialState?.current)?.accounts[0];
+
+  const userStakes = walletAddress
+    ? await fetchUserStakes(walletAddress)
+    : { stakes: [] };
+  const leaderboard = (await fetchLeaderboard()) || { wallets: [] };
+
+  const tokenPercentage = calculateTokenPercentage(
+    totalUserStakes(userStakes.stakes || []),
+    21340000 // todo - fetch the total supply from the contract
+  );
+  console.log("tokenPercentage", tokenPercentage);
 
   return (
     <div className={styles.container}>
@@ -73,7 +97,14 @@ const Page: FC = async () => {
             <div className={styles.cardInner}>
               <h5 className={styles.cardTitle}>My KLIMA(v0) Deposited</h5>
               <div className={styles.cardContents}>
-                <div id="step1" style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                <div
+                  id="step1"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.8rem",
+                  }}
+                >
                   <Image src={klimav1Logo} alt="Klima V1 Logo" />
                   <div className={styles.mainText}>
                     {totalUserStakes(userStakes.stakes || [])}
@@ -88,14 +119,15 @@ const Page: FC = async () => {
             <div className={styles.cardInner}>
               <h5 className={styles.cardTitle}>My Points Accumulated</h5>
               <div className={styles.cardContents}>
-                <div id="step3" className={styles.mainText}>0</div>
+                <div id="step3" className={styles.mainText}>
+                  0
+                </div>
                 <div className={styles.secondaryText}>
                   <strong>&lt;1%</strong> of <strong>12.49</strong> B
                 </div>
               </div>
             </div>
           </div>
-
           <div className={styles.card}>
             <div className={styles.cardInner}>
               <h5 className={styles.cardTitle}>Stake History</h5>
@@ -119,7 +151,9 @@ const Page: FC = async () => {
                             {formatTimestamp(parseInt(stake.startTimestamp))}
                           </TableCell>
                           <TableCell>
-                            <strong>{formatCurrency(parseFloat(stake.amount))}</strong>
+                            <strong>
+                              {formatCurrency(parseFloat(stake.amount))}
+                            </strong>
                           </TableCell>
                           <TableCell>12,345</TableCell>
                           <TableCell>-75 KLIMA</TableCell>
@@ -141,7 +175,6 @@ const Page: FC = async () => {
               </div>
             </div>
           </div>
-
           <div className={styles.twoCols}>
             <div className={styles.card}>
               <div className={styles.cardInner}>
@@ -160,9 +193,7 @@ const Page: FC = async () => {
                       <TableBody>
                         {leaderboard.wallets.map((wallet, index) => (
                           <TableRow key={wallet.id}>
-                            <TableCell>
-                              {index + 1}
-                            </TableCell>
+                            <TableCell>{index + 1}</TableCell>
                             <TableCell>
                               {shortenWalletAddress(wallet.id)}
                             </TableCell>
@@ -184,10 +215,16 @@ const Page: FC = async () => {
                 </div>
               </div>
             </div>
-
             <div className={styles.card}>
               <div className={styles.cardInner}>
-                <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '1rem' }}>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: "1rem",
+                  }}
+                >
                   <Image src={gklimaLogo} alt="Klima Logo" />
                   <h5 className={styles.cardTitle}>
                     KLIMAX Allocation Value at:
@@ -201,5 +238,5 @@ const Page: FC = async () => {
       </div>
     </div>
   );
-}
+};
 export default Page;

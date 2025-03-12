@@ -1,15 +1,15 @@
 "use client";
 
 import clsx from "clsx";
-import type { FC } from "react";
 import { Alert } from "@components/alert/alert";
 import { Input } from "@components/input/input";
 import { Dialog } from "radix-ui";
+import { useForm } from "@tanstack/react-form";
 import { parseEther } from "viem";
 import { abi as erc20Abi } from "@abi/erc20";
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
-import { Fragment, useEffect, useState } from "react";
 import { MdCelebration, MdLibraryAdd } from "react-icons/md";
+import { type FC, Fragment, useEffect, useState } from "react";
 import {
   useAccount,
   useReadContract,
@@ -20,6 +20,7 @@ import * as styles from "./stake-dialog.styles";
 
 type FocusOutsideEvent = CustomEvent<{ originalEvent: FocusEvent }>;
 type PointerDownOutsideEvent = CustomEvent<{ originalEvent: PointerEvent }>;
+type InteractOutsideEvent = FocusOutsideEvent | PointerDownOutsideEvent;
 
 // TODO - move to constants...
 const contractAddress = "0x5D7c2a994Ca46c2c12a605699E65dcbafDeae80c";
@@ -43,13 +44,21 @@ export const StakeDialog: FC = () => {
   const [dialogState, setDialogState] = useState<DialogState>(
     DialogState.INITIAL
   );
+
+  const form = useForm({
+    defaultValues: { amount: "" },
+    onSubmit: async ({ value }) => {
+      // Do something with form data
+      console.log(value);
+    },
+  });
+
   const {
     data: approveData,
     isPending: isApprovePending,
     writeContract: approveContract,
   } = useWriteContract();
   const { data: stakeData, writeContract: stakeContract } = useWriteContract();
-
   const { data: allowanceData } = useReadContract({
     ...allowanceConfig,
     args: [address, contractAddress],
@@ -88,9 +97,7 @@ export const StakeDialog: FC = () => {
   };
 
   useEffect(() => {
-    if (!!isApproved) {
-      setDialogState(DialogState.CONFIRM);
-    }
+    if (!!isApproved) setDialogState(DialogState.CONFIRM);
   }, [isApproved]);
 
   const InitialView = () => {
@@ -238,9 +245,7 @@ export const StakeDialog: FC = () => {
         />
         <Dialog.Content
           className={styles.content}
-          onInteractOutside={(
-            e: PointerDownOutsideEvent | FocusOutsideEvent
-          ) => {
+          onInteractOutside={(e: InteractOutsideEvent) => {
             e.preventDefault();
             e.stopPropagation();
           }}
