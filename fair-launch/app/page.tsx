@@ -1,13 +1,22 @@
 import type { FC } from "react";
 import Link from "next/link";
+import Image from 'next/image';
 import { Footer } from "@components/footer/footer";
 import { ConnectButton } from "@components/connect/connect";
+import backgroundImage from '@public/background.png';
 import * as styles from "./page.styles";
 
 const Page: FC = () => (
   <div className={styles.container}>
     <div className={styles.main}>
       <div className={styles.content}>
+        <Image
+          src={backgroundImage}
+          alt="Background Cover"
+          layout="fill"
+          objectFit="cover"
+          className={styles.backgroundImage}
+        />
         <h1 className={styles.title}>Welcome</h1>
         <p className={styles.subtitle}>To Klima Fair Launch 2025.</p>
         <p className={styles.description}>Connect a wallet to get started.</p>

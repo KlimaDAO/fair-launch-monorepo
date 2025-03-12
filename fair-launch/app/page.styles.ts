@@ -3,7 +3,7 @@ import { css } from '../styled-system/css';
 export const container = css({
   display: 'flex',
   height: '100vh',
-  backgroundColor: 'black',
+  backgroundColor: 'transparent',
 });
 
 export const main = css({
@@ -19,6 +19,7 @@ export const content = css({
   display: 'flex',
   padding: '8rem',
   flexDirection: 'column',
+  position: 'relative',
 });
 
 export const title = css({
@@ -49,4 +50,13 @@ export const learnMore = css({
   lineHeight: 'sm',
   fontWeight: 400,
   width: 'fit-content',
+});
+
+export const backgroundImage = css({
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  width: '100%',
+  height: '100%',
+  zIndex: -1,
 });

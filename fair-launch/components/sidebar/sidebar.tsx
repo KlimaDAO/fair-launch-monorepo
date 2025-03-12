@@ -4,10 +4,10 @@ import clsx from 'clsx';
 import type { FC } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from 'next/navigation';
 import klimaLogo from "@public/kp-logo.svg";
-import { IntroWalkthrough } from "@components/intro-walkthrough/intro";
+import { usePathname, useRouter } from 'next/navigation';
 import { IoTrophySharp } from "react-icons/io5";
+import { IntroWalkthrough } from "@components/intro-walkthrough/intro";
 import { MdDashboard, MdLogout } from "react-icons/md";
 import { useAccount, useDisconnect } from "wagmi";
 import * as styles from './sidebar.styles';
@@ -18,9 +18,15 @@ const navLinks = [
 ];
 
 export const Sidebar: FC = () => {
+  const router = useRouter();
   const pathname = usePathname();
   const { address } = useAccount();
   const { disconnect } = useDisconnect();
+
+  const handleLogout = async () => {
+    await disconnect();
+    setTimeout(() => router.push('/'), 100);
+  };
 
   return (
     <div className={styles.sidebar}>
@@ -46,7 +52,7 @@ export const Sidebar: FC = () => {
         <IntroWalkthrough />
         {address && (
           <button
-            onClick={() => disconnect()}
+            onClick={handleLogout}
             className={styles.logoutButton}>
             <MdLogout />
             <span>Logout</span>
