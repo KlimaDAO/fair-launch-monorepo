@@ -126,7 +126,7 @@ export const secondaryButton = css({
   cursor: 'pointer',
 });
 
-export const fairLaunchButton = css({
+export const participateButton = css({
   backgroundColor: 'green.40',
   color: 'white',
   borderRadius: 'sm',
