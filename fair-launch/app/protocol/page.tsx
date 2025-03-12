@@ -1,5 +1,3 @@
-'use client';
-
 import Image from 'next/image';
 import klimav1Logo from "@public/tokens/klima-v1.svg";
 import { Footer } from "@components/footer/footer";
@@ -28,10 +26,8 @@ const Page: FC = async () => {
   //   dropdownItems[0]
   // );
 
-  // console.log('selectedDropdown', selectedDropdown);
-
   // replace this call with react-query? 
-  // const leaderboard = await fetchLeaderboard() || { wallets: [] };
+  const leaderboard = await fetchLeaderboard() || { wallets: [] };
   const totalStaked = await readContract(config, {
     abi: klimaFairLaunchAbi,
     address: contractAddress,
@@ -90,7 +86,6 @@ const Page: FC = async () => {
                   Leaderboard
                 </div>
                 <Dropdown
-                  // onValueChange={(item) => console.log('item', item)}
                   selected={dropdownItems[0]}
                   items={[
                     { value: '1', label: 'Points - high to low' },
@@ -107,11 +102,11 @@ const Page: FC = async () => {
                       <TableHead>Points</TableHead>
                     </TableRow>
                   </TableHeader>
-                  {/* {leaderboard?.wallets && !!leaderboard.wallets.length ? (
+                  {leaderboard?.wallets && !!leaderboard.wallets.length ? (
                     <TableBody>
-                      {leaderboard.wallets.map((wallet) => (
+                      {leaderboard.wallets.map((wallet, index) => (
                         <TableRow key={wallet.id}>
-                          <TableCell>1</TableCell>
+                          <TableCell>{index + 1}</TableCell>
                           <TableCell>{wallet.id}</TableCell>
                           <TableCell>{wallet.totalStaked}</TableCell>
                           <TableCell>-</TableCell>
@@ -124,7 +119,7 @@ const Page: FC = async () => {
                         <TableCell colSpan={4}>None yet</TableCell>
                       </TableRow>
                     </TableBody>
-                  )} */}
+                  )}
                 </Table>
               </div>
             </div>
