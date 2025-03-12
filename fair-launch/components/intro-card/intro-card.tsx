@@ -1,7 +1,6 @@
 'use client';
 
 import type { FC } from 'react';
-// import { Button } from '@repo/ui/button';
 import { CardComponentProps } from 'nextstepjs';
 import * as styles from './intro-card.styles';
 

@@ -5,12 +5,12 @@ import type { FC } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from 'next/navigation';
-import klimaLogo from "../../public/kp-logo.svg";
-import { IntroWalkthrough } from "../intro-walkthrough/intro";
+import klimaLogo from "@public/kp-logo.svg";
+import { IntroWalkthrough } from "@components/intro-walkthrough/intro";
 import { IoTrophySharp } from "react-icons/io5";
 import { MdDashboard, MdLogout } from "react-icons/md";
-import * as styles from './sidebar.styles';
 import { useAccount, useDisconnect } from "wagmi";
+import * as styles from './sidebar.styles';
 
 const navLinks = [
   { href: '/my-rewards', icon: <IoTrophySharp />, label: 'My Rewards' },

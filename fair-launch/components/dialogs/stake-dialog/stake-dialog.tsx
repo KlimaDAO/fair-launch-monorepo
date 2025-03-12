@@ -2,15 +2,15 @@
 
 import clsx from 'clsx';
 import type { FC } from "react";
-import { Alert } from "../../alert/alert";
-import { Input } from "../../input/input";
+import { Alert } from "@components/alert/alert";
+import { Input } from "@components/input/input";
 import { Dialog } from "radix-ui";
 import { useState } from "react";
 import { parseEther } from 'viem'
 import { useAccount, useReadContract, useWriteContract } from "wagmi";
 import { MdCelebration, MdLibraryAdd } from "react-icons/md";
-import { abi } from '../../../abi/klima-fair-launch';
-import { abi as erc20Abi } from '../../../abi/erc20';
+import { abi } from '@abi/klima-fair-launch';
+import { abi as erc20Abi } from '@abi/erc20';
 import * as styles from './stake-dialog.styles';
 
 type FocusOutsideEvent = CustomEvent<{ originalEvent: FocusEvent }>;

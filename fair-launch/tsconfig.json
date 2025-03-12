@@ -23,6 +23,7 @@
       }
     ],
     "paths": {
+      "@abi/*": ["abi/*"],
       "@actions/*": ["actions/*"],
       "@app/*": ["app/*"],
       "@components/*": ["components/*"],

@@ -1,3 +1,5 @@
+'use client';
+
 import { Select } from "radix-ui";
 import type { FC } from "react";
 import { MdKeyboardArrowDown } from "react-icons/md";

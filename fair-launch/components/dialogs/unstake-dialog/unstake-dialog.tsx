@@ -8,7 +8,7 @@ import { useState } from "react";
 import { parseEther } from 'viem'
 import { useAccount, useWriteContract } from "wagmi";
 import { MdAccountBalance, MdWarningAmber } from "react-icons/md";
-import { abi } from '../../../abi/klima-fair-launch';
+import { abi } from '@abi/klima-fair-launch';
 import * as styles from './unstake-dialog.styles';
 
 type FocusOutsideEvent = CustomEvent<{ originalEvent: FocusEvent }>;

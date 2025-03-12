@@ -1,7 +1,6 @@
 'use client';
 
 import type { FC } from 'react';
-import { useLayoutEffect } from 'react';
 import { useNextStep } from 'nextstepjs';
 import * as styles from './intro.styles';
 import { MdHelpOutline } from 'react-icons/md';

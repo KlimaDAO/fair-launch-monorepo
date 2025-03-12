@@ -8,7 +8,7 @@ import { Sidebar } from "@components/sidebar/sidebar";
 import { Dropdown } from '@components/dropdown/dropdown';
 import { readContract } from '@wagmi/core'
 import { fetchLeaderboard } from '@utils/queries';
-import { abi as klimaFairLaunchAbi } from '../../abi/klima-fair-launch';
+import { abi as klimaFairLaunchAbi } from '@abi/klima-fair-launch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@components/table/table';
 import * as styles from "./page.styles";
 
