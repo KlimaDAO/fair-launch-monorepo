@@ -4,7 +4,6 @@ import type { FC, ReactNode } from "react";
 import { headers } from 'next/headers'
 import { WalletProvider } from '@providers/wallet-provider';
 import { inter, firaCode } from '@utils/fonts';
-import { IntroStepProvider } from '@providers/intro-step-provider';
 import '@rainbow-me/rainbowkit/styles.css';
 
 export const metadata: Metadata = {
@@ -30,14 +29,11 @@ const RootLayout: FC<Props> = async (props) => {
   //     console.log('parsed', parsed.state.connections.value);
   //   }
   // }
-
   return (
     <html lang="en">
       <body className={`${inter.variable} ${firaCode.variable}`}>
         <WalletProvider cookie={cookie}>
-          <IntroStepProvider>
-            {props.children}
-          </IntroStepProvider>
+          {props.children}
         </WalletProvider>
       </body>
     </html>

@@ -3,7 +3,7 @@ import { css } from '../styled-system/css';
 export const container = css({
   display: 'flex',
   height: '100vh',
-  backgroundColor: 'black',
+  backgroundColor: 'transparent',
 });
 
 export const main = css({

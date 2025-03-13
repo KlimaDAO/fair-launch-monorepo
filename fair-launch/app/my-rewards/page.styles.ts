@@ -1,5 +1,9 @@
 import { css } from '../../styled-system/css';
 
+export const body = css({
+  backgroundColor: 'var(--background-secondary)',
+});
+
 export const container = css({
   display: 'flex',
   height: '100vh',

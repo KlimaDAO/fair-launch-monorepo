@@ -1,14 +1,16 @@
 @layer reset, base, tokens, recipes, utilities;
 
 :root {
-  --background: #FAFAFA;
+  --background: #000;
   --foreground: #000;
+  --background-secondary: #FAFAFA;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #FAFAFA;
+    --background: #000;
     --foreground: #000;
+    --background-secondary: #FAFAFA;
   }
 }
 
