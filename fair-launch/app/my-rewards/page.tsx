@@ -140,7 +140,7 @@ const Page: FC = async () => {
                           <TableCell>- KLIMA</TableCell>
                           <TableCell>- KLIMAX</TableCell>
                           <TableCell>
-                            <UnstakeDialog />
+                            <UnstakeDialog amount={stake.amount} />
                           </TableCell>
                         </TableRow>
                       ))}

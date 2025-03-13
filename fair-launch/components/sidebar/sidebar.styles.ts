@@ -3,7 +3,7 @@ import { css } from '../../styled-system/css';
 export const sidebar = css({
   width: '22.4rem',
   display: 'none',
-  height: '100%',
+  height: '100vh',
   padding: '2.4rem 1.2rem',
   backgroundColor: 'white',
   borderRight: '0.1rem solid token(colors.void.20)',

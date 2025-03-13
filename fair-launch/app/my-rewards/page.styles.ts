@@ -9,6 +9,7 @@ export const main = css({
   gap: 0,
   flex: 1,
   display: 'flex',
+  overflowY: 'auto',
   flexDirection: 'column',
   width: 'calc(100% - var(--sidebar-width))'
 });

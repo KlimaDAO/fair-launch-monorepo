@@ -17,9 +17,9 @@ import {
 } from "wagmi";
 import * as styles from "./stake-dialog.styles";
 
-type FocusOutsideEvent = CustomEvent<{ originalEvent: FocusEvent }>;
-type PointerDownOutsideEvent = CustomEvent<{ originalEvent: PointerEvent }>;
-type InteractOutsideEvent = FocusOutsideEvent | PointerDownOutsideEvent;
+type InteractOutsideEvent =
+  | CustomEvent<{ originalEvent: FocusEvent }>
+  | CustomEvent<{ originalEvent: PointerEvent }>;
 
 // TODO - move to constants...
 const contractAddress = "0x5D7c2a994Ca46c2c12a605699E65dcbafDeae80c";
@@ -45,7 +45,6 @@ export const StakeDialog: FC = () => {
   const [dialogState, setDialogState] = useState<DialogState>(
     DialogState.INITIAL
   );
-
   const {
     data: approveData,
     isPending: isApprovePending,
@@ -54,7 +53,7 @@ export const StakeDialog: FC = () => {
   const {
     data: stakeData,
     isPending: isStakePending,
-    writeContract: stakeContract
+    writeContract: stakeContract,
   } = useWriteContract();
 
   const { data: allowanceData } = useReadContract({
@@ -64,7 +63,10 @@ export const StakeDialog: FC = () => {
 
   const { data: receipt } = useWaitForTransactionReceipt({ hash: approveData });
   const isApproved = receipt?.status === "success";
-  const { data: submitReceipt } = useWaitForTransactionReceipt({ hash: stakeData });
+  const { data: submitReceipt } = useWaitForTransactionReceipt({
+    confirmations: 14,
+    hash: stakeData,
+  });
 
   const handleProceed = () => {
     setDialogState(DialogState.STAKE);
@@ -99,6 +101,7 @@ export const StakeDialog: FC = () => {
   useEffect(() => {
     if (submitReceipt?.status === "success") {
       setOpen(false);
+      // show notification message...
       window.location.reload();
     }
   }, [submitReceipt]);
@@ -146,7 +149,8 @@ export const StakeDialog: FC = () => {
               id="stake-amount"
               value={stakeAmount}
               placeholder={stakeAmount}
-              onChange={handleChange} />
+              onChange={handleChange}
+            />
           </div>
           <Alert variant="default">
             <strong>Note:</strong> It is best to leave this amount staked until
@@ -196,7 +200,8 @@ export const StakeDialog: FC = () => {
             })}
             onClick={handleApprove}
           >
-            Approve {isApprovePending || (approveData && !isApproved) ? "..." : ""}
+            Approve{" "}
+            {isApprovePending || (approveData && !isApproved) ? "..." : ""}
           </button>
           <Dialog.Close asChild>
             <button className={styles.secondaryButton}>Cancel</button>
@@ -226,7 +231,8 @@ export const StakeDialog: FC = () => {
             <Input
               disabled
               id="send-amount"
-              value={`${formatNumber(Number(stakeAmount))} KLIMA`} />
+              value={`${formatNumber(Number(stakeAmount))} KLIMA`}
+            />
           </div>
         </div>
         <div className={styles.actions}>
@@ -262,7 +268,6 @@ export const StakeDialog: FC = () => {
           })}
         />
         <Dialog.Content
-
           className={styles.content}
           onInteractOutside={(e: InteractOutsideEvent) => {
             e.preventDefault();

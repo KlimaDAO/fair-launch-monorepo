@@ -8,17 +8,21 @@ import { useState } from "react";
 import { parseEther } from 'viem'
 import { useAccount, useWriteContract } from "wagmi";
 import { MdAccountBalance, MdWarningAmber } from "react-icons/md";
-import { abi } from '@abi/klima-fair-launch';
+import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
 import * as styles from './unstake-dialog.styles';
 
 type FocusOutsideEvent = CustomEvent<{ originalEvent: FocusEvent }>;
 type PointerDownOutsideEvent = CustomEvent<{ originalEvent: PointerEvent }>;
 
 // TODO - move to constants...
-const contractAddress = '0x5D7c2a994Ca46c2c12a605699E65dcbafDeae80c';
+const contractAddress = "0x5D7c2a994Ca46c2c12a605699E65dcbafDeae80c";
 const klimaTokenAddress = '0x3E63e9c64942399e987A04f0663A5c1Cba9c148A';
 
-export const UnstakeDialog: FC = () => {
+interface UnstakeDialogProps {
+  amount: string;
+}
+
+export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount }) => {
   const { address } = useAccount();
   const [shouldProceed, setShouldProceed] = useState(false);
   const [confirmScreen, setConfirmScreen] = useState(false);
@@ -26,18 +30,15 @@ export const UnstakeDialog: FC = () => {
 
   // add steps to keep track of the state of which dialog to show...
 
-  const unstake = async () => {
-    await unstakeContract({
-      abi,
+  const handleUnstake = () => {
+    unstakeContract({
+      abi: klimaFairLaunchAbi,
       functionName: 'unstake',
       address: contractAddress,
-      args: [parseEther('0.00000000000000005')],
+      args: [BigInt(amount)],
     });
   };
 
-  const handleUnstake = async () => {
-    await unstake();
-  };
 
   return (
     <Dialog.Root>
@@ -81,7 +82,7 @@ export const UnstakeDialog: FC = () => {
                 </Dialog.Close>
               </div>
             </>
-          ) : confirmScreen ? (
+          ) : (
             <>
               <Dialog.Title className={styles.title}>
                 Confirm your transaction
@@ -89,53 +90,23 @@ export const UnstakeDialog: FC = () => {
               <div className={styles.description}>
                 <p>Give the transaction one final review before submitting to the blockchain.</p>
                 <div className={styles.inputContainer}>
-                  <label htmlFor="stake-amount">
+                  <label htmlFor="contract-address">
                     Contract Address
                   </label>
-                  <Input id="stake-amount" placeholder="0.00" />
+                  <Input disabled id="contract-address" value="0x8cE...5f8" />
                 </div>
                 <div className={styles.inputContainer}>
                   <label htmlFor="stake-amount">
                     You are sending
                   </label>
-                  <Input id="stake-amount" placeholder="0.00" />
+                  <Input disabled id="stake-amount" value={`${amount} KLIMA`} />
                 </div>
               </div>
               <div className={styles.actions}>
                 <button className={styles.primaryButton} onClick={() => {
-                  setShouldProceed(false);
-                  setConfirmScreen(false);
+                  handleUnstake();
                 }}>
                   Submit
-                </button>
-                <Dialog.Close asChild>
-                  <button className={styles.secondaryButton}>
-                    Cancel
-                  </button>
-                </Dialog.Close>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className={styles.icon}>
-                <MdAccountBalance />
-              </div>
-              <Dialog.Title className={styles.title}>
-                Unstake
-              </Dialog.Title>
-              <div className={styles.description}>
-                <div className={styles.inputContainer}>
-                  <label htmlFor="stake-amount">
-                    Amount
-                  </label>
-                  <Input id="stake-amount" placeholder="0.00" />
-                </div>
-              </div>
-              <div className={styles.actions}>
-                <button
-                  className={styles.primaryButton}
-                  onClick={handleUnstake}>
-                  Unstake
                 </button>
                 <Dialog.Close asChild>
                   <button className={styles.secondaryButton}>
