@@ -9,6 +9,7 @@ import { formatNumber } from "@utils/formatting";
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
 import { MdCelebration, MdLibraryAdd } from "react-icons/md";
 import { type FC, Fragment, useEffect, useState } from "react";
+import { KLIMA_V0_TOKEN_ADDRESS, FAIR_LAUNCH_CONTRACT_ADDRESS } from "@utils/constants";
 import {
   useAccount,
   useReadContract,
@@ -21,14 +22,10 @@ type InteractOutsideEvent =
   | CustomEvent<{ originalEvent: FocusEvent }>
   | CustomEvent<{ originalEvent: PointerEvent }>;
 
-// TODO - move to constants...
-const contractAddress = "0x5D7c2a994Ca46c2c12a605699E65dcbafDeae80c";
-const klimaTokenAddress = "0x3E63e9c64942399e987A04f0663A5c1Cba9c148A";
-
 const allowanceConfig = {
   abi: erc20Abi,
   functionName: "allowance",
-  address: klimaTokenAddress,
+  address: KLIMA_V0_TOKEN_ADDRESS,
 } as const;
 
 enum DialogState {
@@ -53,12 +50,13 @@ export const StakeDialog: FC = () => {
   const {
     data: stakeData,
     isPending: isStakePending,
+    isSuccess: isStakeSuccess,
     writeContract: stakeContract,
   } = useWriteContract();
 
   const { data: allowanceData } = useReadContract({
     ...allowanceConfig,
-    args: [address, contractAddress],
+    args: [address, FAIR_LAUNCH_CONTRACT_ADDRESS],
   });
 
   const { data: receipt } = useWaitForTransactionReceipt({ hash: approveData });
@@ -80,8 +78,8 @@ export const StakeDialog: FC = () => {
     approveContract({
       abi: erc20Abi,
       functionName: "approve",
-      address: klimaTokenAddress,
-      args: [contractAddress, BigInt(stakeAmount)],
+      address: KLIMA_V0_TOKEN_ADDRESS,
+      args: [FAIR_LAUNCH_CONTRACT_ADDRESS, BigInt(stakeAmount)],
     });
   };
 
@@ -89,9 +87,14 @@ export const StakeDialog: FC = () => {
     stakeContract({
       abi: klimaFairLaunchAbi,
       functionName: "stake",
-      address: contractAddress,
+      address: FAIR_LAUNCH_CONTRACT_ADDRESS,
       args: [BigInt(stakeAmount)],
     });
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log("Input value:", e.target.value);
+    setStakeAmount(e.target.value);
   };
 
   useEffect(() => {
@@ -101,7 +104,7 @@ export const StakeDialog: FC = () => {
   useEffect(() => {
     if (submitReceipt?.status === "success") {
       setOpen(false);
-      // show notification message...
+      // todo - show notification message...
       window.location.reload();
     }
   }, [submitReceipt]);
@@ -128,11 +131,6 @@ export const StakeDialog: FC = () => {
         </div>
       </Fragment>
     );
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    console.log("Input value:", e.target.value);
-    setStakeAmount(e.target.value);
   };
 
   const StakeView = () => {
@@ -238,12 +236,12 @@ export const StakeDialog: FC = () => {
         <div className={styles.actions}>
           <button
             onClick={handleConfirm}
-            disabled={isStakePending}
+            disabled={isStakePending || !isStakeSuccess}
             className={clsx(styles.primaryButton, {
-              [styles.disabled]: isStakePending,
+              [styles.disabled]: isStakePending || !isStakeSuccess,
             })}
           >
-            Submit {isStakePending ? "..." : ""}
+            Submit {isStakePending || !isStakeSuccess ? "..." : ""}
           </button>
           <Dialog.Close asChild>
             <button className={styles.secondaryButton}>Cancel</button>

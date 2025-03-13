@@ -144,3 +144,48 @@ export const unstakeButton = css({
     height: '4rem',
   }
 });
+
+export const inputRow = css({
+  gap: '0',
+  display: 'flex',
+  borderRadius: 'sm',
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  border: '0.1rem solid token(colors.void.50)',
+});
+
+export const infoRowContainer = css({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '0.8rem',
+});
+
+export const infoRow = css({
+  gap: '0',
+  display: 'flex',
+  color: 'void.60',
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+});
+
+export const input = css({
+  width: '100%',
+  flexGrow: '1',
+  border: 'none',
+  fontSize: 'sm',
+  lineHeight: 'sm',
+  color: 'void.80',
+});
+
+export const maxButton = css({
+  backgroundColor: 'void.60',
+  textTransform: 'uppercase',
+  padding: '0.8rem 1rem',
+  color: 'white',
+  borderRadius: '0.3rem', 
+  border: 'none',
+  fontSize: 'sm',
+  lineHeight: 'sm',
+  fontWeight: 700,
+  cursor: 'pointer',
+});

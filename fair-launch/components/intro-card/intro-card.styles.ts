@@ -4,7 +4,11 @@ export const card = css({
   minWidth: '27rem',
   backgroundColor: '#64748B',
   borderRadius: '0.4rem',
-  padding: '1.6rem'
+  padding: '1.6rem',
+
+  '& [data-name="nextstep-card"]': {
+    marginTop: '0 !important',
+  }
 });
 
 export const buttons = css({

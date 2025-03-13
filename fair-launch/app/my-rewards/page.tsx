@@ -14,11 +14,11 @@ import { Tooltip } from "@components/tooltip/tooltip";
 import { StakeDialog } from "@components/dialogs/stake-dialog/stake-dialog";
 import { UnstakeDialog } from "@components/dialogs/unstake-dialog/unstake-dialog";
 import { abi as erc20Abi } from "@abi/erc20";
-import { readContract } from '@wagmi/core'
+import { readContract, readContracts, writeContract } from '@wagmi/core'
 import { cookieToInitialState } from "wagmi";
+import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
 import { formatNumber, formatTimestamp } from "@utils/formatting";
 import { fetchUserStakes, fetchLeaderboard } from "@utils/queries";
-
 import {
   Table,
   TableBody,
@@ -28,9 +28,82 @@ import {
   TableRow,
 } from "@components/table/table";
 import * as styles from "./page.styles";
-import { formatEther, formatGwei, formatUnits } from "viem";
+import { AbiFunction, formatGwei } from "viem";
+import { NextStepViewport } from "nextstepjs";
 
 const klimaV0TokenAddress = "0x3E63e9c64942399e987A04f0663A5c1Cba9c148A";
+const fairLaunchAddress = "0x5D7c2a994Ca46c2c12a605699E65dcbafDeae80c";
+
+// todo - fix this...
+const calculatePoints = async (Si = 50, t = 30, Ri = 0) => {
+  const allContracts = await readContracts(config, {
+    contracts: [
+      {
+        abi: klimaFairLaunchAbi as AbiFunction[],
+        address: fairLaunchAddress,
+        functionName: 'freezeTimestamp',
+      },
+      {
+        abi: klimaFairLaunchAbi as AbiFunction[],
+        address: fairLaunchAddress,
+        functionName: 'GROWTH_RATE',
+      },
+      {
+        abi: klimaFairLaunchAbi as AbiFunction[],
+        address: fairLaunchAddress,
+        functionName: 'KLIMA',
+      },
+      {
+        abi: klimaFairLaunchAbi as AbiFunction[],
+        address: fairLaunchAddress,
+        functionName: 'KLIMAX_SUPPLY',
+      },
+      {
+        abi: klimaFairLaunchAbi as AbiFunction[],
+        address: fairLaunchAddress,
+        functionName: 'KLIMA_SUPPLY',
+      },
+      {
+        abi: klimaFairLaunchAbi as AbiFunction[],
+        address: fairLaunchAddress,
+        functionName: 'burnRatio',
+      },
+      {
+        abi: klimaFairLaunchAbi as AbiFunction[],
+        address: fairLaunchAddress,
+        functionName: 'getTotalPoints',
+      },
+      {
+        abi: klimaFairLaunchAbi as AbiFunction[],
+        address: fairLaunchAddress,
+        functionName: 'totalBurned',
+      },
+      {
+        abi: klimaFairLaunchAbi as AbiFunction[],
+        address: fairLaunchAddress,
+        functionName: 'totalOrganicPoints',
+      },
+      {
+        abi: klimaFairLaunchAbi as AbiFunction[],
+        address: fairLaunchAddress,
+        functionName: 'previewUserPoints',
+        args: ["0xA1506e051861dd5A6128e6D55B4c3f465dc21d5f"],
+      }
+    ]
+  });
+
+
+  console.log('allContracts', allContracts);
+
+  const originalStakedAmount = 1000;
+  const daysStaked = 1;
+  const multiplier = 200; // fetch the multiplier
+  const growthConstant = 274; // fetch the growth constant
+  const growthDenominator = 100000;
+  const expectedPoints = (originalStakedAmount * multiplier * daysStaked * growthConstant) / growthDenominator;
+  // Calculate final points using the formula
+  console.log('calc', expectedPoints);
+}
 
 // @todo - move to utils
 const calculateTokenPercentage = (tokens: number, totalSupply: number) => {
@@ -65,9 +138,6 @@ const Page: FC = async () => {
     address: klimaV0TokenAddress,
     functionName: 'totalSupply',
   });
-
-  console.log('totalSupply', totalSupply);
-  console.log('totalSupply formatted', );
   const totalSupplyFormatted = formatGwei(totalSupply as bigint);
 
   const tokenPercentage = calculateTokenPercentage(
@@ -90,41 +160,41 @@ const Page: FC = async () => {
             </div>
             <StakeDialog />
           </div>
-          <div className={styles.card}>
-            <div className={styles.cardInner}>
-              <h5 className={styles.cardTitle}>My KLIMA(v0) Deposited</h5>
-              <div className={styles.cardContents}>
-                <div
-            
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.8rem",
-                  }}
-                >
-                  <Image src={klimav1Logo} alt="Klima V1 Logo" />
-                  <div className={styles.mainText}>
-                    {formatNumber(totalUserStakes(userStakes.stakes || []))}
+            <div className={styles.card}>
+              <div className={styles.cardInner}>
+                <h5 className={styles.cardTitle}>My KLIMA(v0) Deposited</h5>
+                <div className={styles.cardContents}>
+                  <div
+
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.8rem",
+                    }}
+                  >
+                    <Image src={klimav1Logo} alt="Klima V1 Logo" />
+                    <div className={styles.mainText}>
+                      {formatNumber(totalUserStakes(userStakes.stakes || []))}
+                    </div>
+                  </div>
+                  <div id="step1" className={styles.secondaryText}>
+                    <strong>&lt;{tokenPercentage.toFixed(2)}%</strong> of <strong>{formatNumber(totalSupplyFormatted)}</strong> MM
                   </div>
                 </div>
-                <div id="step1" className={styles.secondaryText}>
-                  <strong>&lt;{tokenPercentage.toFixed(2)}%</strong> of <strong>{formatNumber(totalSupplyFormatted)}</strong> MM
+              </div>
+              <div className={styles.divider} />
+              <div className={styles.cardInner}>
+                <h5 className={styles.cardTitle}>My Points Accumulated</h5>
+                <div className={styles.cardContents}>
+                  <div id="step2" className={styles.mainText}>
+                    0
+                  </div>
+                  <div className={styles.secondaryText}>
+                    <strong>&lt;1%</strong> of <strong>12.49</strong> B
+                  </div>
                 </div>
               </div>
             </div>
-            <div className={styles.divider} />
-            <div className={styles.cardInner}>
-              <h5 className={styles.cardTitle}>My Points Accumulated</h5>
-              <div className={styles.cardContents}>
-                <div id="step2" className={styles.mainText}>
-                  0
-                </div>
-                <div className={styles.secondaryText}>
-                  <strong>&lt;1%</strong> of <strong>12.49</strong> B
-                </div>
-              </div>
-            </div>
-          </div>
           <div className={styles.card}>
             <div className={styles.cardInner}>
               <h5 className={styles.cardTitle}>Stake History</h5>
