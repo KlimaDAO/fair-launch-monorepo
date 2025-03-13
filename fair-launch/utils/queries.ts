@@ -26,7 +26,7 @@ export const fetchUserStakes = async (address: string): Promise<{ stakes?: Stake
   await request(
     SUBGRAPH_URL,
     `query ($address: String!) {
-      stakes(first: 100, where: { wallet: $address }) {
+      stakes(first: 100, orderBy: startTimestamp, orderDirection: desc, where: { wallet: $address }) {
         id
         amount
         startTimestamp

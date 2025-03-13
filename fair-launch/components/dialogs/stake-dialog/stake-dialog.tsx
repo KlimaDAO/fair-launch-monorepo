@@ -4,9 +4,8 @@ import clsx from "clsx";
 import { Alert } from "@components/alert/alert";
 import { Input } from "@components/input/input";
 import { Dialog } from "radix-ui";
-import { useForm } from "@tanstack/react-form";
-import { parseEther } from "viem";
 import { abi as erc20Abi } from "@abi/erc20";
+import { formatNumber } from "@utils/formatting";
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
 import { MdCelebration, MdLibraryAdd } from "react-icons/md";
 import { type FC, Fragment, useEffect, useState } from "react";
@@ -41,41 +40,38 @@ enum DialogState {
 
 export const StakeDialog: FC = () => {
   const { address } = useAccount();
+  const [open, setOpen] = useState(false);
+  const [stakeAmount, setStakeAmount] = useState<string>("");
   const [dialogState, setDialogState] = useState<DialogState>(
     DialogState.INITIAL
   );
-
-  const form = useForm({
-    defaultValues: { amount: "" },
-    onSubmit: async ({ value }) => {
-      // Do something with form data
-      console.log(value);
-    },
-  });
 
   const {
     data: approveData,
     isPending: isApprovePending,
     writeContract: approveContract,
   } = useWriteContract();
-  const { data: stakeData, writeContract: stakeContract } = useWriteContract();
+  const {
+    data: stakeData,
+    isPending: isStakePending,
+    writeContract: stakeContract
+  } = useWriteContract();
+
   const { data: allowanceData } = useReadContract({
     ...allowanceConfig,
     args: [address, contractAddress],
   });
 
-  // Use the hook to wait for the transaction receipt only if transactionHash is set
   const { data: receipt } = useWaitForTransactionReceipt({ hash: approveData });
   const isApproved = receipt?.status === "success";
-
-  console.log("|---isApproved---|", isApproved);
+  const { data: submitReceipt } = useWaitForTransactionReceipt({ hash: stakeData });
 
   const handleProceed = () => {
     setDialogState(DialogState.STAKE);
   };
 
   const handleStake = () => {
-    setDialogState(DialogState.APPROVE);
+    setDialogState(!allowanceData ? DialogState.APPROVE : DialogState.CONFIRM);
   };
 
   const handleApprove = () => {
@@ -83,7 +79,7 @@ export const StakeDialog: FC = () => {
       abi: erc20Abi,
       functionName: "approve",
       address: klimaTokenAddress,
-      args: [contractAddress, parseEther("10")],
+      args: [contractAddress, BigInt(stakeAmount)],
     });
   };
 
@@ -92,13 +88,20 @@ export const StakeDialog: FC = () => {
       abi: klimaFairLaunchAbi,
       functionName: "stake",
       address: contractAddress,
-      args: [parseEther("0.00000000000000005")],
+      args: [BigInt(stakeAmount)],
     });
   };
 
   useEffect(() => {
     if (!!isApproved) setDialogState(DialogState.CONFIRM);
   }, [isApproved]);
+
+  useEffect(() => {
+    if (submitReceipt?.status === "success") {
+      setOpen(false);
+      window.location.reload();
+    }
+  }, [submitReceipt]);
 
   const InitialView = () => {
     return (
@@ -124,9 +127,14 @@ export const StakeDialog: FC = () => {
     );
   };
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log("Input value:", e.target.value);
+    setStakeAmount(e.target.value);
+  };
+
   const StakeView = () => {
     return (
-      <Fragment>
+      <form>
         <div className={styles.icon}>
           <MdLibraryAdd />
         </div>
@@ -134,7 +142,11 @@ export const StakeDialog: FC = () => {
         <div className={styles.description}>
           <div className={styles.inputContainer}>
             <label htmlFor="stake-amount">Amount</label>
-            <Input id="stake-amount" placeholder="0.00" />
+            <input
+              id="stake-amount"
+              value={stakeAmount}
+              placeholder={stakeAmount}
+              onChange={handleChange} />
           </div>
           <Alert variant="default">
             <strong>Note:</strong> It is best to leave this amount staked until
@@ -150,7 +162,7 @@ export const StakeDialog: FC = () => {
             <button className={styles.secondaryButton}>Cancel</button>
           </Dialog.Close>
         </div>
-      </Fragment>
+      </form>
     );
   };
 
@@ -172,7 +184,7 @@ export const StakeDialog: FC = () => {
           </div>
           <div className={styles.inputContainer}>
             <label htmlFor="send-amount">You are sending</label>
-            <Input disabled id="send-amount" value="25.00 KLIMA" />
+            <Input disabled id="send-amount" value={`${stakeAmount} KLIMA`} />
           </div>
         </div>
         <div className={styles.actions}>
@@ -184,7 +196,7 @@ export const StakeDialog: FC = () => {
             })}
             onClick={handleApprove}
           >
-            Approve
+            Approve {isApprovePending || (approveData && !isApproved) ? "..." : ""}
           </button>
           <Dialog.Close asChild>
             <button className={styles.secondaryButton}>Cancel</button>
@@ -206,20 +218,26 @@ export const StakeDialog: FC = () => {
         </Dialog.Description>
         <div className={styles.description}>
           <div className={styles.inputContainer}>
-            <label htmlFor="stake-amount">Contract Address</label>
-            <Input id="stake-amount" placeholder="0.00" />
+            <label htmlFor="contract-address">Contract Address</label>
+            <Input disabled id="contract-address" value="0x8cE...5f8" />
           </div>
           <div className={styles.inputContainer}>
-            <label htmlFor="stake-amount">You are sending</label>
-            <Input id="stake-amount" placeholder="0.00" />
+            <label htmlFor="send-amount">You are sending</label>
+            <Input
+              disabled
+              id="send-amount"
+              value={`${formatNumber(Number(stakeAmount))} KLIMA`} />
           </div>
         </div>
         <div className={styles.actions}>
           <button
-            className={styles.primaryButton}
-            onClick={() => handleConfirm()}
+            onClick={handleConfirm}
+            disabled={isStakePending}
+            className={clsx(styles.primaryButton, {
+              [styles.disabled]: isStakePending,
+            })}
           >
-            Submit
+            Submit {isStakePending ? "..." : ""}
           </button>
           <Dialog.Close asChild>
             <button className={styles.secondaryButton}>Cancel</button>
@@ -230,7 +248,7 @@ export const StakeDialog: FC = () => {
   };
 
   return (
-    <Dialog.Root>
+    <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger className={styles.participateButton}>
         <MdCelebration />
         Participate in Klima Fair Launch
@@ -244,6 +262,7 @@ export const StakeDialog: FC = () => {
           })}
         />
         <Dialog.Content
+
           className={styles.content}
           onInteractOutside={(e: InteractOutsideEvent) => {
             e.preventDefault();

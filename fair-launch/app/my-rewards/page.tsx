@@ -58,8 +58,6 @@ const Page: FC = async () => {
     totalUserStakes(userStakes.stakes || []),
     21340000 // todo - fetch the total supply from the contract
   );
-  console.log("tokenPercentage", tokenPercentage);
-  console.log('walletAddress', walletAddress);
 
   return (
     <div className={styles.container}>
@@ -90,7 +88,7 @@ const Page: FC = async () => {
                 >
                   <Image src={klimav1Logo} alt="Klima V1 Logo" />
                   <div className={styles.mainText}>
-                    {totalUserStakes(userStakes.stakes || [])}
+                    {formatNumber(totalUserStakes(userStakes.stakes || []))}
                   </div>
                 </div>
                 <div id="step2" className={styles.secondaryText}>
