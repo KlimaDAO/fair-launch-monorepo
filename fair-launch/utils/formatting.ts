@@ -3,11 +3,11 @@
  * @param value - The number to format
  * @returns The formatted number
  */
-export const formatNumber = (value: number) =>
+export const formatNumber = (value: number | string) =>
   new Intl.NumberFormat("en-US", {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
-  }).format(value);
+  }).format(Number(value));
 
 /**
  * Formats a timestamp to a human readable format

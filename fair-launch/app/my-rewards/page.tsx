@@ -13,9 +13,12 @@ import { headers } from "next/headers";
 import { Tooltip } from "@components/tooltip/tooltip";
 import { StakeDialog } from "@components/dialogs/stake-dialog/stake-dialog";
 import { UnstakeDialog } from "@components/dialogs/unstake-dialog/unstake-dialog";
+import { abi as erc20Abi } from "@abi/erc20";
+import { readContract } from '@wagmi/core'
 import { cookieToInitialState } from "wagmi";
 import { formatNumber, formatTimestamp } from "@utils/formatting";
 import { fetchUserStakes, fetchLeaderboard } from "@utils/queries";
+
 import {
   Table,
   TableBody,
@@ -25,6 +28,9 @@ import {
   TableRow,
 } from "@components/table/table";
 import * as styles from "./page.styles";
+import { formatEther, formatGwei, formatUnits } from "viem";
+
+const klimaV0TokenAddress = "0x3E63e9c64942399e987A04f0663A5c1Cba9c148A";
 
 // @todo - move to utils
 const calculateTokenPercentage = (tokens: number, totalSupply: number) => {
@@ -54,9 +60,19 @@ const Page: FC = async () => {
     : { stakes: [] };
   const leaderboard = (await fetchLeaderboard(5)) || { wallets: [] };
 
+  const totalSupply = await readContract(config, {
+    abi: erc20Abi,
+    address: klimaV0TokenAddress,
+    functionName: 'totalSupply',
+  });
+
+  console.log('totalSupply', totalSupply);
+  console.log('totalSupply formatted', );
+  const totalSupplyFormatted = formatGwei(totalSupply as bigint);
+
   const tokenPercentage = calculateTokenPercentage(
     totalUserStakes(userStakes.stakes || []),
-    21340000 // todo - fetch the total supply from the contract
+    Number(formatGwei(totalSupply as bigint)) // todo - fetch the total supply from the contract
   );
 
   return (
@@ -79,7 +95,7 @@ const Page: FC = async () => {
               <h5 className={styles.cardTitle}>My KLIMA(v0) Deposited</h5>
               <div className={styles.cardContents}>
                 <div
-                  id="step1"
+            
                   style={{
                     display: "flex",
                     alignItems: "center",
@@ -91,8 +107,8 @@ const Page: FC = async () => {
                     {formatNumber(totalUserStakes(userStakes.stakes || []))}
                   </div>
                 </div>
-                <div id="step2" className={styles.secondaryText}>
-                  <strong>&lt;1%</strong> of <strong>21.34</strong> MM
+                <div id="step1" className={styles.secondaryText}>
+                  <strong>&lt;{tokenPercentage.toFixed(2)}%</strong> of <strong>{formatNumber(totalSupplyFormatted)}</strong> MM
                 </div>
               </div>
             </div>
@@ -100,7 +116,7 @@ const Page: FC = async () => {
             <div className={styles.cardInner}>
               <h5 className={styles.cardTitle}>My Points Accumulated</h5>
               <div className={styles.cardContents}>
-                <div id="step3" className={styles.mainText}>
+                <div id="step2" className={styles.mainText}>
                   0
                 </div>
                 <div className={styles.secondaryText}>
