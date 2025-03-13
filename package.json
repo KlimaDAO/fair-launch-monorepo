@@ -19,10 +19,10 @@
     "*.{js,jsx,ts,tsx,json,css,scss,md}": "prettier --check"
   },
   "scripts": {
-    "dev-all": "npm run dev --workspaces",
+    "dev:all": "npm run dev --workspaces",
     "dev:fair-launch": "concurrently --kill-others-on-fail \"npm run dev -w=fair-launch\"",
-    "build-all": "npm run build --workspaces",
-    "build:fair-launch": "npm run build-lib && npm run build -w=fair-launch",
+    "build:all": "npm run build --workspaces",
+    "build:fair-launch": "npm run build -w=fair-launch",
     "lint": "npm run lint --workspaces",
     "prettier:write": "prettier --write ./",
     "prettier:check": "prettier --check ."
