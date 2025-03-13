@@ -1,16 +1,18 @@
 import { NextResponse, NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
-  // const cookie = request.cookies.get('wagmi.store')!;
-  // const cookieValue = JSON.parse(cookie.value);
-  // const { pathname } = request.nextUrl;
-  // const totalConnections = cookieValue?.state?.connections?.value?.length;
+  const cookie = request.cookies.get('wagmi.store');
+  if (!cookie) return;
 
-  // if (totalConnections === 0 && pathname !== '/') {
-  //   return NextResponse.redirect(new URL('/', request.url));
-  // } else if (totalConnections > 0 && pathname === '/') {
-  //   return NextResponse.redirect(new URL('/my-rewards', request.url));
-  // }
+  const cookieValue = JSON.parse(cookie.value);
+  const { pathname } = request.nextUrl;
+  const totalConnections = cookieValue?.state?.connections?.value?.length;
+
+  if (totalConnections === 0 && pathname !== '/') {
+    return NextResponse.redirect(new URL('/', request.url));
+  } else if (totalConnections > 0 && pathname === '/') {
+    return NextResponse.redirect(new URL('/my-rewards', request.url));
+  }
   return NextResponse.next();
 }
 
