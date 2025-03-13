@@ -1,5 +1,7 @@
 import Image from "next/image";
 import type { FC } from "react";
+import clsx from "clsx";
+import Link from "next/link";
 import gklimaLogo from "@public/tokens/g-klima.svg";
 import klimav1Logo from "@public/tokens/klima-v1.svg";
 import { Badge } from "@components/badge/badge";
@@ -12,6 +14,7 @@ import { Tooltip } from "@components/tooltip/tooltip";
 import { StakeDialog } from "@components/dialogs/stake-dialog/stake-dialog";
 import { UnstakeDialog } from "@components/dialogs/unstake-dialog/unstake-dialog";
 import { cookieToInitialState } from "wagmi";
+import { formatNumber, formatTimestamp } from "@utils/formatting";
 import { fetchUserStakes, fetchLeaderboard } from "@utils/queries";
 import {
   Table,
@@ -30,31 +33,10 @@ const calculateTokenPercentage = (tokens: number, totalSupply: number) => {
 };
 
 // @todo - move to utils
-const formatTimestamp = (timestamp: number): string => {
-  const date = new Date(timestamp * 1000); // Convert to milliseconds
-  const options: Intl.DateTimeFormatOptions = {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  };
-  return date.toLocaleString("en", options).replace(",", "");
-};
-
-// @todo - move to utils
 const shortenWalletAddress = (address: string): string => {
   if (address.length <= 10) return address;
   return `${address.slice(0, 5)}...${address.slice(-3)}`;
 };
-
-// @todo - move to utils
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("en-US", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  }).format(value);
 
 const totalUserStakes = (stakes: { amount: string }[]): number =>
   stakes.reduce((total, stake) => total + parseFloat(stake.amount), 0);
@@ -70,15 +52,14 @@ const Page: FC = async () => {
   const userStakes = walletAddress
     ? await fetchUserStakes(walletAddress)
     : { stakes: [] };
-  const leaderboard = (await fetchLeaderboard()) || { wallets: [] };
-  console.log("userStakes", userStakes);
-  console.log("leaderboard", leaderboard);
+  const leaderboard = (await fetchLeaderboard(5)) || { wallets: [] };
 
   const tokenPercentage = calculateTokenPercentage(
     totalUserStakes(userStakes.stakes || []),
     21340000 // todo - fetch the total supply from the contract
   );
   console.log("tokenPercentage", tokenPercentage);
+  console.log('walletAddress', walletAddress);
 
   return (
     <div className={styles.container}>
@@ -154,12 +135,12 @@ const Page: FC = async () => {
                           </TableCell>
                           <TableCell>
                             <strong>
-                              {formatCurrency(parseFloat(stake.amount))}
+                              {formatNumber(parseFloat(stake.amount))}
                             </strong>
                           </TableCell>
-                          <TableCell>12,345</TableCell>
-                          <TableCell>-75 KLIMA</TableCell>
-                          <TableCell>80,000 KLIMAX</TableCell>
+                          <TableCell>-</TableCell>
+                          <TableCell>- KLIMA</TableCell>
+                          <TableCell>- KLIMAX</TableCell>
                           <TableCell>
                             <UnstakeDialog />
                           </TableCell>
@@ -191,20 +172,30 @@ const Page: FC = async () => {
                         <TableHead>Points</TableHead>
                       </TableRow>
                     </TableHeader>
-                    {leaderboard?.wallets && !!leaderboard.wallets.length ? (
+                    {!!leaderboard.wallets.length ? (
                       <TableBody>
-                        {leaderboard.wallets.map((wallet, index) => (
-                          <TableRow key={wallet.id}>
-                            <TableCell>{index + 1}</TableCell>
-                            <TableCell>
-                              {shortenWalletAddress(wallet.id)}
-                            </TableCell>
-                            <TableCell>
-                              {formatCurrency(parseFloat(wallet.totalStaked))}
-                            </TableCell>
-                            <TableCell>-</TableCell>
-                          </TableRow>
-                        ))}
+                        {leaderboard.wallets.map((wallet, key) => {
+                          const isMyWallet = wallet.id.toLowerCase() === walletAddress?.toLowerCase();
+                          return (
+                            <TableRow key={wallet.id}>
+                              <TableCell>
+                                {key + 1}
+                              </TableCell>
+                              <TableCell>
+                                <div className={clsx({ [styles.myWalletText]: isMyWallet })} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                                  {shortenWalletAddress(wallet.id)}
+                                  {isMyWallet && <Badge title="You" />}
+                                </div>
+                              </TableCell>
+                              <TableCell className={clsx({ [styles.myWalletText]: isMyWallet })}>
+                                {formatNumber(parseFloat(wallet.totalStaked))}
+                              </TableCell>
+                              <TableCell>
+                                -
+                              </TableCell>
+                            </TableRow>
+                          )
+                        })}
                       </TableBody>
                     ) : (
                       <TableBody>
@@ -215,6 +206,9 @@ const Page: FC = async () => {
                     )}
                   </Table>
                 </div>
+                <Link className={styles.leaderboardLink} href="/protocol">
+                  View full leaderboard
+                </Link>
               </div>
             </div>
             <div className={styles.card}>

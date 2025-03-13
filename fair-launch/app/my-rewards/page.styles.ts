@@ -97,7 +97,7 @@ export const cardContents = css({
   display: 'flex',
   alignItems: 'center',
   flexDirection: 'row',
-  justifyContent: 'space-between'
+  justifyContent: 'space-between',
 });
 
 export const mainText = css({
@@ -121,4 +121,17 @@ export const divider = css({
     width: '0.1rem',
     height: '100%',
   }
+});
+
+export const myWalletText = css({
+  color: 'green.70',
+});
+
+export const leaderboardLink = css({
+  fontSize: 'sm',
+  lineHeight: 'sm',
+  fontWeight: 400,
+  marginTop: '1.2rem',
+  color: 'green.70 !important',
+  textDecoration: 'underline',
 });

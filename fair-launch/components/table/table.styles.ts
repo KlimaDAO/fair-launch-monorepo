@@ -14,13 +14,13 @@ export const table = css({
 
 export const tableHead = css({
   color: 'void.40',
-  fontSize: '1.4rem',
+  fontSize: 'sm',
   textAlign: 'left',
   verticalAlign: 'middle',
   padding: '2.4rem 0 1.2rem 0',
   borderBottom: '1px solid token(colors.void.20)',
   '& th': {
-    fontWeight: '400',
+    fontWeight: 400,
   },
 });
 
@@ -29,11 +29,11 @@ export const tableBody = css({
 });
 
 export const tableCell = css({
-  padding: '1.6rem 0',
+  padding: '1.1rem 0',
   textAlign: 'left',
   verticalAlign: 'middle',
-  fontWeight: '400',
-  fontSize: '1.4rem',
+  fontWeight: 400,
+  fontSize: 'sm',
   color: 'void.80',
-  borderBottom: '1px solid token(colors.void.20)',
+  borderBottom: '0.1rem solid token(colors.void.20)',
 });

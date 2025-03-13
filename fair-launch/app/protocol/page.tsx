@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import klimav1Logo from "@public/tokens/klima-v1.svg";
+import { type FC } from "react";
 import { Footer } from "@components/footer/footer";
 import { config } from '@utils/wagmi';
 import { Navbar } from "@components/navbar/navbar";
@@ -7,7 +8,7 @@ import { Sidebar } from "@components/sidebar/sidebar";
 import { Dropdown } from '@components/dropdown/dropdown';
 import { readContract } from '@wagmi/core'
 import { fetchLeaderboard } from '@utils/queries';
-import { type FC, useState } from "react";
+import { formatNumber } from '@utils/formatting';
 import { abi as klimaFairLaunchAbi } from '@abi/klima-fair-launch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@components/table/table';
 import * as styles from "./page.styles";
@@ -52,7 +53,7 @@ const Page: FC = async () => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Image src={klimav1Logo} alt="Klima V1 Logo" />
                   <div className={styles.mainText}>
-                    {BigInt(totalStaked)}
+                    {formatNumber(Number(totalStaked))}
                   </div>
                 </div>
                 <div className={styles.secondaryText}>
@@ -98,7 +99,7 @@ const Page: FC = async () => {
                     <TableRow>
                       <TableHead>Place</TableHead>
                       <TableHead>Wallet</TableHead>
-                      <TableHead>KLIMA Staked</TableHead>
+                      <TableHead>KLIMA(v0) Staked</TableHead>
                       <TableHead>Points</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -108,7 +109,9 @@ const Page: FC = async () => {
                         <TableRow key={wallet.id}>
                           <TableCell>{index + 1}</TableCell>
                           <TableCell>{wallet.id}</TableCell>
-                          <TableCell>{wallet.totalStaked}</TableCell>
+                          <TableCell>
+                            {formatNumber(parseFloat(wallet.totalStaked))}
+                          </TableCell>
                           <TableCell>-</TableCell>
                         </TableRow>
                       ))}

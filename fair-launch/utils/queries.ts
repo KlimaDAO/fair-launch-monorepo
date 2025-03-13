@@ -41,11 +41,11 @@ export const fetchUserStakes = async (address: string): Promise<{ stakes?: Stake
  * Fetch the current leaderboard
  * @returns The leaderboard
  */
-export const fetchLeaderboard = async (): Promise<{ wallets: Wallet[] }> =>
+export const fetchLeaderboard = async (limit: number = 100): Promise<{ wallets: Wallet[] }> =>
   await request(
     SUBGRAPH_URL,
-    `query {
-      wallets(first: 100) {
+    `query ($limit: Int!) {
+      wallets(first: $limit) {
         id
         klimaAllocation
         klimaXAllocation
@@ -58,5 +58,6 @@ export const fetchLeaderboard = async (): Promise<{ wallets: Wallet[] }> =>
           stakeCreationHash
         }
       }
-    }`
+    }`,
+    { limit: limit }
   );
