@@ -2,14 +2,15 @@ import { NextResponse, NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
   const cookie = request.cookies.get('wagmi.store')!;
-  const parsed = JSON.parse(cookie.value);
+  const cookieValue = JSON.parse(cookie.value);
+  const { pathname } = request.nextUrl;
+  const totalConnections = cookieValue?.state?.connections?.value?.length;
 
-  if (parsed?.state?.connections?.value?.length === 0 && request.nextUrl.pathname !== '/') {
-    return NextResponse.redirect(new URL('/', request.url));
-  } else if (parsed?.state?.connections?.value?.length > 0 && request.nextUrl.pathname === '/') {
+  if (totalConnections === 0 && pathname !== '/') {
+      return NextResponse.redirect(new URL('/', request.url));
+  } else if (totalConnections > 0 && pathname === '/') {
     return NextResponse.redirect(new URL('/my-rewards', request.url));
   }
-  // Allow the request to continue if no redirect is needed
   return NextResponse.next();
 }
 

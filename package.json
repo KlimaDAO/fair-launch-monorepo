@@ -1,0 +1,37 @@
+{
+  "name": "klimadao-fair-launch",
+  "private": true,
+  "workspaces": [
+    "./fair-launch"
+  ],
+  "engines": {
+    "npm": "10.x",
+    "node": "20.x"
+  },
+  "prettier": {
+    "trailingComma": "es5",
+    "endOfLine": "auto",
+    "plugins": [
+      "prettier-plugin-organize-imports"
+    ]
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,json,css,scss,md}": "prettier --check"
+  },
+  "scripts": {
+    "dev-all": "npm run dev --workspaces",
+    "dev:fair-launch": "concurrently --kill-others-on-fail \"npm run dev -w=fair-launch\"",
+    "build-all": "npm run build --workspaces",
+    "build:fair-launch": "npm run build-lib && npm run build -w=fair-launch",
+    "lint": "npm run lint --workspaces",
+    "prettier:write": "prettier --write ./",
+    "prettier:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "concurrently": "^7.6.0",
+    "husky": "^8.0.3",
+    "lint-staged": "^15.2.0",
+    "prettier": "3.0.2",
+    "prettier-plugin-organize-imports": "^3.2.3"
+  }
+}

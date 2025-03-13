@@ -101,6 +101,8 @@ export const StakeDialog: FC = () => {
     if (!!isApproved) setDialogState(DialogState.CONFIRM);
   }, [isApproved]);
 
+  console.log("submitReceipt", submitReceipt);
+
   useEffect(() => {
     if (submitReceipt?.status === "success") {
       setOpen(false);
@@ -236,12 +238,12 @@ export const StakeDialog: FC = () => {
         <div className={styles.actions}>
           <button
             onClick={handleConfirm}
-            disabled={isStakePending || !isStakeSuccess}
+            disabled={isStakePending}
             className={clsx(styles.primaryButton, {
-              [styles.disabled]: isStakePending || !isStakeSuccess,
+              [styles.disabled]: isStakePending,
             })}
           >
-            Submit {isStakePending || !isStakeSuccess ? "..." : ""}
+            Submit {isStakePending ? "..." : ""}
           </button>
           <Dialog.Close asChild>
             <button className={styles.secondaryButton}>Cancel</button>
