@@ -9,6 +9,7 @@ import {
   TableRow,
 } from "@components/table/table";
 import klimav1Logo from "@public/tokens/klima-v1.svg";
+import { FAIR_LAUNCH_CONTRACT_ADDRESS } from "@utils/constants";
 import { formatNumber } from "@utils/formatting";
 import { fetchLeaderboard } from "@utils/queries";
 import { config } from "@utils/wagmi";
@@ -16,9 +17,6 @@ import { readContract } from "@wagmi/core";
 import Image from "next/image";
 import { type FC } from "react";
 import * as styles from "./styles";
-
-// @todo - move to utils
-const contractAddress = "0x5D7c2a994Ca46c2c12a605699E65dcbafDeae80c";
 
 const dropdownItems = [
   { value: "1", label: "Points - high to low" },
@@ -34,7 +32,7 @@ const Page: FC = async () => {
   const leaderboard = (await fetchLeaderboard()) || { wallets: [] };
   const totalStaked = (await readContract(config, {
     abi: klimaFairLaunchAbi,
-    address: contractAddress,
+    address: FAIR_LAUNCH_CONTRACT_ADDRESS,
     functionName: "totalStaked",
   })) as bigint;
 
@@ -45,6 +43,7 @@ const Page: FC = async () => {
           <h1 className={styles.title}>Protocol</h1>
         </div>
       </div>
+
       <div className={styles.card}>
         <div className={styles.cardInner}>
           <h5 className={styles.cardTitle}>Total KLIMA(v0) Deposited</h5>

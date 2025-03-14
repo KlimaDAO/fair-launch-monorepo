@@ -65,14 +65,12 @@ export const twoCols = css({
 
 export const card = css({
   width: '100%',
+  display: 'flex',
+  borderRadius: '0.8rem',
+  flexDirection: 'column',
   backgroundColor: 'white',
-
   boxShadow: '0 0.1rem 0.2rem -0.1rem rgba(0, 0, 0, 0.1)',
   filter: 'drop-shadow(0 0.1rem 0.3rem rgba(0, 0, 0, 0.1))',
-  borderRadius: '0.8rem',
-
-  display: 'flex',
-  flexDirection: 'column',
   justifyContent: 'space-between',
 
   lg: {

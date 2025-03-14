@@ -1,3 +1,4 @@
+import { Footer } from "@components/footer/footer";
 import { IntroStepProvider } from "@providers/intro-step-provider";
 import { WalletProvider } from "@providers/wallet-provider";
 import "@rainbow-me/rainbowkit/styles.css";
@@ -6,6 +7,7 @@ import { firaCode, inter } from "@utils/fonts";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import type { FC, ReactNode } from "react";
+import * as styles from "./styles";
 
 export const metadata: Metadata = {
   title: "Klima Fair Launch",
@@ -18,23 +20,18 @@ interface Props {
 
 const RootLayout: FC<Props> = async (props) => {
   const cookie = (await headers()).get("cookie");
-  // let wagmiStoreCookie = null;
-
-  // if (cookie) {
-  //   const cookies = cookie.split('; ');
-  //   wagmiStoreCookie = cookies.find(cook => cook.startsWith('wagmi.store='));
-
-  //   if (wagmiStoreCookie) {
-  //     const cookieValue = wagmiStoreCookie.split('=')[1];
-  //     const parsed = JSON.parse(decodeURIComponent(cookieValue));
-  //     console.log('parsed', parsed.state.connections.value);
-  //   }
-  // }
   return (
     <html lang="en">
       <body className={`${inter.variable} ${firaCode.variable}`}>
         <WalletProvider cookie={cookie}>
-          <IntroStepProvider>{props.children}</IntroStepProvider>
+          <IntroStepProvider>
+            <div className={styles.container}>
+              <div className={styles.main}>
+                <div className={styles.content}>{props.children}</div>
+                <Footer />
+              </div>
+            </div>
+          </IntroStepProvider>
         </WalletProvider>
       </body>
     </html>
