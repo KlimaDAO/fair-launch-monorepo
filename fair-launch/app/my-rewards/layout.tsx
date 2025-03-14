@@ -1,6 +1,6 @@
-import { Footer } from "@components/footer/footer";
-import { Navbar } from "@components/navbar/navbar";
-import { Sidebar } from "@components/sidebar/sidebar";
+import { Footer } from "@components/footer";
+import { Navbar } from "@components/navbar";
+import { Sidebar } from "@components/sidebar";
 import type { Metadata } from "next";
 import type { FC, ReactNode } from "react";
 import * as styles from "./styles";

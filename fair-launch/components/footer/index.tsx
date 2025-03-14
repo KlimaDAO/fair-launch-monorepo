@@ -4,7 +4,7 @@ import Link from 'next/link';
 import type { FC } from 'react';
 import { FaTelegramPlane, FaLinkedinIn } from 'react-icons/fa';
 import { FaXTwitter, FaDiscord, FaYoutube } from "react-icons/fa6";
-import * as styles from './footer.styles';
+import * as styles from './styles';
 
 export const Footer: FC = () => {
   const currentYear = new Date().getFullYear();

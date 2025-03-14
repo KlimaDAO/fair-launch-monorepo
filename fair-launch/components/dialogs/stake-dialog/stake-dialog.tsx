@@ -2,7 +2,7 @@
 
 import clsx from "clsx";
 import { Alert } from "@components/alert";
-import { Input } from "@components/input/input";
+import { Input } from "@components/input";
 import { Dialog } from "radix-ui";
 import { abi as erc20Abi } from "@abi/erc20";
 import { formatNumber } from "@utils/formatting";

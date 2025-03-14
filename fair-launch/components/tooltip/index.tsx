@@ -2,7 +2,7 @@
 
 import type { FC } from 'react';
 import { Tooltip as TooltipPrimitive } from "radix-ui";
-import * as styles from './tooltip.styles';
+import * as styles from './styles';
 
 interface Props {
   open?: boolean;

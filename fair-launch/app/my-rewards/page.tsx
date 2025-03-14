@@ -10,8 +10,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@components/table/table";
-import { Tooltip } from "@components/tooltip/tooltip";
+} from "@components/table";
+import { Tooltip } from "@components/tooltip";
 import gklimaLogo from "@public/tokens/g-klima.svg";
 import klimav1Logo from "@public/tokens/klima-v1.svg";
 import { formatNumber, formatTimestamp } from "@utils/formatting";

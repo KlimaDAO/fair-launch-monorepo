@@ -10,7 +10,7 @@ import { IoTrophySharp } from "react-icons/io5";
 import { IntroWalkthrough } from "@components/intro-walkthrough/intro";
 import { MdDashboard, MdLogout } from "react-icons/md";
 import { useAccount, useDisconnect } from "wagmi";
-import * as styles from './sidebar.styles';
+import * as styles from './styles';
 
 const navLinks = [
   { href: '/my-rewards', icon: <IoTrophySharp />, label: 'My Rewards' },

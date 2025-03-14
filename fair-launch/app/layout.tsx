@@ -1,4 +1,4 @@
-import { Footer } from "@components/footer/footer";
+import { Footer } from "@components/footer";
 import { IntroStepProvider } from "@providers/intro-step-provider";
 import { WalletProvider } from "@providers/wallet-provider";
 import "@rainbow-me/rainbowkit/styles.css";

@@ -7,7 +7,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@components/table/table";
+} from "@components/table";
 import klimav1Logo from "@public/tokens/klima-v1.svg";
 import { FAIR_LAUNCH_CONTRACT_ADDRESS } from "@utils/constants";
 import { formatNumber } from "@utils/formatting";

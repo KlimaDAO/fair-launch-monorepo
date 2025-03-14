@@ -2,7 +2,7 @@
 
 import type { FC } from "react";
 // import Marquee from "react-fast-marquee";
-import * as styles from "./navbar.styles";
+import * as styles from "./styles";
 
 export const Navbar: FC = () => (
   <div className={styles.navbar}>

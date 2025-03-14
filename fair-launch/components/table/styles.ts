@@ -1,4 +1,3 @@
-
 import { css } from '../../styled-system/css';
 
 export const tableContainer = css({

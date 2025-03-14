@@ -2,7 +2,7 @@
 
 import clsx from 'clsx';
 import type { FC } from "react";
-import { Input } from "@components/input/input";
+import { Input } from "@components/input";
 import { Dialog } from "radix-ui";
 import { useState } from "react";
 import { parseEther } from 'viem'
