@@ -1,6 +1,6 @@
 import { abi as erc20Abi } from "@abi/erc20";
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
-import { Badge } from "@components/badge/badge";
+import { Badge } from "@components/badge";
 import { StakeDialog } from "@components/dialogs/stake-dialog/stake-dialog";
 import { UnstakeDialog } from "@components/dialogs/unstake-dialog/unstake-dialog";
 import {

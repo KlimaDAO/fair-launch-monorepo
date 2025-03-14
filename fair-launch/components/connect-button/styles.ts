@@ -12,3 +12,16 @@ export const connectButton = css({
   fontWeight: 500,
   cursor: 'pointer',
 });
+
+export const wrongNetworkButton = css({
+  all: 'unset',
+  backgroundColor: 'red.600',
+  color: 'white',
+  padding: '0rem 2.4rem',
+  borderRadius: '0.4rem',
+  height: '4.8rem',
+  fontSize: 'base',
+  lineHeight: 'base',
+  fontWeight: 500,
+  cursor: 'pointer',
+});

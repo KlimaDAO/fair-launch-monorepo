@@ -11,7 +11,7 @@ import { MdAccountBalance, MdWarningAmber } from "react-icons/md";
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
 import * as styles from './unstake-dialog.styles';
 import Link from 'next/link';
-import { Alert } from '@components/alert/alert';
+import { Alert } from '@components/alert';
 
 type FocusOutsideEvent = CustomEvent<{ originalEvent: FocusEvent }>;
 type PointerDownOutsideEvent = CustomEvent<{ originalEvent: PointerEvent }>;

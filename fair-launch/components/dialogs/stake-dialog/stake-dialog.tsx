@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import { Alert } from "@components/alert/alert";
+import { Alert } from "@components/alert";
 import { Input } from "@components/input/input";
 import { Dialog } from "radix-ui";
 import { abi as erc20Abi } from "@abi/erc20";

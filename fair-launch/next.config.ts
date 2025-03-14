@@ -1,7 +1,7 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  reactStrictMode: false,
+  reactStrictMode: true,
   transpilePackages: ['nextstepjs'],
   webpack: (config) => {
     config.externals.push('pino-pretty', 'lokijs', 'encoding');

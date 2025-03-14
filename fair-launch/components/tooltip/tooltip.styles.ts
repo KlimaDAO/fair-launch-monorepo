@@ -6,7 +6,7 @@ export const tooltipTrigger = css({
 
 export const tooltipContent = css({
   overflow: 'hidden',
-  rounded: 'sm',
+  borderRadius: 'sm',
   padding: '1rem 1.2rem',
   zIndex: 5000,
   maxWidth: '24rem',

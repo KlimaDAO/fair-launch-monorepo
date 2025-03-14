@@ -1,5 +1,5 @@
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
-import { Dropdown } from "@components/dropdown/dropdown";
+import { Dropdown } from "@components/dropdown";
 import {
   Table,
   TableBody,

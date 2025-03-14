@@ -1,4 +1,4 @@
-import { ConnectButton } from "@components/connect/connect";
+import { ConnectButton } from "@components/connect-button";
 import backgroundImage from "@public/background.png";
 import Image from "next/image";
 import Link from "next/link";
