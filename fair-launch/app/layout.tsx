@@ -1,11 +1,11 @@
-import "@styles/globals.css";
-import type { Metadata } from "next";
-import type { FC, ReactNode } from "react";
-import { headers } from 'next/headers'
-import { WalletProvider } from '@providers/wallet-provider';
-import { inter, firaCode } from '@utils/fonts';
-import '@rainbow-me/rainbowkit/styles.css';
 import { IntroStepProvider } from "@providers/intro-step-provider";
+import { WalletProvider } from "@providers/wallet-provider";
+import "@rainbow-me/rainbowkit/styles.css";
+import "@styles/globals.css";
+import { firaCode, inter } from "@utils/fonts";
+import type { Metadata } from "next";
+import { headers } from "next/headers";
+import type { FC, ReactNode } from "react";
 
 export const metadata: Metadata = {
   title: "Klima Fair Launch",
@@ -13,8 +13,8 @@ export const metadata: Metadata = {
 };
 
 interface Props {
-  children: ReactNode
-};
+  children: ReactNode;
+}
 
 const RootLayout: FC<Props> = async (props) => {
   const cookie = (await headers()).get("cookie");
@@ -34,14 +34,11 @@ const RootLayout: FC<Props> = async (props) => {
     <html lang="en">
       <body className={`${inter.variable} ${firaCode.variable}`}>
         <WalletProvider cookie={cookie}>
-          <IntroStepProvider>
-            {props.children}
-          </IntroStepProvider>
+          <IntroStepProvider>{props.children}</IntroStepProvider>
         </WalletProvider>
       </body>
     </html>
-  )
+  );
 };
-
 
 export default RootLayout;

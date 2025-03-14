@@ -1,6 +1,9 @@
+import { Footer } from "@components/footer/footer";
+import { Navbar } from "@components/navbar/navbar";
+import { Sidebar } from "@components/sidebar/sidebar";
 import type { Metadata } from "next";
 import type { FC, ReactNode } from "react";
-import * as styles from './page.styles';
+import * as styles from "./styles";
 
 export const metadata: Metadata = {
   title: "Klima Fair Launch dApp - Protocol",
@@ -8,12 +11,19 @@ export const metadata: Metadata = {
 };
 
 interface Props {
-  children: ReactNode
-};
+  children: ReactNode;
+}
 
 const Layout: FC<Props> = (props) => (
   <main className={styles.body}>
-    {props.children}
+    <div className={styles.container}>
+      <Sidebar />
+      <div className={styles.main}>
+        <Navbar />
+        <div className={styles.content}>{props.children}</div>
+        <Footer />
+      </div>
+    </div>
   </main>
 );
 

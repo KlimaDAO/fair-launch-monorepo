@@ -1,10 +1,10 @@
-import type { FC } from "react";
-import Link from "next/link";
-import Image from 'next/image';
-import { Footer } from "@components/footer/footer";
 import { ConnectButton } from "@components/connect/connect";
-import backgroundImage from '@public/background.png';
-import * as styles from "./page.styles";
+import { Footer } from "@components/footer/footer";
+import backgroundImage from "@public/background.png";
+import Image from "next/image";
+import Link from "next/link";
+import type { FC } from "react";
+import * as styles from "./styles";
 
 const Page: FC = () => (
   <div className={styles.container}>
@@ -29,6 +29,5 @@ const Page: FC = () => (
     </div>
   </div>
 );
-
 
 export default Page;
