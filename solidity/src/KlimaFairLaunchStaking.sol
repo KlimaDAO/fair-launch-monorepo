@@ -49,13 +49,13 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     uint256 constant GROWTH_DENOMINATOR = 100000;
     address constant KLIMA_V0 = 0xDCEFd8C8fCc492630B943ABcaB3429F12Ea9Fea2; // current klima address on Base
     
-    uint256 public GROWTH_RATE = 274;
+    uint256 public GROWTH_RATE;
 
     // token state
     address public KLIMA;
     address public KLIMA_X;
-    uint256 public KLIMA_SUPPLY = 17_500_000 * 1e18;
-    uint256 public KLIMAX_SUPPLY = 40_000_000 * 1e18;
+    uint256 public KLIMA_SUPPLY;
+    uint256 public KLIMAX_SUPPLY;
     address public burnVault;
     // events
     event StakeCreated(address indexed user, uint256 amount, uint256 multiplier, uint256 startTimestamp);
@@ -104,6 +104,12 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         __Pausable_init();
         __UUPSUpgradeable_init();
         __ReentrancyGuard_init();
+        
+        // Initialize default values
+        GROWTH_RATE = 274;
+        KLIMA_SUPPLY = 17_500_000 * 1e18;
+        KLIMAX_SUPPLY = 40_000_000 * 1e18;
+        preStakingWindow = 3 days;
     }
 
     /// @notice Authorizes an upgrade to a new implementation
