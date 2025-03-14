@@ -24,8 +24,8 @@ const Page: FC = () => (
         <Link className={styles.learnMore} href="/my-rewards">
           Learn more about Klima Fair Launch
         </Link>
-        <Footer />
       </div>
+      <Footer />
     </div>
   </div>
 );
