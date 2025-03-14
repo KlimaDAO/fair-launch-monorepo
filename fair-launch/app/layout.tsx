@@ -5,6 +5,7 @@ import { headers } from 'next/headers'
 import { WalletProvider } from '@providers/wallet-provider';
 import { inter, firaCode } from '@utils/fonts';
 import '@rainbow-me/rainbowkit/styles.css';
+import { IntroStepProvider } from "@providers/intro-step-provider";
 
 export const metadata: Metadata = {
   title: "Klima Fair Launch",
@@ -33,7 +34,9 @@ const RootLayout: FC<Props> = async (props) => {
     <html lang="en">
       <body className={`${inter.variable} ${firaCode.variable}`}>
         <WalletProvider cookie={cookie}>
-          {props.children}
+          <IntroStepProvider>
+            {props.children}
+          </IntroStepProvider>
         </WalletProvider>
       </body>
     </html>
