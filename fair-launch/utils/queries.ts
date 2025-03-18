@@ -45,7 +45,7 @@ export const fetchLeaderboard = async (limit: number = 100): Promise<{ wallets: 
   await request(
     SUBGRAPH_URL,
     `query ($limit: Int!) {
-      wallets(first: $limit) {
+      wallets(first: $limit, orderBy: totalStaked, orderDirection: desc) {
         id
         klimaAllocation
         klimaXAllocation

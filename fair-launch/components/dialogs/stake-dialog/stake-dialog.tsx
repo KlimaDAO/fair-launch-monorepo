@@ -79,7 +79,7 @@ export const StakeDialog: FC = () => {
       abi: erc20Abi,
       functionName: "approve",
       address: KLIMA_V0_TOKEN_ADDRESS,
-      args: [FAIR_LAUNCH_CONTRACT_ADDRESS, BigInt(stakeAmount)],
+      args: [FAIR_LAUNCH_CONTRACT_ADDRESS, BigInt(stakeAmount) * BigInt(10 ** 9)],
     });
   };
 
@@ -88,7 +88,7 @@ export const StakeDialog: FC = () => {
       abi: klimaFairLaunchAbi,
       functionName: "stake",
       address: FAIR_LAUNCH_CONTRACT_ADDRESS,
-      args: [BigInt(stakeAmount)],
+      args: [BigInt(stakeAmount) * BigInt(10 ** 9)],
     });
   };
 

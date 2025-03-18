@@ -23,12 +23,10 @@ import { headers } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
 import type { FC } from "react";
-import { AbiFunction, formatGwei } from "viem";
+import { AbiFunction, formatGwei, formatUnits } from "viem";
 import { cookieToInitialState } from "wagmi";
 import * as styles from "./styles";
-
-const klimaV0TokenAddress = "0x3E63e9c64942399e987A04f0663A5c1Cba9c148A";
-const fairLaunchAddress = "0x5D7c2a994Ca46c2c12a605699E65dcbafDeae80c";
+import { FAIR_LAUNCH_CONTRACT_ADDRESS, KLIMA_V0_TOKEN_ADDRESS } from "@utils/constants";
 
 // todo - fix this...
 const calculatePoints = async (Si = 50, t = 30, Ri = 0) => {
@@ -36,54 +34,54 @@ const calculatePoints = async (Si = 50, t = 30, Ri = 0) => {
     contracts: [
       {
         abi: klimaFairLaunchAbi as AbiFunction[],
-        address: fairLaunchAddress,
+        address: FAIR_LAUNCH_CONTRACT_ADDRESS,
         functionName: "freezeTimestamp",
       },
       {
         abi: klimaFairLaunchAbi as AbiFunction[],
-        address: fairLaunchAddress,
+        address: FAIR_LAUNCH_CONTRACT_ADDRESS,
         functionName: "GROWTH_RATE",
       },
       {
         abi: klimaFairLaunchAbi as AbiFunction[],
-        address: fairLaunchAddress,
+        address: FAIR_LAUNCH_CONTRACT_ADDRESS,
         functionName: "KLIMA",
       },
       {
         abi: klimaFairLaunchAbi as AbiFunction[],
-        address: fairLaunchAddress,
+        address: FAIR_LAUNCH_CONTRACT_ADDRESS,
         functionName: "KLIMAX_SUPPLY",
       },
       {
         abi: klimaFairLaunchAbi as AbiFunction[],
-        address: fairLaunchAddress,
+        address: FAIR_LAUNCH_CONTRACT_ADDRESS,
         functionName: "KLIMA_SUPPLY",
       },
       {
         abi: klimaFairLaunchAbi as AbiFunction[],
-        address: fairLaunchAddress,
+        address: FAIR_LAUNCH_CONTRACT_ADDRESS,
         functionName: "burnRatio",
       },
       {
         abi: klimaFairLaunchAbi as AbiFunction[],
-        address: fairLaunchAddress,
+        address: FAIR_LAUNCH_CONTRACT_ADDRESS,
         functionName: "getTotalPoints",
       },
       {
         abi: klimaFairLaunchAbi as AbiFunction[],
-        address: fairLaunchAddress,
+        address: FAIR_LAUNCH_CONTRACT_ADDRESS,
         functionName: "totalBurned",
       },
       {
         abi: klimaFairLaunchAbi as AbiFunction[],
-        address: fairLaunchAddress,
+        address: FAIR_LAUNCH_CONTRACT_ADDRESS,
         functionName: "totalOrganicPoints",
       },
       {
         abi: klimaFairLaunchAbi as AbiFunction[],
-        address: fairLaunchAddress,
+        address: FAIR_LAUNCH_CONTRACT_ADDRESS,
         functionName: "previewUserPoints",
-        args: ["0xA1506e051861dd5A6128e6D55B4c3f465dc21d5f"],
+        args: ["0x5B2D6181d743f314170C4969B8F1c17F6363f200"],
       },
     ],
   });
@@ -100,6 +98,8 @@ const calculatePoints = async (Si = 50, t = 30, Ri = 0) => {
     growthDenominator;
   // Calculate final points using the formula
   console.log("calc", expectedPoints);
+
+  return allContracts;
 };
 
 // @todo - move to utils
@@ -132,7 +132,7 @@ const Page: FC = async () => {
 
   const totalSupply = await readContract(config, {
     abi: erc20Abi,
-    address: klimaV0TokenAddress,
+    address: KLIMA_V0_TOKEN_ADDRESS,
     functionName: "totalSupply",
   });
 
@@ -140,6 +140,20 @@ const Page: FC = async () => {
     totalUserStakes(userStakes.stakes || []),
     Number(formatGwei(totalSupply as bigint)) // todo - fetch the total supply from the contract
   );
+
+  console.log('userStakes', userStakes);
+
+  const [freezeTimestamp, GROWTH_RATE, klima, klimaxSupply, klimaSupply, burnRatio, totalPoints, totalBurned, totalOrganicPoints, previewUserPoints] = await calculatePoints(1,2,3);
+  console.log("freezeTimestamp", freezeTimestamp);
+  console.log("GROWTH_RATE", GROWTH_RATE);
+  console.log("klima", klima);
+  console.log("klimaxSupply", klimaxSupply);
+  console.log("klimaSupply", klimaSupply);
+  console.log("burnRatio", burnRatio);
+  console.log("totalPoints", totalPoints);
+  console.log("totalBurned", totalBurned);
+  console.log("totalOrganicPoints", totalOrganicPoints);
+  console.log("previewUserPoints", previewUserPoints);
 
   return (
     <>
@@ -165,7 +179,7 @@ const Page: FC = async () => {
             >
               <Image src={klimav1Logo} alt="Klima V1 Logo" />
               <div className={styles.mainText}>
-                {formatNumber(totalUserStakes(userStakes.stakes || []))}
+                {formatUnits(BigInt(totalUserStakes(userStakes.stakes || [])), 9)}
               </div>
             </div>
             <div id="step1" className={styles.secondaryText}>
@@ -180,7 +194,7 @@ const Page: FC = async () => {
           <h5 className={styles.cardTitle}>My Points Accumulated</h5>
           <div className={styles.cardContents}>
             <div id="step2" className={styles.mainText}>
-              0
+              {formatNumber(formatUnits(BigInt(previewUserPoints?.result || 0), 9))}
             </div>
             <div className={styles.secondaryText}>
               <strong>&lt;1%</strong> of <strong>12.49</strong> B
@@ -212,7 +226,7 @@ const Page: FC = async () => {
                       </TableCell>
                       <TableCell>
                         <strong>
-                          {formatNumber(parseFloat(stake.amount))}
+                          {formatNumber(formatUnits(BigInt(stake.amount), 9))}
                         </strong>
                       </TableCell>
                       <TableCell>-</TableCell>
@@ -278,7 +292,7 @@ const Page: FC = async () => {
                               [styles.myWalletText]: isMyWallet,
                             })}
                           >
-                            {formatNumber(parseFloat(wallet.totalStaked))}
+                            {formatNumber(formatUnits(BigInt(wallet.totalStaked), 9))}
                           </TableCell>
                           <TableCell>-</TableCell>
                         </TableRow>

@@ -17,6 +17,7 @@ import { readContract } from "@wagmi/core";
 import Image from "next/image";
 import { type FC } from "react";
 import * as styles from "./styles";
+import { formatUnits, parseEther } from "viem";
 
 const dropdownItems = [
   { value: "1", label: "Points - high to low" },
@@ -24,9 +25,9 @@ const dropdownItems = [
 ];
 
 const Page: FC = async () => {
-  // const [selectedDropdown, setSelectedDropdown] = useState(
-  //   dropdownItems[0]
-  // );
+  const klimaPrice = await fetch('https://base.klimadao.finance/api/prices?symbols=KLIMA');
+  const { data } = await klimaPrice.json();
+  const price = data?.KLIMA?.[0]?.quote?.USD?.price;
 
   // replace this call with react-query?
   const leaderboard = (await fetchLeaderboard()) || { wallets: [] };
@@ -51,7 +52,7 @@ const Page: FC = async () => {
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <Image src={klimav1Logo} alt="Klima V1 Logo" />
               <div className={styles.mainText}>
-                {formatNumber(Number(totalStaked))}
+                {formatNumber(formatUnits(totalStaked, 9))}
               </div>
             </div>
             <div className={styles.secondaryText}>
@@ -63,7 +64,9 @@ const Page: FC = async () => {
         <div className={styles.cardInner}>
           <h5 className={styles.cardTitle}>$TVL</h5>
           <div className={styles.cardContents}>
-            <div className={styles.mainText}>$14,000,000</div>
+            <div className={styles.mainText}>
+              ${formatNumber(price * Number(formatUnits(totalStaked, 9)))}
+            </div>
           </div>
         </div>
         <div className={styles.divider} />
@@ -107,7 +110,7 @@ const Page: FC = async () => {
                       <TableCell>{index + 1}</TableCell>
                       <TableCell>{wallet.id}</TableCell>
                       <TableCell>
-                        {formatNumber(parseFloat(wallet.totalStaked))}
+                        {formatNumber(formatUnits(BigInt(wallet.totalStaked), 9))}
                       </TableCell>
                       <TableCell>-</TableCell>
                     </TableRow>

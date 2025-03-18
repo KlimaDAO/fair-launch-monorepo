@@ -1,31 +1,27 @@
 'use client';
 
 import clsx from 'clsx';
+import Link from 'next/link';
 import type { FC } from "react";
 import { Input } from "@components/input";
 import { Dialog } from "radix-ui";
 import { useState } from "react";
-import { parseEther } from 'viem'
+import { formatUnits } from 'viem'
+import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
+import { FAIR_LAUNCH_CONTRACT_ADDRESS } from '@utils/constants';
 import { useAccount, useWriteContract } from "wagmi";
 import { MdAccountBalance, MdWarningAmber } from "react-icons/md";
-import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
 import * as styles from './unstake-dialog.styles';
-import Link from 'next/link';
-import { Alert } from '@components/alert';
 
 type FocusOutsideEvent = CustomEvent<{ originalEvent: FocusEvent }>;
 type PointerDownOutsideEvent = CustomEvent<{ originalEvent: PointerEvent }>;
-
-// TODO - move to constants...
-const contractAddress = "0x5D7c2a994Ca46c2c12a605699E65dcbafDeae80c";
-const klimaTokenAddress = '0x3E63e9c64942399e987A04f0663A5c1Cba9c148A';
 
 interface UnstakeDialogProps {
   amount: string;
 }
 
 export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount }) => {
-  const { address } = useAccount();
+  // const { address } = useAccount();
   const [unstakeAmount, setUnstakeAmount] = useState("");
   const [shouldProceed, setShouldProceed] = useState(false);
   const [confirmScreen, setConfirmScreen] = useState(false);
@@ -34,11 +30,12 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount }) => {
   // add steps to keep track of the state of which dialog to show...
 
   const handleUnstake = () => {
+    console.log("unstakeAmount", unstakeAmount);
     unstakeContract({
       abi: klimaFairLaunchAbi,
       functionName: 'unstake',
-      address: contractAddress,
-      args: [BigInt(amount)],
+      address: FAIR_LAUNCH_CONTRACT_ADDRESS,
+      args: [BigInt(120)],
     });
   };
 
@@ -90,8 +87,8 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount }) => {
             <div className={styles.inputRow}>
               <Input
                 id="stake-amount"
-                value={amount}
-                placeholder={amount}
+                value={formatUnits(BigInt(amount), 9)}
+                placeholder={formatUnits(BigInt(amount), 9)}
                 onChange={handleChange}
                 className={styles.input}
               />
@@ -141,7 +138,7 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount }) => {
           <button className={styles.primaryButton} onClick={() => {
             handleUnstake();
           }}>
-            Unstake
+            Confirm
           </button>
           <Dialog.Close asChild>
             <button className={styles.secondaryButton}>
