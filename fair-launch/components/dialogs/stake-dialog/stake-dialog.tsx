@@ -9,7 +9,7 @@ import { formatNumber } from "@utils/formatting";
 import { abi as erc20Abi } from "@abi/erc20";
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
 import { MdCelebration, MdLibraryAdd } from "react-icons/md";
-import { type FC, Fragment, useEffect, useState } from "react";
+import { type FC, useEffect, useState } from "react";
 import { KLIMA_V0_TOKEN_ADDRESS, FAIR_LAUNCH_CONTRACT_ADDRESS } from "@utils/constants";
 import {
   useAccount,
@@ -53,9 +53,7 @@ export const StakeDialog: FC = () => {
   });
 
   const [open, setOpen] = useState(false);
-  const [dialogState, setDialogState] = useState<DialogState>(
-    DialogState.INITIAL
-  );
+  const [dialogState, setDialogState] = useState(DialogState.INITIAL);
 
   const {
     data: approveData,

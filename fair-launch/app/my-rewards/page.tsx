@@ -106,6 +106,8 @@ const Page: FC = async () => {
   const cookie = (await headers()).get("cookie");
   const initialState = cookieToInitialState(config, cookie);
 
+  const [, GROWTH_RATE, , , , , , , , previewUserPoints] = await calculateAllPoints();
+
   const walletAddress =
     initialState?.current &&
     initialState.connections.get(initialState?.current)?.accounts[0];
@@ -126,29 +128,31 @@ const Page: FC = async () => {
     Number(formatGwei(totalSupply as bigint)) // todo - fetch the total supply from the contract
   );
 
-  const getDaysStaked = (stakedTimestamp: number) => {
-    const currentTimestamp = Date.now(); // Current time in milliseconds
-    const differenceInMilliseconds = currentTimestamp - stakedTimestamp * 1000; // Difference in milliseconds
-    const millisecondsInADay = 1000 * 60 * 60 * 24; // Number of milliseconds in a day
-
-    if (Math.floor(differenceInMilliseconds / millisecondsInADay) === 0) {
-      return 1;
-    }
-    return Math.floor(differenceInMilliseconds / millisecondsInADay); // Convert to days
-  };
-
-  console.log('userStakes', userStakes);
-  const [, GROWTH_RATE, , , , , , , , previewUserPoints] = await calculateAllPoints();
-
   const calculateUserPoints = (stakeAmount: number, multiplier: number = 0, stakeTimestamp: number = 3) => {
     const growthRate = Number(GROWTH_RATE.result);
-    console.log('stakeAmount', stakeAmount);
-    console.log('multiplier', multiplier);
-    console.log('days staked', stakeTimestamp);
-    console.log('days staked', getDaysStaked(stakeTimestamp));
-    console.log('GROWTH_RATE', Number(GROWTH_RATE.result));
-    // console.log('sdsdsd', (stakeAmount * multiplier * Number(stakeTimestamp) * Number(BigInt(GROWTH_RATE.result))) / 100000);
     return stakeAmount * multiplier * Number(stakeTimestamp) * growthRate / 100000;
+  }
+
+  const calculatePercentage = (part: number, total: number) => {
+    if (total === 0) throw new Error("Total cannot be zero.");
+    return (part / total) * 100;
+  };
+
+  const getUnstakePenalty = async (stakeAmount: number, stakeTimestamp: number) => {
+    const calculateBurn = await readContract(config, {
+      abi: klimaFairLaunchAbi,
+      address: FAIR_LAUNCH_CONTRACT_ADDRESS,
+      functionName: "calculateBurn",
+      args: [stakeAmount, stakeTimestamp],
+    }) as bigint;
+
+    const burnValue = formatUnits(BigInt(calculateBurn), 9);
+    const stakeAmountFormatted = formatUnits(BigInt(stakeAmount), 9);
+
+    return {
+      percentage: calculatePercentage(Number(burnValue), Number(stakeAmountFormatted)),
+      value: burnValue,
+    }
   }
 
   return (
@@ -206,13 +210,14 @@ const Page: FC = async () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Timestamp</TableHead>
-                  <TableHead>KLIMA(v0) Staked</TableHead>
-                  <TableHead>Points</TableHead>
-                  <TableHead>Unstake Penalty</TableHead>
-                  <TableHead>KLIMAX Allocation</TableHead>
-                  <TableHead>&nbsp;</TableHead>
+                  <TableHead className={styles.textRight}>KLIMA(v0) Staked</TableHead>
+                  <TableHead className={styles.textRight}>Points</TableHead>
+                  <TableHead className={styles.textRight}>Unstake Penalty</TableHead>
+                  <TableHead className={styles.textRight}>KLIMAX Allocation</TableHead>
+                  <TableHead className={styles.textRight}>&nbsp;</TableHead>
                 </TableRow>
               </TableHeader>
+              {/* @todo - cleanup all functions inside map */}
               {userStakes.stakes && !!userStakes.stakes.length ? (
                 <TableBody>
                   {userStakes.stakes.map(async (stake) => (
@@ -220,17 +225,24 @@ const Page: FC = async () => {
                       <TableCell>
                         {formatTimestamp(parseInt(stake.startTimestamp))}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className={styles.textRight}>
                         <strong>
                           {formatNumber(formatUnits(BigInt(stake.amount), 9))}
                         </strong>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className={styles.textRight}>
                         {formatNumber(calculateUserPoints(Number(stake.amount), Number(stake.multiplier), Number(stake.startTimestamp)) / 10 ** 9)}
                       </TableCell>
-                      <TableCell>- KLIMA</TableCell>
-                      <TableCell>- KLIMAX</TableCell>
-                      <TableCell>
+                      <TableCell className={styles.textRight}>
+                        <div>
+                          -{await getUnstakePenalty(Number(stake.amount), Number(stake.startTimestamp)).then(({ value }) => value)} KLIMA
+                        </div>
+                        <div className={styles.penaltyText}>
+                          {await getUnstakePenalty(Number(stake.amount), Number(stake.startTimestamp)).then(({ percentage }) => percentage)}%
+                        </div>
+                      </TableCell>
+                      <TableCell className={styles.textRight}>- KLIMAX</TableCell>
+                      <TableCell className={styles.textRight}>
                         <UnstakeDialog amount={stake.amount} />
                       </TableCell>
                     </TableRow>

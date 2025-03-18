@@ -30,7 +30,7 @@ export const tableBody = css({
 export const tableCell = css({
   padding: '1.1rem 0',
   textAlign: 'left',
-  verticalAlign: 'middle',
+  verticalAlign: 'baseline',
   fontWeight: 400,
   fontSize: 'sm',
   color: 'void.80',

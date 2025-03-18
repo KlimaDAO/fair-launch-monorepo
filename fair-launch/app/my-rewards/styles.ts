@@ -140,3 +140,14 @@ export const leaderboardLink = css({
   color: 'green.70 !important',
   textDecoration: 'underline',
 });
+
+export const textRight = css({
+  textAlign: 'right',
+});
+
+export const penaltyText = css({
+  fontSize: 'sm',
+  lineHeight: 'sm',
+  fontWeight: 400,
+  color: 'red.600',
+});

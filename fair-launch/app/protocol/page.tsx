@@ -1,5 +1,5 @@
-import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
-import { Dropdown } from "@components/dropdown";
+import Image from "next/image";
+import klimav1Logo from "@public/tokens/klima-v1.svg";
 import {
   Table,
   TableBody,
@@ -8,16 +8,16 @@ import {
   TableHeader,
   TableRow,
 } from "@components/table";
-import klimav1Logo from "@public/tokens/klima-v1.svg";
-import { FAIR_LAUNCH_CONTRACT_ADDRESS } from "@utils/constants";
+import { config } from "@utils/wagmi";
+import { type FC } from "react";
+import { Dropdown } from "@components/dropdown";
+import { formatUnits } from "viem";
+import { readContract } from "@wagmi/core";
 import { formatNumber } from "@utils/formatting";
 import { fetchLeaderboard } from "@utils/queries";
-import { config } from "@utils/wagmi";
-import { readContract } from "@wagmi/core";
-import Image from "next/image";
-import { type FC } from "react";
+import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
+import { FAIR_LAUNCH_CONTRACT_ADDRESS } from "@utils/constants";
 import * as styles from "./styles";
-import { formatUnits, parseEther } from "viem";
 
 const dropdownItems = [
   { value: "1", label: "Points - high to low" },
@@ -44,7 +44,6 @@ const Page: FC = async () => {
           <h1 className={styles.title}>Protocol</h1>
         </div>
       </div>
-
       <div className={styles.card}>
         <div className={styles.cardInner}>
           <h5 className={styles.cardTitle}>Total KLIMA(v0) Deposited</h5>
