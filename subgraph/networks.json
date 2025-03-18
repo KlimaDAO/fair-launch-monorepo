@@ -4,5 +4,11 @@
       "address": "0x0000000000000000000000000000000000000000",
       "startBlock": 0
     }
+  },
+  "base-sepolia": {
+    "KlimaFairLaunchStaking": {
+      "address": "0x779085797E1AC3973dCCCf7499EE09033e5b2BBE",
+      "startBlock": 23156880
+    }
   }
 }
