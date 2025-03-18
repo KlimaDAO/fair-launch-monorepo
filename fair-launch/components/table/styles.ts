@@ -28,9 +28,9 @@ export const tableBody = css({
 });
 
 export const tableCell = css({
-  padding: '1.1rem 0',
+  padding: '1.2rem 0',
   textAlign: 'left',
-  verticalAlign: 'baseline',
+  verticalAlign: 'top',
   fontWeight: 400,
   fontSize: 'sm',
   color: 'void.80',

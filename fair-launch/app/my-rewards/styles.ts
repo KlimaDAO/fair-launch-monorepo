@@ -142,7 +142,7 @@ export const leaderboardLink = css({
 });
 
 export const textRight = css({
-  textAlign: 'right',
+  textAlign: 'right !important',
 });
 
 export const penaltyText = css({
