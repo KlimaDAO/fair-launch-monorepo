@@ -82,12 +82,17 @@ export const StakeDialog: FC = () => {
     hash: stakeData,
   });
 
+  const handleDialogState = () => {
+    setOpen(!open);
+    // reset dialog state when dialog is closed
+    if (open) setDialogState(DialogState.INITIAL);
+  };
+
   const handleProceed = () => {
     setDialogState(DialogState.STAKE);
   };
 
   const handleStake = () => {
-    console.log('handleStake', form.state.values);
     setDialogState(!allowanceData ? DialogState.APPROVE : DialogState.CONFIRM);
   };
 
@@ -124,7 +129,7 @@ export const StakeDialog: FC = () => {
   }, [submitReceipt]);
 
   const InitialView = () => (
-    <Fragment>
+    <>
       <div className={styles.icon}>
         <MdLibraryAdd />
       </div>
@@ -142,12 +147,11 @@ export const StakeDialog: FC = () => {
           <button className={styles.secondaryButton}>Cancel</button>
         </Dialog.Close>
       </div>
-    </Fragment>
+    </>
   );
 
-
   const StakeView = () => (
-    <Fragment>
+    <>
       <div className={styles.icon}>
         <MdLibraryAdd />
       </div>
@@ -197,100 +201,97 @@ export const StakeDialog: FC = () => {
           <button className={styles.secondaryButton}>Cancel</button>
         </Dialog.Close>
       </div>
-    </Fragment>
+    </>
   );
 
-  const ApproveView = () => {
-    return (
-      <>
-        <div className={styles.confirmContainer}>
-          <Dialog.Title className={styles.confirmTitle}>Confirm your transaction</Dialog.Title>
-          <Dialog.Description className={styles.confirmDescription}>
-            To complete this transaction, please allow our smart contract to transfer tokens on your behalf.
-          </Dialog.Description>
+  const ApproveView = () => (
+    <>
+      <div className={styles.confirmContainer}>
+        <Dialog.Title className={styles.confirmTitle}>Confirm your transaction</Dialog.Title>
+        <Dialog.Description className={styles.confirmDescription}>
+          To complete this transaction, please allow our smart contract to transfer tokens on your behalf.
+        </Dialog.Description>
+      </div>
+      <div className={styles.description}>
+        <div className={styles.inputContainer}>
+          <label htmlFor="contract-address">Contract Address</label>
+          <input className={styles.input} disabled id="contract-address" value="0x8cE...5f8" />
         </div>
-        <div className={styles.description}>
-          <div className={styles.inputContainer}>
-            <label htmlFor="contract-address">Contract Address</label>
-            <input className={styles.input} disabled id="contract-address" value="0x8cE...5f8" />
-          </div>
-          <div className={styles.inputContainer}>
-            <label htmlFor="send-amount">You are sending</label>
-            <input className={styles.input} disabled id="send-amount" value={`${form.state.values["stake-amount"]} KLIMA`} />
-          </div>
+        <div className={styles.inputContainer}>
+          <label htmlFor="send-amount">You are sending</label>
+          <input className={styles.input} disabled id="send-amount" value={`${form.state.values["stake-amount"]} KLIMA`} />
         </div>
-        <div className={styles.actions}>
-          <button
-            disabled={isApprovePending || (approveData && !isApproved)}
-            className={clsx(styles.primaryButton, {
-              [styles.disabled]:
-                isApprovePending || (approveData && !isApproved),
-            })}
-            onClick={handleApprove}
-          >
-            Approve{" "}
-            {isApprovePending || (approveData && !isApproved) ? "..." : ""}
-          </button>
-          <Dialog.Close asChild>
-            <button className={styles.secondaryButton}>Cancel</button>
-          </Dialog.Close>
-        </div>
-      </>
-    );
-  };
+      </div>
+      <div className={styles.actions}>
+        <button
+          onClick={handleApprove}
+          disabled={isApprovePending || (approveData && !isApproved)}
+          className={clsx(styles.primaryButton, {
+            [styles.disabled]:
+              isApprovePending || (approveData && !isApproved),
+          })}
+        >
+          Approve{" "}
+          {isApprovePending || (approveData && !isApproved) ? "..." : ""}
+        </button>
+        <Dialog.Close asChild>
+          <button className={styles.secondaryButton}>Cancel</button>
+        </Dialog.Close>
+      </div>
+    </>
+  );
 
-  const ConfirmView = () => {
-    return (
-      <>
-        <div className={styles.confirmContainer}>
-          <Dialog.Title className={styles.confirmTitle}>
-            Confirm your transaction
-          </Dialog.Title>
-          <Dialog.Description className={styles.confirmDescription}>
-            Give the transaction one final review before submitting to the
-            blockchain.
-          </Dialog.Description>
+  const ConfirmView = () => (
+    <>
+      <div className={styles.confirmContainer}>
+        <Dialog.Title className={styles.confirmTitle}>
+          Confirm your transaction
+        </Dialog.Title>
+        <Dialog.Description className={styles.confirmDescription}>
+          Give the transaction one final review before submitting to the
+          blockchain.
+        </Dialog.Description>
+      </div>
+      <div className={styles.description}>
+        <div className={styles.inputContainer}>
+          <label htmlFor="contract-address">Contract Address</label>
+          <input
+            disabled
+            id="contract-address"
+            className={styles.input}
+            value="0x8cE...5f8"
+          />
         </div>
-        <div className={styles.description}>
-          <div className={styles.inputContainer}>
-            <label htmlFor="contract-address">Contract Address</label>
-            <input
-              disabled
-              id="contract-address"
-              className={styles.input}
-              value="0x8cE...5f8"
-            />
-          </div>
-          <div className={styles.inputContainer}>
-            <label htmlFor="send-amount">You are sending</label>
-            <input
-              disabled
-              id="send-amount"
-              className={styles.input}
-              value={`${formatNumber(Number(form.state.values["stake-amount"]))} KLIMA`}
-            />
-          </div>
+        <div className={styles.inputContainer}>
+          <label htmlFor="send-amount">You are sending</label>
+          <input
+            disabled
+            id="send-amount"
+            className={styles.input}
+            value={`${formatNumber(Number(form.state.values["stake-amount"]))} KLIMA`}
+          />
         </div>
-        <div className={styles.actions}>
-          <button
-            onClick={handleConfirm}
-            disabled={isStakePending}
-            className={clsx(styles.primaryButton, {
-              [styles.disabled]: isStakePending,
-            })}
-          >
-            Submit {isStakePending ? "..." : ""}
-          </button>
-          <Dialog.Close asChild>
-            <button className={styles.secondaryButton}>Cancel</button>
-          </Dialog.Close>
-        </div>
-      </>
-    );
-  };
+      </div>
+      <div className={styles.actions}>
+        <button
+          onClick={handleConfirm}
+          disabled={isStakePending}
+          className={clsx(styles.primaryButton, {
+            [styles.disabled]: isStakePending,
+          })}
+        >
+          Submit {isStakePending ? "..." : ""}
+        </button>
+        <Dialog.Close asChild>
+          <button className={styles.secondaryButton}>Cancel</button>
+        </Dialog.Close>
+      </div>
+    </>
+  );
+
 
   return (
-    <Dialog.Root open={open} onOpenChange={setOpen}>
+    <Dialog.Root open={open} onOpenChange={handleDialogState}>
       <Dialog.Trigger className={styles.participateButton}>
         <MdCelebration />
         Participate in Klima Fair Launch

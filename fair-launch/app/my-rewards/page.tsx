@@ -141,15 +141,14 @@ const Page: FC = async () => {
   const [, GROWTH_RATE, , , , , , , , previewUserPoints] = await calculateAllPoints();
 
   const calculateUserPoints = (stakeAmount: number, multiplier: number = 0, stakeTimestamp: number = 3) => {
+    const growthRate = Number(GROWTH_RATE.result);
     console.log('stakeAmount', stakeAmount);
     console.log('multiplier', multiplier);
     console.log('days staked', stakeTimestamp);
     console.log('days staked', getDaysStaked(stakeTimestamp));
     console.log('GROWTH_RATE', Number(GROWTH_RATE.result));
     // console.log('sdsdsd', (stakeAmount * multiplier * Number(stakeTimestamp) * Number(BigInt(GROWTH_RATE.result))) / 100000);
-
-    // formatNumber((BigInt(previewUserPoints?.result || 0), 9)
-    return stakeAmount * multiplier * Number(stakeTimestamp) * Number(BigInt(GROWTH_RATE.result)) / 100000;
+    return stakeAmount * multiplier * Number(stakeTimestamp) * growthRate / 100000;
   }
 
   return (
