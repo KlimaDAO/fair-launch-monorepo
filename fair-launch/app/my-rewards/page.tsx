@@ -23,14 +23,14 @@ import { headers } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
 import type { FC } from "react";
+import { FAIR_LAUNCH_CONTRACT_ADDRESS, KLIMA_V0_TOKEN_ADDRESS } from "@utils/constants";
 import { AbiFunction, formatGwei, formatUnits } from "viem";
 import { cookieToInitialState } from "wagmi";
 import * as styles from "./styles";
-import { FAIR_LAUNCH_CONTRACT_ADDRESS, KLIMA_V0_TOKEN_ADDRESS } from "@utils/constants";
 
 // todo - fix this...
-const calculatePoints = async (Si = 50, t = 30, Ri = 0) => {
-  const allContracts = await readContracts(config, {
+const calculateAllPoints = async () => {
+  return await readContracts(config, {
     contracts: [
       {
         abi: klimaFairLaunchAbi as AbiFunction[],
@@ -85,21 +85,6 @@ const calculatePoints = async (Si = 50, t = 30, Ri = 0) => {
       },
     ],
   });
-
-  console.log("allContracts", allContracts);
-
-  const originalStakedAmount = 1000;
-  const daysStaked = 1;
-  const multiplier = 200; // fetch the multiplier
-  const growthConstant = 274; // fetch the growth constant
-  const growthDenominator = 100000;
-  const expectedPoints =
-    (originalStakedAmount * multiplier * daysStaked * growthConstant) /
-    growthDenominator;
-  // Calculate final points using the formula
-  console.log("calc", expectedPoints);
-
-  return allContracts;
 };
 
 // @todo - move to utils
@@ -141,19 +126,31 @@ const Page: FC = async () => {
     Number(formatGwei(totalSupply as bigint)) // todo - fetch the total supply from the contract
   );
 
-  console.log('userStakes', userStakes);
+  const getDaysStaked = (stakedTimestamp: number) => {
+    const currentTimestamp = Date.now(); // Current time in milliseconds
+    const differenceInMilliseconds = currentTimestamp - stakedTimestamp * 1000; // Difference in milliseconds
+    const millisecondsInADay = 1000 * 60 * 60 * 24; // Number of milliseconds in a day
 
-  const [freezeTimestamp, GROWTH_RATE, klima, klimaxSupply, klimaSupply, burnRatio, totalPoints, totalBurned, totalOrganicPoints, previewUserPoints] = await calculatePoints(1,2,3);
-  console.log("freezeTimestamp", freezeTimestamp);
-  console.log("GROWTH_RATE", GROWTH_RATE);
-  console.log("klima", klima);
-  console.log("klimaxSupply", klimaxSupply);
-  console.log("klimaSupply", klimaSupply);
-  console.log("burnRatio", burnRatio);
-  console.log("totalPoints", totalPoints);
-  console.log("totalBurned", totalBurned);
-  console.log("totalOrganicPoints", totalOrganicPoints);
-  console.log("previewUserPoints", previewUserPoints);
+    if (Math.floor(differenceInMilliseconds / millisecondsInADay) === 0) {
+      return 1;
+    }
+    return Math.floor(differenceInMilliseconds / millisecondsInADay); // Convert to days
+  };
+
+  console.log('userStakes', userStakes);
+  const [, GROWTH_RATE, , , , , , , , previewUserPoints] = await calculateAllPoints();
+
+  const calculateUserPoints = (stakeAmount: number, multiplier: number = 0, stakeTimestamp: number = 3) => {
+    console.log('stakeAmount', stakeAmount);
+    console.log('multiplier', multiplier);
+    console.log('days staked', stakeTimestamp);
+    console.log('days staked', getDaysStaked(stakeTimestamp));
+    console.log('GROWTH_RATE', Number(GROWTH_RATE.result));
+    // console.log('sdsdsd', (stakeAmount * multiplier * Number(stakeTimestamp) * Number(BigInt(GROWTH_RATE.result))) / 100000);
+
+    // formatNumber((BigInt(previewUserPoints?.result || 0), 9)
+    return stakeAmount * multiplier * Number(stakeTimestamp) * Number(BigInt(GROWTH_RATE.result)) / 100000;
+  }
 
   return (
     <>
@@ -179,7 +176,7 @@ const Page: FC = async () => {
             >
               <Image src={klimav1Logo} alt="Klima V1 Logo" />
               <div className={styles.mainText}>
-                {formatUnits(BigInt(totalUserStakes(userStakes.stakes || [])), 9)}
+                {formatNumber(formatUnits(BigInt(totalUserStakes(userStakes.stakes || [])), 9))}
               </div>
             </div>
             <div id="step1" className={styles.secondaryText}>
@@ -219,7 +216,7 @@ const Page: FC = async () => {
               </TableHeader>
               {userStakes.stakes && !!userStakes.stakes.length ? (
                 <TableBody>
-                  {userStakes.stakes.map((stake) => (
+                  {userStakes.stakes.map(async (stake) => (
                     <TableRow key={stake.id}>
                       <TableCell>
                         {formatTimestamp(parseInt(stake.startTimestamp))}
@@ -229,7 +226,9 @@ const Page: FC = async () => {
                           {formatNumber(formatUnits(BigInt(stake.amount), 9))}
                         </strong>
                       </TableCell>
-                      <TableCell>-</TableCell>
+                      <TableCell>
+                        {formatNumber(calculateUserPoints(Number(stake.amount), Number(stake.multiplier), Number(stake.startTimestamp)) / 10 ** 9)}
+                      </TableCell>
                       <TableCell>- KLIMA</TableCell>
                       <TableCell>- KLIMAX</TableCell>
                       <TableCell>

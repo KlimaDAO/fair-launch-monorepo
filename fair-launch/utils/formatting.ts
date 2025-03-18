@@ -3,10 +3,10 @@
  * @param value - The number to format
  * @returns The formatted number
  */
-export const formatNumber = (value: number | string) =>
+export const formatNumber = (value: number | string, maxDecimals: number = 8) =>
   new Intl.NumberFormat("en-US", {
     minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
+    maximumFractionDigits: maxDecimals,
   }).format(Number(value));
 
 /**

@@ -65,7 +65,7 @@ const Page: FC = async () => {
           <h5 className={styles.cardTitle}>$TVL</h5>
           <div className={styles.cardContents}>
             <div className={styles.mainText}>
-              ${formatNumber(price * Number(formatUnits(totalStaked, 9)))}
+              ${formatNumber(price * Number(formatUnits(totalStaked, 9)), 2)}
             </div>
           </div>
         </div>

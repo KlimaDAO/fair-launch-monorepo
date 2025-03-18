@@ -2,16 +2,18 @@
 
 import clsx from "clsx";
 import { Alert } from "@components/alert";
-import { Input } from "@components/input";
 import { Dialog } from "radix-ui";
-import { abi as erc20Abi } from "@abi/erc20";
+import { useForm } from "@tanstack/react-form";
+import { formatUnits } from "viem";
 import { formatNumber } from "@utils/formatting";
+import { abi as erc20Abi } from "@abi/erc20";
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
 import { MdCelebration, MdLibraryAdd } from "react-icons/md";
 import { type FC, Fragment, useEffect, useState } from "react";
 import { KLIMA_V0_TOKEN_ADDRESS, FAIR_LAUNCH_CONTRACT_ADDRESS } from "@utils/constants";
 import {
   useAccount,
+  useBalance,
   useReadContract,
   useWaitForTransactionReceipt,
   useWriteContract,
@@ -37,16 +39,30 @@ enum DialogState {
 
 export const StakeDialog: FC = () => {
   const { address } = useAccount();
+  const { data: balance } = useBalance({
+    address: address,
+    token: KLIMA_V0_TOKEN_ADDRESS,
+  });
+
+  const klimaBalance = formatUnits(balance?.value ?? BigInt(0), 9);
+  const form = useForm({
+    defaultValues: { 'stake-amount': '' },
+    onSubmit: async ({ value }) => {
+      console.log('after submit', value);
+    },
+  });
+
   const [open, setOpen] = useState(false);
-  const [stakeAmount, setStakeAmount] = useState<string>("");
   const [dialogState, setDialogState] = useState<DialogState>(
     DialogState.INITIAL
   );
+
   const {
     data: approveData,
     isPending: isApprovePending,
     writeContract: approveContract,
   } = useWriteContract();
+
   const {
     data: stakeData,
     isPending: isStakePending,
@@ -71,10 +87,12 @@ export const StakeDialog: FC = () => {
   };
 
   const handleStake = () => {
+    console.log('handleStake', form.state.values);
     setDialogState(!allowanceData ? DialogState.APPROVE : DialogState.CONFIRM);
   };
 
   const handleApprove = () => {
+    const stakeAmount = form.state.values["stake-amount"];
     approveContract({
       abi: erc20Abi,
       functionName: "approve",
@@ -84,6 +102,7 @@ export const StakeDialog: FC = () => {
   };
 
   const handleConfirm = () => {
+    const stakeAmount = form.state.values["stake-amount"];
     stakeContract({
       abi: klimaFairLaunchAbi,
       functionName: "stake",
@@ -92,103 +111,112 @@ export const StakeDialog: FC = () => {
     });
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    console.log("Input value:", e.target.value);
-    setStakeAmount(e.target.value);
-  };
-
   useEffect(() => {
     if (!!isApproved) setDialogState(DialogState.CONFIRM);
   }, [isApproved]);
 
-  console.log("submitReceipt", submitReceipt);
-
   useEffect(() => {
+    setOpen(false);
+    // todo - show notification message...
     if (submitReceipt?.status === "success") {
-      setOpen(false);
-      // todo - show notification message...
       window.location.reload();
     }
   }, [submitReceipt]);
 
-  const InitialView = () => {
-    return (
-      <Fragment>
-        <div className={styles.icon}>
-          <MdLibraryAdd />
-        </div>
-        <Dialog.Title className={styles.title}>
-          Participate in the Fair Launch!
-        </Dialog.Title>
-        <Dialog.Description className={styles.description}>
-          Stake KLIMA to earn your share of KLIMA 2.0!
-        </Dialog.Description>
-        <div className={styles.actions}>
-          <button className={styles.primaryButton} onClick={handleProceed}>
-            Proceed
-          </button>
-          <Dialog.Close asChild>
-            <button className={styles.secondaryButton}>Cancel</button>
-          </Dialog.Close>
-        </div>
-      </Fragment>
-    );
-  };
+  const InitialView = () => (
+    <Fragment>
+      <div className={styles.icon}>
+        <MdLibraryAdd />
+      </div>
+      <Dialog.Title className={styles.title}>
+        Participate in the Fair Launch!
+      </Dialog.Title>
+      <Dialog.Description className={styles.description}>
+        Stake KLIMA to earn your share of KLIMA 2.0!
+      </Dialog.Description>
+      <div className={styles.actions}>
+        <button className={styles.primaryButton} onClick={handleProceed}>
+          Proceed
+        </button>
+        <Dialog.Close asChild>
+          <button className={styles.secondaryButton}>Cancel</button>
+        </Dialog.Close>
+      </div>
+    </Fragment>
+  );
 
-  const StakeView = () => {
-    return (
-      <form>
-        <div className={styles.icon}>
-          <MdLibraryAdd />
+
+  const StakeView = () => (
+    <Fragment>
+      <div className={styles.icon}>
+        <MdLibraryAdd />
+      </div>
+      <Dialog.Title className={styles.title}>Stake KLIMA</Dialog.Title>
+      <div className={styles.description}>
+        <div className={styles.inputContainer}>
+          <form.Field name="stake-amount">
+            {(field) => (
+              <>
+                <label htmlFor={field.name}>
+                  Amount
+                </label>
+                <div className={styles.inputRow}>
+                  <input
+                    type="number"
+                    id={field.name}
+                    name={field.name}
+                    value={field.state.value}
+                    className={styles.input}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                  />
+                  <button
+                    className={styles.maxButton}
+                    onClick={() => field.handleChange(klimaBalance)}
+                  >
+                    Max
+                  </button>
+                </div>
+                {/* {field.state.meta.errors ? (
+                    <em role="alert">{field.state.meta.errors.join(', ')}</em>
+                  ) : null} */}
+              </>
+            )}
+          </form.Field>
         </div>
-        <Dialog.Title className={styles.title}>Stake KLIMA</Dialog.Title>
-        <div className={styles.description}>
-          <div className={styles.inputContainer}>
-            <label htmlFor="stake-amount">Amount</label>
-            <input
-              id="stake-amount"
-              value={stakeAmount}
-              placeholder={stakeAmount}
-              onChange={handleChange}
-            />
-          </div>
-          <Alert variant="default">
-            <strong>Note:</strong> It is best to leave this amount staked until
-            the end of the Fair Launch period. Unstaking your KLIMA early will
-            result in a penalty.
-          </Alert>
-        </div>
-        <div className={styles.actions}>
-          <button className={styles.primaryButton} onClick={handleStake}>
-            Stake
-          </button>
-          <Dialog.Close asChild>
-            <button className={styles.secondaryButton}>Cancel</button>
-          </Dialog.Close>
-        </div>
-      </form>
-    );
-  };
+      </div>
+      <Alert variant="default">
+        <strong>Note:</strong> It is best to leave this amount staked until
+        the end of the Fair Launch period. Unstaking your KLIMA early will
+        result in a penalty.
+      </Alert>
+      <div className={styles.actions}>
+        <button className={styles.primaryButton} onClick={handleStake}>
+          Stake
+        </button>
+        <Dialog.Close asChild>
+          <button className={styles.secondaryButton}>Cancel</button>
+        </Dialog.Close>
+      </div>
+    </Fragment>
+  );
 
   const ApproveView = () => {
     return (
-      <Fragment>
-        <div className={styles.icon}>
-          <MdLibraryAdd />
+      <>
+        <div className={styles.confirmContainer}>
+          <Dialog.Title className={styles.confirmTitle}>Confirm your transaction</Dialog.Title>
+          <Dialog.Description className={styles.confirmDescription}>
+            To complete this transaction, please allow our smart contract to transfer tokens on your behalf.
+          </Dialog.Description>
         </div>
-        <Dialog.Title className={styles.title}>Stake KLIMA</Dialog.Title>
-        <Dialog.Description className={styles.description}>
-          To complete this transaction, please allow our smart contract to
-          transfer tokens on your behalf.
-        </Dialog.Description>
         <div className={styles.description}>
           <div className={styles.inputContainer}>
             <label htmlFor="contract-address">Contract Address</label>
-            <Input disabled id="contract-address" value="0x8cE...5f8" />
+            <input className={styles.input} disabled id="contract-address" value="0x8cE...5f8" />
           </div>
           <div className={styles.inputContainer}>
             <label htmlFor="send-amount">You are sending</label>
-            <Input disabled id="send-amount" value={`${stakeAmount} KLIMA`} />
+            <input className={styles.input} disabled id="send-amount" value={`${form.state.values["stake-amount"]} KLIMA`} />
           </div>
         </div>
         <div className={styles.actions}>
@@ -207,31 +235,39 @@ export const StakeDialog: FC = () => {
             <button className={styles.secondaryButton}>Cancel</button>
           </Dialog.Close>
         </div>
-      </Fragment>
+      </>
     );
   };
 
   const ConfirmView = () => {
     return (
       <>
-        <Dialog.Title className={styles.title}>
-          Confirm your transaction
-        </Dialog.Title>
-        <Dialog.Description className={styles.description}>
-          Give the transaction one final review before submitting to the
-          blockchain.
-        </Dialog.Description>
+        <div className={styles.confirmContainer}>
+          <Dialog.Title className={styles.confirmTitle}>
+            Confirm your transaction
+          </Dialog.Title>
+          <Dialog.Description className={styles.confirmDescription}>
+            Give the transaction one final review before submitting to the
+            blockchain.
+          </Dialog.Description>
+        </div>
         <div className={styles.description}>
           <div className={styles.inputContainer}>
             <label htmlFor="contract-address">Contract Address</label>
-            <Input disabled id="contract-address" value="0x8cE...5f8" />
+            <input
+              disabled
+              id="contract-address"
+              className={styles.input}
+              value="0x8cE...5f8"
+            />
           </div>
           <div className={styles.inputContainer}>
             <label htmlFor="send-amount">You are sending</label>
-            <Input
+            <input
               disabled
               id="send-amount"
-              value={`${formatNumber(Number(stakeAmount))} KLIMA`}
+              className={styles.input}
+              value={`${formatNumber(Number(form.state.values["stake-amount"]))} KLIMA`}
             />
           </div>
         </div>

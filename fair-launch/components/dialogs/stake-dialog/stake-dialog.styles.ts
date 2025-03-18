@@ -13,7 +13,7 @@ export const overlay = css({
 });
 
 export const confirmOverlay = css({
-  background: 'void.10',
+  backgroundColor: 'void.10',
 });
 
 export const disabled = css({
@@ -72,10 +72,10 @@ export const description = css({
   lineHeight: '2rem',
   fontWeight: '400',
   color: 'void.80',
-  textAlign: 'center',
   display: 'flex',
   flexDirection: 'column',
   gap: '2rem',
+  textAlign: 'center',
 });
 
 export const actions = css({
@@ -148,4 +148,60 @@ export const participateButton = css({
     maxWidth: '32rem',
     height: '4rem',
   }
+});
+
+export const input = css({
+  flex: 1,
+  display: 'flex',
+  height: '4rem',
+  width: '100%',
+  borderRadius: 'sm',
+  border: 'none',
+  background: 'void.10',
+  padding: '1rem 1.2rem',
+  fontSize: 'base',
+});
+
+export const inputRow = css({
+  gap: '0',
+  display: 'flex',
+  borderRadius: 'sm',
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  border: '0.1rem solid token(colors.void.50)',
+});
+
+export const maxButton = css({
+  backgroundColor: 'void.60',
+  textTransform: 'uppercase',
+  padding: '0.8rem 1rem',
+  color: 'white',
+  borderRadius: '0.3rem',
+  border: 'none',
+  fontSize: 'sm',
+  lineHeight: 'sm',
+  fontWeight: 700,
+  cursor: 'pointer',
+});
+
+export const confirmTitle = css({
+  fontSize: 'lg',
+  lineHeight: 'lg',
+  textAlign: 'left',
+  fontWeight: 700,
+  color: 'void.80',
+});
+
+export const confirmDescription = css({
+  fontSize: 'base',
+  lineHeight: 'base',
+  textAlign: 'left',
+  fontWeight: 400,
+  color: 'void.80',
+});
+
+export const confirmContainer = css({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '1.2rem',
 });

@@ -7,12 +7,14 @@ import * as styles from "./styles";
 export const Input = React.forwardRef<
   HTMLInputElement,
   React.ComponentProps<"input">
->(({ className, type, ...props }, ref) => (
-  <input
-    ref={ref}
-    type={type}
-    className={clsx(styles.input, className)}
-    {...props}
-  />
-));
-Input.displayName = "Input";
+>(({ className, type, onChange, ...props }, ref) => {
+  return (
+    <input
+      ref={ref}
+      type={type}
+      onChange={onChange} // Use the onChange prop directly
+      className={clsx(styles.input, className)}
+      {...props}
+    />
+  );
+});
