@@ -130,7 +130,11 @@ const Page: FC = async () => {
 
   const calculateUserPoints = (stakeAmount: number, multiplier: number = 0, stakeTimestamp: number = 3) => {
     const growthRate = Number(GROWTH_RATE.result);
-    return stakeAmount * multiplier * Number(stakeTimestamp) * growthRate / 100000;
+    const currentTimestamp = Math.floor(Date.now() / 1000);
+    const elapsedTime = currentTimestamp - stakeTimestamp;
+    console.log("elapsedTime", elapsedTime);
+    const formattedStake = formatUnits(BigInt(stakeAmount), 9);
+    return (Number(formattedStake) * multiplier * elapsedTime * growthRate) / 100000;
   }
 
   const calculatePercentage = (part: number, total: number) => {
@@ -294,7 +298,7 @@ const Page: FC = async () => {
                               }}
                             >
                               {shortenWalletAddress(wallet.id)}
-                              {isMyWallet && <Badge title="You" />}
+                              {isMyWallet && <Badge variant="table" title="You" />}
                             </div>
                           </TableCell>
                           <TableCell

@@ -1,12 +1,21 @@
 'use client';
 
-import type { FC } from "react";
+import clsx from "clsx";
+import * as React from "react";
+import { type RecipeVariantProps } from "../../styled-system/css";
 import * as styles from './styles';
 
-interface Props {
-  title: string;
-}
-
-export const Badge: FC<Props> = (props) =>
-  <div className={styles.badge}>{props.title}</div>;
-
+export const Badge = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement> &
+  RecipeVariantProps<typeof styles.badgeVariants>
+>(({ className, variant, ...props }, ref) => (
+  <div
+    ref={ref}
+    role="badge"
+    className={clsx(styles.badgeVariants({ variant }), className)}
+    {...props}
+  >
+    {props.title}
+  </div>
+));

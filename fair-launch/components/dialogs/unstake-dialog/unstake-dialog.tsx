@@ -35,7 +35,7 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount }) => {
       abi: klimaFairLaunchAbi,
       functionName: 'unstake',
       address: FAIR_LAUNCH_CONTRACT_ADDRESS,
-      args: [BigInt(20) * BigInt(10 ** 9)],
+      args: [BigInt(10) * BigInt(10 ** 9)],
     });
   };
 
