@@ -141,8 +141,21 @@ export const leaderboardLink = css({
   textDecoration: 'underline',
 });
 
-export const textRight = css({
-  textAlign: 'right !important',
+export const stakingTable = css({
+  '& th': {
+    textAlign: 'right',
+    '&:first-child': {
+      textAlign: 'left'
+    },
+  },
+
+  '& td': {
+    textAlign: 'right',
+    verticalAlign: 'top',
+    '&:first-child': {
+      textAlign: 'left'
+    }
+  }
 });
 
 export const penaltyText = css({

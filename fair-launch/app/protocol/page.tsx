@@ -29,6 +29,12 @@ const Page: FC = async () => {
   const { data } = await klimaPrice.json();
   const price = data?.KLIMA?.[0]?.quote?.USD?.price;
 
+  const totalBurned = await readContract(config, {
+    abi: klimaFairLaunchAbi,
+    address: FAIR_LAUNCH_CONTRACT_ADDRESS,
+    functionName: "totalBurned",
+  }) as bigint;
+
   // replace this call with react-query?
   const leaderboard = (await fetchLeaderboard()) || { wallets: [] };
   const totalStaked = (await readContract(config, {
@@ -74,7 +80,9 @@ const Page: FC = async () => {
           <div className={styles.cardContents}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <Image src={klimav1Logo} alt="Klima V1 Logo" />
-              <div className={styles.mainText}>40,000,000</div>
+              <div className={styles.mainText}>
+                {formatNumber(formatUnits(totalBurned, 9))}
+              </div>
             </div>
           </div>
         </div>

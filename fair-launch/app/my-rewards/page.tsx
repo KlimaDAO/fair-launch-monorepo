@@ -206,15 +206,15 @@ const Page: FC = async () => {
         <div className={styles.cardInner}>
           <h5 className={styles.cardTitle}>Stake History</h5>
           <div className={styles.cardContents}>
-            <Table>
+            <Table className={styles.stakingTable}>
               <TableHeader>
                 <TableRow>
                   <TableHead>Timestamp</TableHead>
-                  <TableHead className={styles.textRight}>KLIMA(v0) Staked</TableHead>
-                  <TableHead className={styles.textRight}>Points</TableHead>
-                  <TableHead className={styles.textRight}>Unstake Penalty</TableHead>
-                  <TableHead className={styles.textRight}>KLIMAX Allocation</TableHead>
-                  <TableHead className={styles.textRight}>&nbsp;</TableHead>
+                  <TableHead>KLIMA(v0) Staked</TableHead>
+                  <TableHead>Points</TableHead>
+                  <TableHead>Unstake Penalty</TableHead>
+                  <TableHead>KLIMAX Allocation</TableHead>
+                  <TableHead>&nbsp;</TableHead>
                 </TableRow>
               </TableHeader>
               {/* @todo - cleanup all functions inside map */}
@@ -225,15 +225,15 @@ const Page: FC = async () => {
                       <TableCell>
                         {formatTimestamp(parseInt(stake.startTimestamp))}
                       </TableCell>
-                      <TableCell className={styles.textRight}>
+                      <TableCell>
                         <strong>
                           {formatNumber(formatUnits(BigInt(stake.amount), 9))}
                         </strong>
                       </TableCell>
-                      <TableCell className={styles.textRight}>
+                      <TableCell>
                         {formatNumber(calculateUserPoints(Number(stake.amount), Number(stake.multiplier), Number(stake.startTimestamp)) / 10 ** 9)}
                       </TableCell>
-                      <TableCell className={styles.textRight}>
+                      <TableCell>
                         <div>
                           -{await getUnstakePenalty(Number(stake.amount), Number(stake.startTimestamp)).then(({ value }) => value)} KLIMA
                         </div>
@@ -241,8 +241,8 @@ const Page: FC = async () => {
                           {await getUnstakePenalty(Number(stake.amount), Number(stake.startTimestamp)).then(({ percentage }) => percentage)}%
                         </div>
                       </TableCell>
-                      <TableCell className={styles.textRight}>- KLIMAX</TableCell>
-                      <TableCell className={styles.textRight}>
+                      <TableCell>- KLIMAX</TableCell>
+                      <TableCell>
                         <UnstakeDialog amount={stake.amount} />
                       </TableCell>
                     </TableRow>
