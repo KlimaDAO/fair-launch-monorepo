@@ -13,11 +13,17 @@ export const alertVariants = cva({
   },
   variants: {
     variant: {
-      default: { 
-        bg: 'green.10', 
+      default: {
+        bg: 'green.10',
         color: 'black',
         borderColor: 'green.40',
-       },
+      },
+      success: {
+        bg: 'green.10',
+        border: 'none',
+        color: 'black',
+        padding: '2rem',
+      }
     },
   },
   defaultVariants: {

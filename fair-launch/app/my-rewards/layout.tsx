@@ -4,6 +4,7 @@ import { Sidebar } from "@components/sidebar";
 import type { Metadata } from "next";
 import type { FC, ReactNode } from "react";
 import * as styles from "./styles";
+import { Alert } from "@components/alert";
 
 export const metadata: Metadata = {
   title: "Klima Fair Launch dApp - My Rewards",

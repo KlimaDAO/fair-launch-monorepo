@@ -4,12 +4,13 @@ import clsx from "clsx";
 import { Alert } from "@components/alert";
 import { Dialog } from "radix-ui";
 import { useForm } from "@tanstack/react-form";
-import { formatUnits } from "viem";
+import { formatUnits, parseGwei } from "viem";
 import { formatNumber } from "@utils/formatting";
 import { abi as erc20Abi } from "@abi/erc20";
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
 import { MdCelebration, MdLibraryAdd } from "react-icons/md";
 import { type FC, useEffect, useState } from "react";
+import { getGasPrice } from '@wagmi/core'
 import { KLIMA_V0_TOKEN_ADDRESS, FAIR_LAUNCH_CONTRACT_ADDRESS } from "@utils/constants";
 import {
   useAccount,
@@ -19,6 +20,7 @@ import {
   useWriteContract,
 } from "wagmi";
 import * as styles from "./styles";
+import { config } from "@utils/wagmi";
 
 type InteractOutsideEvent =
   | CustomEvent<{ originalEvent: FocusEvent }>
@@ -37,6 +39,7 @@ enum DialogState {
   CONFIRM,
 }
 
+
 export const StakeDialog: FC = () => {
   const { address } = useAccount();
   const { data: balance } = useBalance({
@@ -46,7 +49,7 @@ export const StakeDialog: FC = () => {
 
   const form = useForm({ defaultValues: { 'stake-amount': '' } });
   const klimaBalance = formatUnits(balance?.value ?? BigInt(0), 9);
-  
+
   const [open, setOpen] = useState(false);
   const [dialogState, setDialogState] = useState(DialogState.INITIAL);
 
@@ -62,6 +65,9 @@ export const StakeDialog: FC = () => {
     isSuccess: isStakeSuccess,
     writeContract: stakeContract,
   } = useWriteContract();
+
+  console.log('isPending', isStakePending);
+  console.log('isSuccess', isStakeSuccess);
 
   const { data: allowanceData } = useReadContract({
     ...allowanceConfig,
@@ -89,7 +95,8 @@ export const StakeDialog: FC = () => {
     setDialogState(!allowanceData ? DialogState.APPROVE : DialogState.CONFIRM);
   };
 
-  const handleApprove = () => {
+  const handleApprove = async () => {
+
     const stakeAmount = form.state.values["stake-amount"];
     console.log('stakeAmount::handleApprove', stakeAmount);
     approveContract({
@@ -100,14 +107,16 @@ export const StakeDialog: FC = () => {
     });
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
+    // const gasPrice = await getGasPrice(config);
+    // console.log('gasPrice::handleApprove', gasPrice);
     const stakeAmount = form.state.values["stake-amount"];
-    console.log('stakeAmount::handleConfirm', stakeAmount);
     stakeContract({
       abi: klimaFairLaunchAbi,
       functionName: "stake",
       address: FAIR_LAUNCH_CONTRACT_ADDRESS,
       args: [BigInt(stakeAmount) * BigInt(10 ** 9)],
+      gas: parseGwei('2'),
     });
   };
 

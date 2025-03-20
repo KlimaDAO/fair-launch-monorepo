@@ -17,17 +17,17 @@ import {
   TableRow,
 } from "@components/table";
 import { readContract } from "@wagmi/core";
-import { formatNumber, formatTimestamp, formatTokenToValue, formatValueToNumber, truncateAddress } from "@utils/formatting";
+import { formatNumber, formatTimestamp, formatValueToNumber, truncateAddress } from "@utils/formatting";
 import { fetchLeaderboard, fetchUserStakes } from "@utils/queries";
 import { headers } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
-import type { FC } from "react";
+import { type FC } from "react";
 import { FAIR_LAUNCH_CONTRACT_ADDRESS, KLIMA_V0_TOKEN_ADDRESS } from "@utils/constants";
 import { formatGwei, formatUnits } from "viem";
 import { cookieToInitialState } from "wagmi";
 import * as styles from "./styles";
-import { calculateBurnFn, calculateUnstakePenalty } from "@utils/contract";
+import { calculateUnstakePenalty } from "@utils/contract";
 
 // @todo - move to utils
 const calculateTokenPercentage = (tokens: number, totalSupply: number) => {
@@ -145,32 +145,32 @@ const Page: FC = async () => {
               {!!userStakes?.stakes?.length ? (
                 <TableBody>
                   {userStakes.stakes.map(async (stake) => {
-                    console.log('stake.amount', stake.amount);
                     const { burnValue, percentage } = await calculateUnstakePenalty(stake.amount, stake.startTimestamp);
-                    return (<TableRow key={stake.id}>
-                      <TableCell>
-                        {formatTimestamp(parseInt(stake.startTimestamp))}
-                      </TableCell>
-                      <TableCell>
-                        <strong>
-                          {formatNumber(formatUnits(BigInt(stake.amount), 9))}
-                        </strong>
-                      </TableCell>
-                      <TableCell>
-                        {formatNumber(calculateUserPoints(Number(stake.amount), Number(stake.multiplier), Number(stake.startTimestamp)) / 10 ** 9)}
-                      </TableCell>
-                      <TableCell>
-                        <div>-{burnValue} KLIMA</div>
-                        <div className={styles.penaltyText}>{percentage}</div>
-                      </TableCell>
-                      <TableCell>- KLIMAX</TableCell>
-                      <TableCell>
-                        <UnstakeDialog
-                          amount={stake.amount}
-                          startTimestamp={stake.startTimestamp}
-                        />
-                      </TableCell>
-                    </TableRow>)
+                    return (
+                      <TableRow key={stake.id}>
+                        <TableCell>
+                          {formatTimestamp(parseInt(stake.startTimestamp))}
+                        </TableCell>
+                        <TableCell>
+                          <strong>
+                            {formatNumber(formatUnits(BigInt(stake.amount), 9))}
+                          </strong>
+                        </TableCell>
+                        <TableCell>
+                          {formatNumber(calculateUserPoints(Number(stake.amount), Number(stake.multiplier), Number(stake.startTimestamp)) / 10 ** 9)}
+                        </TableCell>
+                        <TableCell>
+                          <div>-{burnValue} KLIMA</div>
+                          <div className={styles.penaltyText}>{percentage}</div>
+                        </TableCell>
+                        <TableCell>- KLIMAX</TableCell>
+                        <TableCell>
+                          <UnstakeDialog
+                            amount={stake.amount}
+                            startTimestamp={stake.startTimestamp}
+                          />
+                        </TableCell>
+                      </TableRow>)
                   })}
                 </TableBody>
               ) : (
