@@ -17,7 +17,7 @@ import {
   TableRow,
 } from "@components/table";
 import { readContract } from "@wagmi/core";
-import { formatNumber, formatTimestamp, formatValueToNumber, truncateAddress } from "@utils/formatting";
+import { formatLargeNumber, formatNumber, formatTimestamp, formatValueToNumber, truncateAddress } from "@utils/formatting";
 import { fetchLeaderboard, fetchUserStakes } from "@utils/queries";
 import { headers } from "next/headers";
 import Image from "next/image";
@@ -117,8 +117,7 @@ const Page: FC = async () => {
             </div>
             <div id="step1" className={styles.secondaryText}>
               <strong>&lt;{tokenPercentage.toFixed(2)}%</strong> of{" "}
-              <strong>{formatNumber(formatGwei(totalSupply as bigint))}</strong>{" "}
-              MM
+              <strong>{formatLargeNumber(Number(formatGwei(totalSupply as bigint)))}</strong>{" "}
             </div>
           </div>
         </div>

@@ -55,3 +55,14 @@ export const truncateAddress = (address: string): string => {
   if (address.length <= 10) return address;
   return `${address.slice(0, 5)}...${address.slice(-3)}`;
 };
+
+export const formatLargeNumber = (value: number) => {
+  if (value >= 1e9) {
+    return `${(value / 1e9).toFixed(1)} B`; // Format to billions
+  } else if (value >= 1e6) {
+    return `${(value / 1e6).toFixed(1)} M`; // Format to millions
+  } else if (value >= 1e3) {
+    return `${(value / 1e3).toFixed(1)} K`; // Format to thousands
+  }
+  return value.toString();
+};
