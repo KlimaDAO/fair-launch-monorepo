@@ -11,7 +11,7 @@ import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
 import { FAIR_LAUNCH_CONTRACT_ADDRESS } from '@utils/constants';
 import { useAccount, useWriteContract } from "wagmi";
 import { MdAccountBalance, MdWarningAmber } from "react-icons/md";
-import * as styles from './unstake-dialog.styles';
+import * as styles from './styles';
 
 type FocusOutsideEvent = CustomEvent<{ originalEvent: FocusEvent }>;
 type PointerDownOutsideEvent = CustomEvent<{ originalEvent: PointerEvent }>;

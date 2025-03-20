@@ -6,8 +6,8 @@ import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
 import { Badge } from "@components/badge";
 import { config } from "@utils/wagmi";
 import { Tooltip } from "@components/tooltip";
-import { StakeDialog } from "@components/dialogs/stake-dialog/stake-dialog";
-import { UnstakeDialog } from "@components/dialogs/unstake-dialog/unstake-dialog";
+import { StakeDialog } from "@components/dialogs/stake-dialog";
+import { UnstakeDialog } from "@components/dialogs/unstake-dialog";
 import {
   Table,
   TableBody,

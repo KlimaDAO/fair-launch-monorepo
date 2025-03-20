@@ -18,7 +18,7 @@ import {
   useWaitForTransactionReceipt,
   useWriteContract,
 } from "wagmi";
-import * as styles from "./stake-dialog.styles";
+import * as styles from "./styles";
 
 type InteractOutsideEvent =
   | CustomEvent<{ originalEvent: FocusEvent }>
