@@ -22,7 +22,8 @@ const connectors = connectorsForWallets(
   ],
   {
     appName: 'KlimaDAO Fair Launch',
-    projectId: 'YOUR_PROJECT_ID',
+    // replace with official project id
+    projectId: 'd70d1ad9ea2bed68ed81737f44a75ef0',
   },
 );
 
