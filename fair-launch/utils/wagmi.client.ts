@@ -12,7 +12,6 @@ import {
 } from '@rainbow-me/rainbowkit/wallets';
 import { connectorsForWallets } from '@rainbow-me/rainbowkit';
 
-coinbaseWallet.preference = 'smartWalletOnly';
 const connectors = connectorsForWallets(
   [
     {

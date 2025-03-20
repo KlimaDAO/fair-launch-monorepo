@@ -38,7 +38,6 @@ enum DialogState {
   CONFIRM,
 }
 
-
 export const StakeDialog: FC = () => {
   const { address } = useAccount();
   const { data: balance } = useBalance({
@@ -197,7 +196,11 @@ export const StakeDialog: FC = () => {
         result in a penalty.
       </Alert>
       <div className={styles.actions}>
-        <button className={styles.primaryButton} onClick={handleStake}>
+        <button
+          onClick={handleStake}
+          disabled={Number(klimaBalance) <= 0}
+          className={styles.primaryButton}
+        >
           Stake
         </button>
         <Dialog.Close asChild>
