@@ -180,11 +180,16 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount, startTimestamp }
       <Dialog.Title className={styles.title}>
         Confirm Unstake
       </Dialog.Title>
-      <div className={styles.altDescription}>
-        <div>Are you sure you'd like to unstake {amount} KLIMA? You will burn this KLIMA and <strong>will not be able to re-stake it.</strong></div>
-        <div>You will still get to keep the points and KLIMAX you've accrued.</div>
-        <Link href="/">Learn more about burning KLIMA.</Link>
-      </div>
+      <form.Subscribe
+        selector={(state) => state.values}
+        children={(values) => (
+          <div className={styles.altDescription}>
+            <div>Are you sure you'd like to unstake {values['unstake-amount']} KLIMA? You will burn {values['burn-amount']} KLIMA and <strong>will not be able to re-stake it.</strong></div>
+            <div>You will still get to keep the points and KLIMAX you've accrued.</div>
+            <Link href="/">Learn more about burning KLIMA.</Link>
+          </div>
+        )}
+      />
       <div className={styles.actions}>
         <button onClick={handleConfirmUnstake} className={styles.primaryButton}>
           Confirm
