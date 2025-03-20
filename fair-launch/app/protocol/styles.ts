@@ -123,3 +123,36 @@ export const divider = css({
     height: '100%',
   }
 });
+
+export const leaderboardTable = css({
+  '& th': {
+    textAlign: 'right',
+    '&:first-child': {
+      textAlign: 'left',
+      width: '8rem'
+    },
+    '&:nth-child(2)': {
+      textAlign: 'left',
+      width: '50%'
+    },
+    '&:nth-child(3)': {
+      width: '15rem'
+    },
+  },
+
+  '& td': {
+    textAlign: 'right',
+    verticalAlign: 'top',
+    '&:first-child': {
+      textAlign: 'left',
+      width: '8rem'
+    },
+    '&:nth-child(2)': {
+      textAlign: 'left',
+      width: '50%'
+    },
+    '&:nth-child(3)': {
+      width: '15rem'
+    },
+  }
+});

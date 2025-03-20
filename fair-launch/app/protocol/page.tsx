@@ -101,16 +101,14 @@ const Page: FC = async () => {
             />
           </div>
           <div className={styles.cardContents}>
-            <Table>
+            <Table className={styles.leaderboardTable}>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Place</TableHead>
-                  <TableHead>Wallet</TableHead>
-                  <TableHead>KLIMA(v0) Staked</TableHead>
-                  <TableHead>Points</TableHead>
-                </TableRow>
+                <TableHead>Place</TableHead>
+                <TableHead>Wallet</TableHead>
+                <TableHead>KLIMA(v0) Staked</TableHead>
+                <TableHead>Points</TableHead>
               </TableHeader>
-              {leaderboard?.wallets && !!leaderboard.wallets.length ? (
+              {!!leaderboard?.wallets?.length ? (
                 <TableBody>
                   {leaderboard.wallets.map((wallet, index) => (
                     <TableRow key={wallet.id}>
