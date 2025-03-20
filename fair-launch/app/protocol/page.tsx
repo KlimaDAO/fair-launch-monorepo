@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@components/table";
-import { config } from "@utils/wagmi";
+import { config } from "@utils/wagmi.server";
 import { type FC } from "react";
 import { Dropdown } from "@components/dropdown";
 import { formatUnits } from "viem";
@@ -103,10 +103,12 @@ const Page: FC = async () => {
           <div className={styles.cardContents}>
             <Table className={styles.leaderboardTable}>
               <TableHeader>
-                <TableHead>Place</TableHead>
-                <TableHead>Wallet</TableHead>
-                <TableHead>KLIMA(v0) Staked</TableHead>
-                <TableHead>Points</TableHead>
+                <TableRow>
+                  <TableHead>Place</TableHead>
+                  <TableHead>Wallet</TableHead>
+                  <TableHead>KLIMA(v0) Staked</TableHead>
+                  <TableHead>Points</TableHead>
+                </TableRow>
               </TableHeader>
               {!!leaderboard?.wallets?.length ? (
                 <TableBody>
@@ -130,6 +132,7 @@ const Page: FC = async () => {
               )}
             </Table>
           </div>
+          <div>Showing 1 to 2 of 2 results</div>
         </div>
       </div>
     </>

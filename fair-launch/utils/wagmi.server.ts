@@ -4,7 +4,7 @@ import {
   createConfig,
   http,
   cookieStorage,
-  createStorage
+  createStorage,
 } from 'wagmi'
 
 export const config: Config = createConfig({

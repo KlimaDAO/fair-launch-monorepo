@@ -4,7 +4,7 @@ import klimav1Logo from "@public/tokens/klima-v1.svg";
 import { abi as erc20Abi } from "@abi/erc20";
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
 import { Badge } from "@components/badge";
-import { config } from "@utils/wagmi";
+import { config } from "@utils/wagmi.server";
 import { Tooltip } from "@components/tooltip";
 import { StakeDialog } from "@components/dialogs/stake-dialog";
 import { UnstakeDialog } from "@components/dialogs/unstake-dialog";
@@ -157,7 +157,7 @@ const Page: FC = async () => {
                           </strong>
                         </TableCell>
                         <TableCell>
-                          {formatNumber(calculateUserPoints(Number(stake.amount), Number(stake.multiplier), Number(stake.startTimestamp)) / 10 ** 9)}
+                          {formatNumber(calculateUserPoints(Number(stake.amount), Number(stake.multiplier), Number(stake.startTimestamp)))}
                         </TableCell>
                         <TableCell>
                           <div>-{burnValue} KLIMA</div>
