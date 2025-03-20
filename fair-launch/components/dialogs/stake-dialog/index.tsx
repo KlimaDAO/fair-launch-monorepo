@@ -82,7 +82,10 @@ export const StakeDialog: FC = () => {
   const handleDialogState = () => {
     setOpen(!open);
     // reset dialog state when dialog is closed
-    if (open) setDialogState(DialogState.INITIAL);
+    if (open) {
+      setDialogState(DialogState.INITIAL);
+      form.reset();
+    }
   };
 
   const handleProceed = () => {
