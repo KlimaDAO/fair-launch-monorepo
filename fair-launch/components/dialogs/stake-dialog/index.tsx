@@ -77,7 +77,7 @@ export const StakeDialog: FC = () => {
   const { data: receipt } = useWaitForTransactionReceipt({ hash: approveData });
   const isApproved = receipt?.status === "success";
   const { data: submitReceipt } = useWaitForTransactionReceipt({
-    confirmations: 14,
+    confirmations: 3,
     hash: stakeData,
   });
 
