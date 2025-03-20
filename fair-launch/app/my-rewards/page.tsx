@@ -27,7 +27,7 @@ import { FAIR_LAUNCH_CONTRACT_ADDRESS, KLIMA_V0_TOKEN_ADDRESS } from "@utils/con
 import { formatGwei, formatUnits } from "viem";
 import { cookieToInitialState } from "wagmi";
 import * as styles from "./styles";
-import { calculateBurnFn } from "@utils/contract";
+import { calculateBurnFn, calculateUnstakePenalty } from "@utils/contract";
 
 // @todo - move to utils
 const calculateTokenPercentage = (tokens: number, totalSupply: number) => {
@@ -78,18 +78,6 @@ const Page: FC = async () => {
     const elapsedTime = currentTimestamp - stakeTimestamp;
     const formattedStake = formatUnits(BigInt(stakeAmount), 9);
     return (Number(formattedStake) * multiplier * elapsedTime * Number(growthRate)) / 100000;
-  }
-
-  const calculatePenaltyPercentage = (part: number, total: number) => {
-    if (total === 0) throw new Error("Total cannot be zero.");
-    return (part / total) * 100;
-  };
-
-  const calculateUnstakePenalty = async (stakeAmount: string, stakeTimestamp: string) => {
-    const burnAmount = formatTokenToValue(await calculateBurnFn(BigInt(stakeAmount), BigInt(stakeTimestamp)));
-    const stakeAmountFormatted = formatTokenToValue(stakeAmount);
-    const penaltyPercentage = calculatePenaltyPercentage(Number(burnAmount), Number(stakeAmountFormatted));
-    return { value: burnAmount, percentage: penaltyPercentage };
   }
 
   return (
@@ -154,11 +142,12 @@ const Page: FC = async () => {
                   <TableHead>&nbsp;</TableHead>
                 </TableRow>
               </TableHeader>
-              {/* @todo - cleanup all functions inside map */}
-              {userStakes.stakes && !!userStakes.stakes.length ? (
+              {!!userStakes?.stakes?.length ? (
                 <TableBody>
-                  {userStakes.stakes.map(async (stake) => (
-                    <TableRow key={stake.id}>
+                  {userStakes.stakes.map(async (stake) => {
+                    console.log('stake.amount', stake.amount);
+                    const { burnValue, percentage } = await calculateUnstakePenalty(stake.amount, stake.startTimestamp);
+                    return (<TableRow key={stake.id}>
                       <TableCell>
                         {formatTimestamp(parseInt(stake.startTimestamp))}
                       </TableCell>
@@ -171,19 +160,18 @@ const Page: FC = async () => {
                         {formatNumber(calculateUserPoints(Number(stake.amount), Number(stake.multiplier), Number(stake.startTimestamp)) / 10 ** 9)}
                       </TableCell>
                       <TableCell>
-                        <div>
-                          -{await calculateUnstakePenalty(stake.amount, stake.startTimestamp).then(({ value }) => value)} KLIMA
-                        </div>
-                        <div className={styles.penaltyText}>
-                          {await calculateUnstakePenalty(stake.amount, stake.startTimestamp).then(({ percentage }) => percentage)}%
-                        </div>
+                        <div>-{burnValue} KLIMA</div>
+                        <div className={styles.penaltyText}>{percentage}</div>
                       </TableCell>
                       <TableCell>- KLIMAX</TableCell>
                       <TableCell>
-                        <UnstakeDialog amount={stake.amount} />
+                        <UnstakeDialog
+                          amount={stake.amount}
+                          startTimestamp={stake.startTimestamp}
+                        />
                       </TableCell>
-                    </TableRow>
-                  ))}
+                    </TableRow>)
+                  })}
                 </TableBody>
               ) : (
                 <TableBody>

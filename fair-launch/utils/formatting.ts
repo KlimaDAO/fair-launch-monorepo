@@ -38,7 +38,6 @@ export const formatTimestamp = (timestamp: number) => {
 export const formatTokenToValue = (value: number | string | bigint, decimals: number = 9) =>
   formatUnits(BigInt(value), decimals);
 
-
 /**
  * Formats a token value to a human readable format
  * @param value - The token value to format

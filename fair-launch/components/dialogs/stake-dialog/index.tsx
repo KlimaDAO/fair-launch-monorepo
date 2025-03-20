@@ -44,14 +44,9 @@ export const StakeDialog: FC = () => {
     token: KLIMA_V0_TOKEN_ADDRESS,
   });
 
+  const form = useForm({ defaultValues: { 'stake-amount': '' } });
   const klimaBalance = formatUnits(balance?.value ?? BigInt(0), 9);
-  const form = useForm({
-    defaultValues: { 'stake-amount': '' },
-    onSubmit: async ({ value }) => {
-      console.log('after submit', value);
-    },
-  });
-
+  
   const [open, setOpen] = useState(false);
   const [dialogState, setDialogState] = useState(DialogState.INITIAL);
 

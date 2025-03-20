@@ -6,11 +6,14 @@ import type { FC } from "react";
 import { Input } from "@components/input";
 import { Dialog } from "radix-ui";
 import { useState } from "react";
-import { formatUnits } from 'viem'
+import { useForm } from "@tanstack/react-form";
+import { parseUnits } from 'viem';
+import { useWriteContract } from "wagmi";
+import { calculateUnstakePenalty } from '@utils/contract';
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
 import { FAIR_LAUNCH_CONTRACT_ADDRESS } from '@utils/constants';
-import { useAccount, useWriteContract } from "wagmi";
 import { MdAccountBalance, MdWarningAmber } from "react-icons/md";
+import { formatNumber, formatTokenToValue } from '@utils/formatting';
 import * as styles from './styles';
 
 type FocusOutsideEvent = CustomEvent<{ originalEvent: FocusEvent }>;
@@ -18,6 +21,7 @@ type PointerDownOutsideEvent = CustomEvent<{ originalEvent: PointerEvent }>;
 
 interface UnstakeDialogProps {
   amount: string;
+  startTimestamp: string;
 }
 
 enum DialogState {
@@ -27,23 +31,21 @@ enum DialogState {
   CONFIRM,
 }
 
-export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount }) => {
+export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount, startTimestamp }) => {
   const [open, setOpen] = useState(false);
-  const [unstakeAmount, setUnstakeAmount] = useState("");
+  const form = useForm({
+    defaultValues: {
+      'burn-amount': '0',
+      'receive-amount': '0',
+      'unstake-amount': formatTokenToValue(amount),
+    }
+  });
   const [dialogState, setDialogState] = useState(DialogState.INITIAL);
   const { data: unstakeData, writeContract: unstakeContract } = useWriteContract();
 
-  // add steps to keep track of the state of which dialog to show...
-
   const handleDialogState = () => {
     setOpen(!open);
-    // reset dialog state when dialog is closed
     if (open) setDialogState(DialogState.INITIAL);
-  };
-
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setUnstakeAmount(e.target.value);
   };
 
   const handleProceed = () => {
@@ -59,7 +61,6 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount }) => {
   };
 
   const handleConfirm = () => {
-    console.log("unstakeAmount", unstakeAmount);
     unstakeContract({
       abi: klimaFairLaunchAbi,
       functionName: 'unstake',
@@ -68,143 +69,167 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount }) => {
     });
   };
 
-  const InitialView = () => {
-    return (
-      <>
-        <div className={styles.icon}>
-          <MdWarningAmber />
-        </div>
-        <Dialog.Title className={styles.title}>
-          Hold on there, partner!
-        </Dialog.Title>
-        <div className={styles.altDescription}>
-          <div>The longer you leave your KLIMA staked, the better your rewards! If you unstake now, you’ll not only lose out on some KLIMA through <Link href="/">the burn mechanism</Link>,
-            but you’ll also miss out on KLIMAX!</div>
-          <div>Make sure you have a good reason to unstake before you go clickin’ buttons.</div>
-        </div>
-        <div className={styles.actions}>
-          <button
-            onClick={handleProceed}
-            className={styles.primaryButton}
-          >
-            Proceed
-          </button>
-          <Dialog.Close asChild>
-            <button className={styles.secondaryButton}>
-              Cancel
-            </button>
-          </Dialog.Close>
-        </div>
-      </>
-    )
+  const generateAllocationInfo = async (amount: string) => {
+    // todo -> cleanup
+    const penalty = await calculateUnstakePenalty(parseUnits(amount, 9), startTimestamp);
+    form.setFieldValue('burn-amount', formatNumber(penalty.burnValue))
+    form.setFieldValue('receive-amount', formatNumber(Number(amount) - Number(penalty.burnValue)))
   }
 
-  const UnstakeView = () => {
-    return (
-      <div className={styles.content}>
-        <div className={styles.icon}>
-          <MdAccountBalance />
-        </div>
-        <Dialog.Title className={styles.title}>Unstake</Dialog.Title>
-        <div className={styles.description}>
-          <div className={styles.inputContainer}>
-            <label htmlFor="stake-amount">Amount</label>
-            <div className={styles.inputRow}>
-              <Input
-                id="stake-amount"
-                value={formatUnits(BigInt(amount), 9)}
-                placeholder={formatUnits(BigInt(amount), 9)}
-                onChange={handleChange}
-                className={styles.input}
-              />
-              <button className={styles.maxButton}>Max</button>
-            </div>
-          </div>
-          <div className={styles.infoRowContainer}>
-            <div className={styles.infoRow}>
-              <p>Burn Amount</p>
-              <p><strong>0.00</strong> KLIMA</p>
-            </div>
-            <div className={styles.infoRow}>
-              <p>Receive Amount</p>
-              <p><strong>0.00</strong> KLIMA</p>
-            </div>
-          </div>
-        </div>
-        <div className={styles.actions}>
-          <button className={styles.primaryButton} onClick={handleUnstake}>
-            Unstake
+  const InitialView = () => (
+    <>
+      <div className={styles.icon}>
+        <MdWarningAmber />
+      </div>
+      <Dialog.Title className={styles.title}>
+        Hold on there, partner!
+      </Dialog.Title>
+      <div className={styles.altDescription}>
+        <div>The longer you leave your KLIMA staked, the better your rewards! If you unstake now, you’ll not only lose out on some KLIMA through <Link href="/">the burn mechanism</Link>,
+          but you’ll also miss out on KLIMAX!</div>
+        <div>Make sure you have a good reason to unstake before you go clickin’ buttons.</div>
+      </div>
+      <div className={styles.actions}>
+        <button
+          onClick={handleProceed}
+          className={styles.primaryButton}
+        >
+          Proceed
+        </button>
+        <Dialog.Close asChild>
+          <button className={styles.secondaryButton}>
+            Cancel
           </button>
-          <Dialog.Close asChild>
-            <button className={styles.secondaryButton}>Cancel</button>
-          </Dialog.Close>
+        </Dialog.Close>
+      </div>
+    </>
+  );
+
+  const UnstakeView = () => (
+    <div className={styles.content}>
+      <div className={styles.icon}>
+        <MdAccountBalance />
+      </div>
+      <Dialog.Title className={styles.title}>Unstake</Dialog.Title>
+      <div className={styles.description}>
+        <div className={styles.inputContainer}>
+          <form.Field
+            name="unstake-amount"
+            listeners={{
+              onMount: async ({ value }) => await generateAllocationInfo(value),
+              onChange: async ({ value }) => await generateAllocationInfo(value),
+            }}
+          >
+            {(field) => (
+              <>
+                <label htmlFor={field.name}>
+                  Amount
+                </label>
+                <div className={styles.inputRow}>
+                  <input
+                    type="number"
+                    id={field.name}
+                    name={field.name}
+                    className={styles.input}
+                    defaultValue={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                  />
+                  <button
+                    className={styles.maxButton}
+                  // onClick={() => field.handleChange(klimaBalance)}
+                  >
+                    Max
+                  </button>
+                </div>
+              </>
+            )}
+          </form.Field>
+        </div>
+        <div className={styles.infoRowContainer}>
+          <div className={styles.infoRow}>
+            <p>Burn Amount</p>
+            <form.Field name="burn-amount">
+              {(field) => <p><strong>{field.state.value}</strong> KLIMA</p>}
+            </form.Field>
+          </div>
+          <div className={styles.infoRow}>
+            <p>Receive Amount</p>
+            <form.Field name="receive-amount">
+              {(field) => <p><strong>{field.state.value}</strong> KLIMA</p>}
+            </form.Field>
+          </div>
         </div>
       </div>
-    );
-  }
+      <div className={styles.actions}>
+        <button className={styles.primaryButton} onClick={handleUnstake}>
+          Unstake
+        </button>
+        <Dialog.Close asChild>
+          <button className={styles.secondaryButton}>Cancel</button>
+        </Dialog.Close>
+      </div>
+    </div>
+  );
 
-  const ConfirmUnstakeView = () => {
-    return (
-      <>
-        <div className={styles.icon}>
-          <MdWarningAmber />
-        </div>
-        <Dialog.Title className={styles.title}>
-          Confirm Unstake
-        </Dialog.Title>
-        <div className={styles.altDescription}>
-          <div>Are you sure you'd like to unstake {amount} KLIMA? You will burn this KLIMA and <strong>will not be able to re-stake it.</strong></div>
-          <div>You will still get to keep the points and KLIMAX you've accrued.</div>
-          <Link href="/">Learn more about burning KLIMA.</Link>
-        </div>
-        <div className={styles.actions}>
-          <button onClick={handleConfirmUnstake} className={styles.primaryButton}>
-            Confirm
-          </button>
-          <Dialog.Close asChild>
-            <button className={styles.secondaryButton}>
-              Cancel
-            </button>
-          </Dialog.Close>
-        </div>
-      </>
-    )
-  }
 
-  const ConfirmView = () => {
-    return (
-      <>
-        <Dialog.Title className={styles.title}>
-          Confirm your transaction
-        </Dialog.Title>
-        <div className={styles.description}>
-          <p>Give the transaction one final review before submitting to the blockchain.</p>
-          <div className={styles.inputContainer}>
-            <label htmlFor="contract-address">
-              Contract Address
-            </label>
-            <Input disabled id="contract-address" value="0x8cE...5f8" />
-          </div>
-          <div className={styles.inputContainer}>
-            <label htmlFor="stake-amount">
-              You are sending
-            </label>
-            <Input disabled id="stake-amount" value={`${amount} KLIMA`} />
-          </div>
-        </div>
-        <div className={styles.actions}>
-          <button className={styles.primaryButton} onClick={handleConfirm}>
-            Submit
+  const ConfirmUnstakeView = () => (
+    <>
+      <div className={styles.icon}>
+        <MdWarningAmber />
+      </div>
+      <Dialog.Title className={styles.title}>
+        Confirm Unstake
+      </Dialog.Title>
+      <div className={styles.altDescription}>
+        <div>Are you sure you'd like to unstake {amount} KLIMA? You will burn this KLIMA and <strong>will not be able to re-stake it.</strong></div>
+        <div>You will still get to keep the points and KLIMAX you've accrued.</div>
+        <Link href="/">Learn more about burning KLIMA.</Link>
+      </div>
+      <div className={styles.actions}>
+        <button onClick={handleConfirmUnstake} className={styles.primaryButton}>
+          Confirm
+        </button>
+        <Dialog.Close asChild>
+          <button className={styles.secondaryButton}>
+            Cancel
           </button>
-          <Dialog.Close asChild>
-            <button className={styles.secondaryButton}>
-              Cancel
-            </button>
-          </Dialog.Close>
+        </Dialog.Close>
+      </div>
+    </>
+  );
+
+  const ConfirmView = () => (
+    <>
+      <Dialog.Title className={styles.title}>
+        Confirm your transaction
+      </Dialog.Title>
+      <div className={styles.description}>
+        <p>Give the transaction one final review before submitting to the blockchain.</p>
+        <div className={styles.inputContainer}>
+          <label htmlFor="contract-address">
+            Contract Address
+          </label>
+          <Input disabled id="contract-address" value="0x8cE...5f8" />
         </div>
-      </>
-    )
-  }
+        <div className={styles.inputContainer}>
+          <label htmlFor="stake-amount">
+            You are sending
+          </label>
+          <Input disabled id="stake-amount" value={`${amount} KLIMA`} />
+        </div>
+      </div>
+      <div className={styles.actions}>
+        <button className={styles.primaryButton} onClick={handleConfirm}>
+          Submit
+        </button>
+        <Dialog.Close asChild>
+          <button className={styles.secondaryButton}>
+            Cancel
+          </button>
+        </Dialog.Close>
+      </div>
+    </>
+  );
 
   return (
     <Dialog.Root open={open} onOpenChange={handleDialogState}>

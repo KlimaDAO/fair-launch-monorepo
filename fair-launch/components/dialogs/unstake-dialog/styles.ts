@@ -112,6 +112,18 @@ export const inputContainer = css({
   }
 });
 
+export const input = css({
+  flex: 1,
+  display: 'flex',
+  height: '4rem',
+  width: '100%',
+  borderRadius: 'sm',
+  border: 'none',
+  background: 'void.10',
+  padding: '1rem 1.2rem',
+  fontSize: 'base',
+});
+
 export const primaryButton = css({
   width: '100%',
   backgroundColor: 'red.600',
@@ -186,15 +198,6 @@ export const infoRow = css({
   color: 'void.60',
   flexDirection: 'row',
   justifyContent: 'space-between',
-});
-
-export const input = css({
-  width: '100%',
-  flexGrow: '1',
-  border: 'none',
-  fontSize: 'sm',
-  lineHeight: 'sm',
-  color: 'void.80',
 });
 
 export const maxButton = css({
