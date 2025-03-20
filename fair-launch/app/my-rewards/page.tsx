@@ -61,6 +61,12 @@ const Page: FC = async () => {
     functionName: "GROWTH_RATE",
   });
 
+  const totalOrganicPoints = await readContract(config, {
+    abi: klimaFairLaunchAbi,
+    address: FAIR_LAUNCH_CONTRACT_ADDRESS,
+    functionName: "totalOrganicPoints",
+  });
+
   const previewUserPoints = await readContract(config, {
     abi: klimaFairLaunchAbi,
     address: FAIR_LAUNCH_CONTRACT_ADDRESS,
@@ -79,6 +85,8 @@ const Page: FC = async () => {
     const formattedStake = formatUnits(BigInt(stakeAmount), 9);
     return (Number(formattedStake) * multiplier * elapsedTime * Number(growthRate)) / 100000;
   }
+
+  console.log('totalOrganicPoints', formatUnits(BigInt(totalOrganicPoints as bigint || 0), 9));
 
   return (
     <>

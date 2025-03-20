@@ -199,7 +199,9 @@ export const StakeDialog: FC = () => {
         <button
           onClick={handleStake}
           disabled={Number(klimaBalance) <= 0}
-          className={styles.primaryButton}
+          className={clsx(styles.primaryButton, {
+            [styles.disabled]: Number(klimaBalance) <= 0,
+          })}
         >
           Stake
         </button>
