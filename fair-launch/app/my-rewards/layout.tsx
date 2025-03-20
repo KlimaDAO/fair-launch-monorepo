@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import type { FC, ReactNode } from "react";
 import * as styles from "./styles";
 import { Alert } from "@components/alert";
+import { DisclaimerDialog } from "@components/dialogs/disclaimer-dialog";
 
 export const metadata: Metadata = {
   title: "Klima Fair Launch dApp - My Rewards",
@@ -25,6 +26,7 @@ const Layout: FC<Props> = (props) => (
         <Footer />
       </div>
     </div>
+    <DisclaimerDialog />
   </main>
 );
 

@@ -24,26 +24,48 @@ export const content = css({
   width: '38.2rem',
   maxWidth: '38.2rem',
   maxHeight: '85vh',
+  overflowY: 'scroll',
   padding: '2rem',
   display: 'flex',
   flexDirection: 'column',
   gap: '2rem',
 });
 
+export const icon = css({
+  backgroundColor: 'void.10',
+  borderRadius: '4xl',
+  padding: '0.8rem',
+  width: '4.8rem',
+  minHeight: '4.8rem',
+  display: 'flex',
+  margin: '0 auto',
+  alignItems: 'center',
+  justifyContent: 'center',
+
+  '& svg': {
+    width: '2rem',
+    height: '2rem',
+    fill: 'void.60',
+  }
+});
+
 export const title = css({
-  fontSize: '1.6rem',
-  lineHeight: '2.4rem',
-  fontWeight: '700',
-  color: 'slate.950',
+  fontSize: 'base',
+  lineHeight: 'base',
+  fontWeight: 700,
+  color: 'void.80',
   textAlign: 'center',
 });
 
 export const description = css({
-  fontSize: '1.4rem',
-  lineHeight: '2rem',
-  fontWeight: '400',
-  color: 'slate.950',
-  textAlign: 'center',
+  fontSize: 'sm',
+  lineHeight: 'sm',
+  fontWeight: 400,
+  textAlign: 'left',
+  color: 'void.80',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '0.8rem',
 });
 
 export const actions = css({
@@ -52,28 +74,15 @@ export const actions = css({
   gap: '0.8rem',
 });
 
-export const proceedButton = css({
+export const button = css({
   width: '100%',
-  backgroundColor: 'slate.950',
+  backgroundColor: 'void.80',
   color: 'white',
   borderRadius: '0.4rem',
   border: 'none',
-  // padding: '1rem',
-  fontFamily: 'var(--font-inter)',
-
-  fontSize: '1.6rem',
-  fontWeight: '500',
+  fontSize: 'base',
+  lineHeight: 'base',
+  fontWeight: 500,
   height: '4rem',
-});
-
-export const cancelButton = css({
-  width: '100%',
-  backgroundColor: 'transparent',
-  color: 'slate.950',
-  border: '0.1rem solid slate.950',
-  borderRadius: '0.4rem',
-  fontSize: '1.6rem',
-  fontFamily: 'var(--font-inter)',
-  fontWeight: '500',
-  height: '4rem',
+  cursor: 'pointer',
 });

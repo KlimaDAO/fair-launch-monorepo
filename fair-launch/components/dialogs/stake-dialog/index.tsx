@@ -20,7 +20,6 @@ import {
   useWriteContract,
 } from "wagmi";
 import * as styles from "./styles";
-import { config } from "@utils/wagmi";
 
 type InteractOutsideEvent =
   | CustomEvent<{ originalEvent: FocusEvent }>

@@ -4,6 +4,7 @@ import { Sidebar } from "@components/sidebar";
 import type { Metadata } from "next";
 import type { FC, ReactNode } from "react";
 import * as styles from "./styles";
+import { DisclaimerDialog } from "@components/dialogs/disclaimer-dialog";
 
 export const metadata: Metadata = {
   title: "Klima Fair Launch dApp - Protocol",
@@ -24,6 +25,7 @@ const Layout: FC<Props> = (props) => (
         <Footer />
       </div>
     </div>
+    <DisclaimerDialog />
   </main>
 );
 
