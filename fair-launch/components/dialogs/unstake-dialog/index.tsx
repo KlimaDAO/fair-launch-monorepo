@@ -45,7 +45,10 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount, startTimestamp }
 
   const handleDialogState = () => {
     setOpen(!open);
-    if (open) setDialogState(DialogState.INITIAL);
+    if (open) {
+      setDialogState(DialogState.INITIAL);
+      form.reset();
+    }
   };
 
   const handleProceed = () => {
