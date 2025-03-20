@@ -77,11 +77,11 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount }) => {
         <Dialog.Title className={styles.title}>
           Hold on there, partner!
         </Dialog.Title>
-        <Dialog.Description className={styles.description}>
-          The longer you leave your KLIMA staked, the better your rewards! If you unstake now, you’ll not only lose out on some KLIMA through <Link href="/">the burn mechanism</Link>, but you’ll also miss out on KLIMAX!
-          <br /><br />
-          Make sure you have a good reason to unstake before you go clickin’ buttons.
-        </Dialog.Description>
+        <div className={styles.altDescription}>
+          <div>The longer you leave your KLIMA staked, the better your rewards! If you unstake now, you’ll not only lose out on some KLIMA through <Link href="/">the burn mechanism</Link>,
+            but you’ll also miss out on KLIMAX!</div>
+          <div>Make sure you have a good reason to unstake before you go clickin’ buttons.</div>
+        </div>
         <div className={styles.actions}>
           <button
             onClick={handleProceed}
@@ -152,13 +152,11 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount }) => {
         <Dialog.Title className={styles.title}>
           Confirm Unstake
         </Dialog.Title>
-        <Dialog.Description className={styles.description}>
-          Are you sure you'd like to unstake {amount} KLIMA? You will burn this KLIMA and <strong>will not be able to re-stake it.</strong>
-          <br /><br />
-          You will still get to keep the points and KLIMAX you've accrued.
-          <br /><br />
+        <div className={styles.altDescription}>
+          <div>Are you sure you'd like to unstake {amount} KLIMA? You will burn this KLIMA and <strong>will not be able to re-stake it.</strong></div>
+          <div>You will still get to keep the points and KLIMAX you've accrued.</div>
           <Link href="/">Learn more about burning KLIMA.</Link>
-        </Dialog.Description>
+        </div>
         <div className={styles.actions}>
           <button onClick={handleConfirmUnstake} className={styles.primaryButton}>
             Confirm

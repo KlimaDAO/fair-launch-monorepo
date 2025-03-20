@@ -72,6 +72,26 @@ export const description = css({
   gap: '2rem',
 });
 
+export const altDescription = css({
+  display: 'block',
+  fontSize: '1.4rem',
+  lineHeight: '2rem',
+  fontWeight: '400',
+  color: 'void.80',
+  textAlign: 'left',
+  flexDirection: 'column',
+  gap: '2rem',
+
+  '& div:not(:last-child)': {
+    marginBottom: '2rem',
+  },
+
+  '& a': {
+    color: 'green.70 !important',
+    textDecoration: 'underline',
+  },
+});
+
 export const actions = css({
   display: 'flex',
   flexDirection: 'column',

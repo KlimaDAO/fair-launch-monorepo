@@ -2,7 +2,7 @@ import { css } from '../../styled-system/css';
 
 export const button = css({
   width: '100%',
-  backgroundColor: 'void.50',
+  backgroundColor: 'void.60',
   cursor: 'pointer',
   padding: '0.8rem 1.6rem',
   borderRadius: '3.6rem',
