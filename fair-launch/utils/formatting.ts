@@ -1,3 +1,5 @@
+import { formatUnits } from "viem";
+
 /**
  * Formats a number to a human readable format
  * @param value - The number to format
@@ -25,4 +27,32 @@ export const formatTimestamp = (timestamp: number) => {
     hour12: true,
   };
   return date.toLocaleString("en", options).replace(",", "");
+};
+
+/**
+ * Formats a token value to a human readable format
+ * @param value - The token value to format
+ * @param decimals - The number of decimals to format to
+ * @returns The formatted token value
+ */
+export const formatTokenToValue = (value: number | string | bigint, decimals: number = 9) =>
+  formatUnits(BigInt(value), decimals);
+
+
+/**
+ * Formats a token value to a human readable format
+ * @param value - The token value to format
+ * @returns The formatted token value
+ */
+export const formatValueToNumber = (value: number | string | bigint) =>
+  formatNumber(formatTokenToValue(value));
+
+/**
+ * Formats a full address to a shorter address
+ * @param address - The full address to format
+ * @returns The formatted short address
+ */
+export const truncateAddress = (address: string): string => {
+  if (address.length <= 10) return address;
+  return `${address.slice(0, 5)}...${address.slice(-3)}`;
 };

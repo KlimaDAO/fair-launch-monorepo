@@ -17,7 +17,7 @@ import {
   TableRow,
 } from "@components/table";
 import { readContract } from "@wagmi/core";
-import { formatNumber, formatTimestamp } from "@utils/formatting";
+import { formatNumber, formatTimestamp, formatTokenToValue, formatValueToNumber, truncateAddress } from "@utils/formatting";
 import { fetchLeaderboard, fetchUserStakes } from "@utils/queries";
 import { headers } from "next/headers";
 import Image from "next/image";
@@ -27,17 +27,12 @@ import { FAIR_LAUNCH_CONTRACT_ADDRESS, KLIMA_V0_TOKEN_ADDRESS } from "@utils/con
 import { formatGwei, formatUnits } from "viem";
 import { cookieToInitialState } from "wagmi";
 import * as styles from "./styles";
+import { calculateBurnFn } from "@utils/contract";
 
 // @todo - move to utils
 const calculateTokenPercentage = (tokens: number, totalSupply: number) => {
   if (totalSupply === 0) return 0;
   return (tokens / totalSupply) * 100;
-};
-
-// @todo - move to utils
-const shortenWalletAddress = (address: string): string => {
-  if (address.length <= 10) return address;
-  return `${address.slice(0, 5)}...${address.slice(-3)}`;
 };
 
 const totalUserStakes = (stakes: { amount: string }[]): number =>
@@ -51,10 +46,8 @@ const Page: FC = async () => {
     initialState?.current &&
     initialState.connections.get(initialState?.current)?.accounts[0];
 
-  const userStakes = walletAddress
-    ? await fetchUserStakes(walletAddress)
-    : { stakes: [] };
-  const leaderboard = (await fetchLeaderboard(5)) || { wallets: [] };
+  const leaderboard = await fetchLeaderboard(5);
+  const userStakes = await fetchUserStakes(walletAddress ?? null);
 
   const totalSupply = await readContract(config, {
     abi: erc20Abi,
@@ -87,25 +80,16 @@ const Page: FC = async () => {
     return (Number(formattedStake) * multiplier * elapsedTime * Number(growthRate)) / 100000;
   }
 
-  const calculatePercentage = (part: number, total: number) => {
+  const calculatePenaltyPercentage = (part: number, total: number) => {
     if (total === 0) throw new Error("Total cannot be zero.");
     return (part / total) * 100;
   };
 
-  const getUnstakePenalty = async (stakeAmount: number, stakeTimestamp: number) => {
-    const calculateBurn = await readContract(config, {
-      abi: klimaFairLaunchAbi,
-      address: FAIR_LAUNCH_CONTRACT_ADDRESS,
-      functionName: "calculateBurn",
-      args: [stakeAmount, stakeTimestamp],
-    }) as bigint;
-
-    const burnValue = formatUnits(BigInt(calculateBurn), 9);
-    const stakeAmountFormatted = formatUnits(BigInt(stakeAmount), 9);
-    return {
-      percentage: calculatePercentage(Number(burnValue), Number(stakeAmountFormatted)),
-      value: burnValue,
-    }
+  const calculateUnstakePenalty = async (stakeAmount: string, stakeTimestamp: string) => {
+    const burnAmount = formatTokenToValue(await calculateBurnFn(BigInt(stakeAmount), BigInt(stakeTimestamp)));
+    const stakeAmountFormatted = formatTokenToValue(stakeAmount);
+    const penaltyPercentage = calculatePenaltyPercentage(Number(burnAmount), Number(stakeAmountFormatted));
+    return { value: burnAmount, percentage: penaltyPercentage };
   }
 
   return (
@@ -188,10 +172,10 @@ const Page: FC = async () => {
                       </TableCell>
                       <TableCell>
                         <div>
-                          -{await getUnstakePenalty(Number(stake.amount), Number(stake.startTimestamp)).then(({ value }) => value)} KLIMA
+                          -{await calculateUnstakePenalty(stake.amount, stake.startTimestamp).then(({ value }) => value)} KLIMA
                         </div>
                         <div className={styles.penaltyText}>
-                          {await getUnstakePenalty(Number(stake.amount), Number(stake.startTimestamp)).then(({ percentage }) => percentage)}%
+                          {await calculateUnstakePenalty(stake.amount, stake.startTimestamp).then(({ percentage }) => percentage)}%
                         </div>
                       </TableCell>
                       <TableCell>- KLIMAX</TableCell>
@@ -226,10 +210,10 @@ const Page: FC = async () => {
                     <TableHead>Points</TableHead>
                   </TableRow>
                 </TableHeader>
-                {!!leaderboard.wallets.length ? (
+                {!!leaderboard.wallets?.length ? (
                   <TableBody>
                     {leaderboard.wallets.map((wallet, key) => {
-                      const isMyWallet =
+                      const isUserWallet =
                         wallet.id.toLowerCase() ===
                         walletAddress?.toLowerCase();
                       return (
@@ -238,7 +222,7 @@ const Page: FC = async () => {
                           <TableCell>
                             <div
                               className={clsx({
-                                [styles.myWalletText]: isMyWallet,
+                                [styles.userWalletText]: isUserWallet,
                               })}
                               style={{
                                 display: "flex",
@@ -246,16 +230,12 @@ const Page: FC = async () => {
                                 gap: "0.8rem",
                               }}
                             >
-                              {shortenWalletAddress(wallet.id)}
-                              {isMyWallet && <Badge variant="table" title="You" />}
+                              {truncateAddress(wallet.id)}
+                              {isUserWallet && <Badge variant="table" title="You" />}
                             </div>
                           </TableCell>
-                          <TableCell
-                            className={clsx({
-                              [styles.myWalletText]: isMyWallet,
-                            })}
-                          >
-                            {formatNumber(formatUnits(BigInt(wallet.totalStaked), 9))}
+                          <TableCell className={clsx({ [styles.userWalletText]: isUserWallet })}>
+                            {formatValueToNumber(wallet.totalStaked)}
                           </TableCell>
                           <TableCell>-</TableCell>
                         </TableRow>

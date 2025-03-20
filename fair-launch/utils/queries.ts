@@ -22,8 +22,9 @@ export interface Wallet {
  * @param address - The address of the user
  * @returns The user stakes
  */
-export const fetchUserStakes = async (address: string): Promise<{ stakes?: Stake[] }> =>
-  await request(
+export const fetchUserStakes = async (address: string | null): Promise<{ stakes?: Stake[] }> => {
+  if (!address) return { stakes: [] };
+  const result = await request(
     SUBGRAPH_URL,
     `query ($address: String!) {
       stakes(first: 100, orderBy: startTimestamp, orderDirection: desc, where: { wallet: $address }) {
@@ -36,13 +37,15 @@ export const fetchUserStakes = async (address: string): Promise<{ stakes?: Stake
     }`,
     { address: address.toLowerCase() }
   );
+  return result || { stakes: [] };
+};
 
 /**
  * Fetch the current leaderboard
  * @returns The leaderboard
  */
-export const fetchLeaderboard = async (limit: number = 100): Promise<{ wallets: Wallet[] }> =>
-  await request(
+export const fetchLeaderboard = async (limit: number = 100): Promise<{ wallets?: Wallet[] }> => {
+  const result = await request(
     SUBGRAPH_URL,
     `query ($limit: Int!) {
       wallets(first: $limit, orderBy: totalStaked, orderDirection: desc) {
@@ -61,3 +64,5 @@ export const fetchLeaderboard = async (limit: number = 100): Promise<{ wallets: 
     }`,
     { limit: limit }
   );
+  return result || { wallets: [] };
+};

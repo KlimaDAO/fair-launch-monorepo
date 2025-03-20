@@ -128,7 +128,7 @@ export const divider = css({
   }
 });
 
-export const myWalletText = css({
+export const userWalletText = css({
   color: 'green.70',
 });
 
