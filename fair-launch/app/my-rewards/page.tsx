@@ -1,6 +1,11 @@
+import clsx from "clsx";
+import gklimaLogo from "@public/tokens/g-klima.svg";
+import klimav1Logo from "@public/tokens/klima-v1.svg";
 import { abi as erc20Abi } from "@abi/erc20";
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
 import { Badge } from "@components/badge";
+import { config } from "@utils/wagmi";
+import { Tooltip } from "@components/tooltip";
 import { StakeDialog } from "@components/dialogs/stake-dialog/stake-dialog";
 import { UnstakeDialog } from "@components/dialogs/unstake-dialog/unstake-dialog";
 import {
@@ -11,81 +16,17 @@ import {
   TableHeader,
   TableRow,
 } from "@components/table";
-import { Tooltip } from "@components/tooltip";
-import gklimaLogo from "@public/tokens/g-klima.svg";
-import klimav1Logo from "@public/tokens/klima-v1.svg";
+import { readContract } from "@wagmi/core";
 import { formatNumber, formatTimestamp } from "@utils/formatting";
 import { fetchLeaderboard, fetchUserStakes } from "@utils/queries";
-import { config } from "@utils/wagmi";
-import { readContract, readContracts } from "@wagmi/core";
-import clsx from "clsx";
 import { headers } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
 import type { FC } from "react";
 import { FAIR_LAUNCH_CONTRACT_ADDRESS, KLIMA_V0_TOKEN_ADDRESS } from "@utils/constants";
-import { AbiFunction, formatGwei, formatUnits } from "viem";
+import { formatGwei, formatUnits } from "viem";
 import { cookieToInitialState } from "wagmi";
 import * as styles from "./styles";
-
-// todo - fix this...
-const calculateAllPoints = async () => {
-  return await readContracts(config, {
-    contracts: [
-      {
-        abi: klimaFairLaunchAbi as AbiFunction[],
-        address: FAIR_LAUNCH_CONTRACT_ADDRESS,
-        functionName: "freezeTimestamp",
-      },
-      {
-        abi: klimaFairLaunchAbi as AbiFunction[],
-        address: FAIR_LAUNCH_CONTRACT_ADDRESS,
-        functionName: "GROWTH_RATE",
-      },
-      {
-        abi: klimaFairLaunchAbi as AbiFunction[],
-        address: FAIR_LAUNCH_CONTRACT_ADDRESS,
-        functionName: "KLIMA",
-      },
-      {
-        abi: klimaFairLaunchAbi as AbiFunction[],
-        address: FAIR_LAUNCH_CONTRACT_ADDRESS,
-        functionName: "KLIMAX_SUPPLY",
-      },
-      {
-        abi: klimaFairLaunchAbi as AbiFunction[],
-        address: FAIR_LAUNCH_CONTRACT_ADDRESS,
-        functionName: "KLIMA_SUPPLY",
-      },
-      {
-        abi: klimaFairLaunchAbi as AbiFunction[],
-        address: FAIR_LAUNCH_CONTRACT_ADDRESS,
-        functionName: "burnRatio",
-      },
-      {
-        abi: klimaFairLaunchAbi as AbiFunction[],
-        address: FAIR_LAUNCH_CONTRACT_ADDRESS,
-        functionName: "getTotalPoints",
-      },
-      {
-        abi: klimaFairLaunchAbi as AbiFunction[],
-        address: FAIR_LAUNCH_CONTRACT_ADDRESS,
-        functionName: "totalBurned",
-      },
-      {
-        abi: klimaFairLaunchAbi as AbiFunction[],
-        address: FAIR_LAUNCH_CONTRACT_ADDRESS,
-        functionName: "totalOrganicPoints",
-      },
-      {
-        abi: klimaFairLaunchAbi as AbiFunction[],
-        address: FAIR_LAUNCH_CONTRACT_ADDRESS,
-        functionName: "previewUserPoints",
-        args: ["0x5B2D6181d743f314170C4969B8F1c17F6363f200"],
-      },
-    ],
-  });
-};
 
 // @todo - move to utils
 const calculateTokenPercentage = (tokens: number, totalSupply: number) => {
@@ -106,8 +47,6 @@ const Page: FC = async () => {
   const cookie = (await headers()).get("cookie");
   const initialState = cookieToInitialState(config, cookie);
 
-  const [, GROWTH_RATE, , , , , , , , previewUserPoints] = await calculateAllPoints();
-
   const walletAddress =
     initialState?.current &&
     initialState.connections.get(initialState?.current)?.accounts[0];
@@ -123,18 +62,29 @@ const Page: FC = async () => {
     functionName: "totalSupply",
   });
 
+  const growthRate = await readContract(config, {
+    abi: klimaFairLaunchAbi,
+    address: FAIR_LAUNCH_CONTRACT_ADDRESS,
+    functionName: "GROWTH_RATE",
+  });
+
+  const previewUserPoints = await readContract(config, {
+    abi: klimaFairLaunchAbi,
+    address: FAIR_LAUNCH_CONTRACT_ADDRESS,
+    functionName: "previewUserPoints",
+    args: [walletAddress],
+  });
+
   const tokenPercentage = calculateTokenPercentage(
     totalUserStakes(userStakes.stakes || []),
     Number(formatGwei(totalSupply as bigint)) // todo - fetch the total supply from the contract
   );
 
-  const calculateUserPoints = (stakeAmount: number, multiplier: number = 0, stakeTimestamp: number = 3) => {
-    const growthRate = Number(GROWTH_RATE.result);
+  const calculateUserPoints = (stakeAmount: number, multiplier = 0, stakeTimestamp = 3) => {
     const currentTimestamp = Math.floor(Date.now() / 1000);
     const elapsedTime = currentTimestamp - stakeTimestamp;
-    console.log("elapsedTime", elapsedTime);
     const formattedStake = formatUnits(BigInt(stakeAmount), 9);
-    return (Number(formattedStake) * multiplier * elapsedTime * growthRate) / 100000;
+    return (Number(formattedStake) * multiplier * elapsedTime * Number(growthRate)) / 100000;
   }
 
   const calculatePercentage = (part: number, total: number) => {
@@ -152,7 +102,6 @@ const Page: FC = async () => {
 
     const burnValue = formatUnits(BigInt(calculateBurn), 9);
     const stakeAmountFormatted = formatUnits(BigInt(stakeAmount), 9);
-
     return {
       percentage: calculatePercentage(Number(burnValue), Number(stakeAmountFormatted)),
       value: burnValue,
@@ -164,7 +113,7 @@ const Page: FC = async () => {
       <div className={styles.twoCols}>
         <div className={styles.titleContainer}>
           <h1 className={styles.title}>My Rewards</h1>
-          <Tooltip content="Lorem ipsum dolor sit amet consectetur. Nisl rhoncus vitae lectus sit est sed urna varius.">
+          <Tooltip content="Participate early, earn more points.">
             <Badge title="Phase 1" />
           </Tooltip>
         </div>
@@ -198,7 +147,7 @@ const Page: FC = async () => {
           <h5 className={styles.cardTitle}>My Points Accumulated</h5>
           <div className={styles.cardContents}>
             <div id="step2" className={styles.mainText}>
-              {formatNumber(formatUnits(BigInt(previewUserPoints?.result || 0), 9))}
+              {formatNumber(formatUnits(BigInt(previewUserPoints as bigint || 0), 9))}
             </div>
             <div className={styles.secondaryText}>
               <strong>&lt;1%</strong> of <strong>12.49</strong> B

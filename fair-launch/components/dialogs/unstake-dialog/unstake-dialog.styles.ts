@@ -13,7 +13,7 @@ export const overlay = css({
 });
 
 export const confirmOverlay = css({
-  background: 'void.10',
+  backgroundColor: 'void.10',
 });
 
 export const content = css({
@@ -182,7 +182,7 @@ export const maxButton = css({
   textTransform: 'uppercase',
   padding: '0.8rem 1rem',
   color: 'white',
-  borderRadius: '0.3rem', 
+  borderRadius: '0.3rem',
   border: 'none',
   fontSize: 'sm',
   lineHeight: 'sm',

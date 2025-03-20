@@ -96,6 +96,7 @@ export const StakeDialog: FC = () => {
 
   const handleApprove = () => {
     const stakeAmount = form.state.values["stake-amount"];
+    console.log('stakeAmount::handleApprove', stakeAmount);
     approveContract({
       abi: erc20Abi,
       functionName: "approve",
@@ -106,6 +107,7 @@ export const StakeDialog: FC = () => {
 
   const handleConfirm = () => {
     const stakeAmount = form.state.values["stake-amount"];
+    console.log('stakeAmount::handleConfirm', stakeAmount);
     stakeContract({
       abi: klimaFairLaunchAbi,
       functionName: "stake",

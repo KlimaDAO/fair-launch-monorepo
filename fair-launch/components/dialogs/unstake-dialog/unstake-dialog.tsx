@@ -20,16 +20,45 @@ interface UnstakeDialogProps {
   amount: string;
 }
 
+enum DialogState {
+  INITIAL,
+  UNSTAKE,
+  CONFIRM_UNSTAKE,
+  CONFIRM,
+}
+
 export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount }) => {
-  // const { address } = useAccount();
+  const [open, setOpen] = useState(false);
   const [unstakeAmount, setUnstakeAmount] = useState("");
-  const [shouldProceed, setShouldProceed] = useState(false);
-  const [confirmScreen, setConfirmScreen] = useState(false);
+  const [dialogState, setDialogState] = useState(DialogState.INITIAL);
   const { data: unstakeData, writeContract: unstakeContract } = useWriteContract();
 
   // add steps to keep track of the state of which dialog to show...
 
+  const handleDialogState = () => {
+    setOpen(!open);
+    // reset dialog state when dialog is closed
+    if (open) setDialogState(DialogState.INITIAL);
+  };
+
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUnstakeAmount(e.target.value);
+  };
+
+  const handleProceed = () => {
+    setDialogState(DialogState.UNSTAKE);
+  };
+
   const handleUnstake = () => {
+    setDialogState(DialogState.CONFIRM_UNSTAKE);
+  };
+
+  const handleConfirmUnstake = () => {
+    setDialogState(DialogState.CONFIRM);
+  };
+
+  const handleConfirm = () => {
     console.log("unstakeAmount", unstakeAmount);
     unstakeContract({
       abi: klimaFairLaunchAbi,
@@ -37,10 +66,6 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount }) => {
       address: FAIR_LAUNCH_CONTRACT_ADDRESS,
       args: [BigInt(10) * BigInt(10 ** 9)],
     });
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setUnstakeAmount(e.target.value);
   };
 
   const InitialView = () => {
@@ -59,8 +84,8 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount }) => {
         </Dialog.Description>
         <div className={styles.actions}>
           <button
+            onClick={handleProceed}
             className={styles.primaryButton}
-            onClick={() => setShouldProceed(true)}
           >
             Proceed
           </button>
@@ -135,9 +160,7 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount }) => {
           <Link href="/">Learn more about burning KLIMA.</Link>
         </Dialog.Description>
         <div className={styles.actions}>
-          <button className={styles.primaryButton} onClick={() => {
-            handleUnstake();
-          }}>
+          <button onClick={handleConfirmUnstake} className={styles.primaryButton}>
             Confirm
           </button>
           <Dialog.Close asChild>
@@ -172,9 +195,7 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount }) => {
           </div>
         </div>
         <div className={styles.actions}>
-          <button className={styles.primaryButton} onClick={() => {
-            handleUnstake();
-          }}>
+          <button className={styles.primaryButton} onClick={handleConfirm}>
             Submit
           </button>
           <Dialog.Close asChild>
@@ -188,13 +209,15 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount }) => {
   }
 
   return (
-    <Dialog.Root>
+    <Dialog.Root open={open} onOpenChange={handleDialogState}>
       <Dialog.Trigger className={styles.unstakeButton}>
         Unstake
       </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className={clsx(styles.overlay, {
-          [styles.confirmOverlay]: confirmScreen,
+          [styles.confirmOverlay]:
+            dialogState === DialogState.CONFIRM_UNSTAKE ||
+            dialogState === DialogState.CONFIRM,
         })} />
         <Dialog.Content
           className={styles.content}
@@ -202,11 +225,11 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount }) => {
             e.preventDefault();
             e.stopPropagation();
           }}>
-          {!shouldProceed ? (
-            <UnstakeView />
-          ) : (
-            <ConfirmView />
-          )}
+
+          {dialogState === DialogState.INITIAL && <InitialView />}
+          {dialogState === DialogState.UNSTAKE && <UnstakeView />}
+          {dialogState === DialogState.CONFIRM_UNSTAKE && <ConfirmUnstakeView />}
+          {dialogState === DialogState.CONFIRM && <ConfirmView />}
         </Dialog.Content>
       </Dialog.Portal >
     </Dialog.Root >
