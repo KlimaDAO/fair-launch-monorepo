@@ -1489,7 +1489,7 @@ contract KlimaFairLaunchStakingTest is Test {
     // =============================================================
 
     /// @notice Test staking with very small amount
-    function test_StakeWithMinimalAmount() public {
+    function test_StakeWithMinStakeAmount() public {
         // Setup staking period
         vm.prank(owner);
         staking.setBurnVault(address(burnVault));
@@ -1499,7 +1499,7 @@ contract KlimaFairLaunchStakingTest is Test {
         
         // Stake minimal amount (1 wei of KLIMA_V0)
         vm.warp(startTime);
-        uint256 minimalAmount = 1;
+        uint256 minimalAmount = staking.minStakeAmount();
         
         // Give user1 a small amount
         deal(KLIMA_V0_ADDR, user1, minimalAmount);

@@ -426,9 +426,12 @@ contract KlimaFairLaunchBurnVaultTest is Test {
         // Finalize staking
         finalizeStaking();
         
-        // Attempt to burn without setting helper
+        // Give some ETH to the account making the call
+        vm.deal(owner, 1 ether);
+        
+        // Initiate burn without helper set
         vm.prank(owner);
-        vm.expectRevert();
+        vm.expectRevert("Helper contract not set");
         vault.initiateFinalBurn{value: 0.1 ether}();
     }
 

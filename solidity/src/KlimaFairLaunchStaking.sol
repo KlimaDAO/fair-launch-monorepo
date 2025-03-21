@@ -57,6 +57,11 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     uint256 public KLIMA_SUPPLY;
     uint256 public KLIMAX_SUPPLY;
     address public burnVault;
+
+    // stake limits
+    uint256 public minStakeAmount;
+    uint256 public maxTotalStakesPerUser;
+
     // events
     event StakeCreated(address indexed user, uint256 amount, uint256 multiplier, uint256 startTimestamp);
     event StakeBurned(address indexed user, uint256 burnAmount, uint256 timestamp);
@@ -70,6 +75,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     event KlimaSupplySet(uint256 newValue);
     event KlimaXSupplySet(uint256 newValue);
     event PreStakingWindowSet(uint256 preStakingWindow);
+    event StakeLimitsSet(uint256 minStakeAmount, uint256 maxTotalStakesPerUser);
 
     /// @notice Prevents actions after pre-staking has begun
     /// @dev Used to lock configuration changes once pre-staking begins
@@ -110,6 +116,10 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         KLIMA_SUPPLY = 17_500_000 * 1e18;
         KLIMAX_SUPPLY = 40_000_000 * 1e18;
         preStakingWindow = 3 days;
+
+        // Set default limits for DOS mitigation
+        minStakeAmount = 1e9;
+        maxTotalStakesPerUser = 200;
     }
 
     /// @notice Authorizes an upgrade to a new implementation
@@ -126,9 +136,11 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     /// @param amount Amount of KLIMA_V0 tokens to stake
     /// @dev Multiplier is 2x for week 1, 1.5x for week 2, 1x afterwards
     /// @dev Points accrue based on stake amount, time, and multiplier
+    /// @dev Reverts if amount is less than minStakeAmount or maxTotalStakesPerUser is reached to mitigate DOS
     function stake(uint256 amount) public whenNotPaused {
         // Require valid amount
-        require(amount > 0, "Amount must be greater than 0");
+        require(amount >= minStakeAmount, "Amount must be greater than or equal to minStakeAmount");
+        require(userStakes[msg.sender].length < maxTotalStakesPerUser, "Max total stakes per user reached");
 
         // Require staking is active (either pre-staking or regular staking period)
         require(startTimestamp > 0, "Staking not initialized");
@@ -446,9 +458,17 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     /// @param _startTimestamp Timestamp when staking begins
     /// @dev Freeze timestamp is 90 days after start
     /// @dev Can only be called by the owner
+    /// @dev Reverts if start timestamp is in the past
+    /// @dev Reverts if burn vault is not set
+    /// @dev Reverts if minStakeAmount is not set
+    /// @dev Reverts if maxTotalStakesPerUser is not set
+    /// @dev Reverts if growth rate is not set
     function enableStaking(uint256 _startTimestamp) external onlyOwner beforeStartTimestamp beforePreStaking {
         require(_startTimestamp > block.timestamp, "Start timestamp cannot be in the past");
         require(burnVault != address(0), "Burn vault not set");
+        require(minStakeAmount > 0, "Min stake amount not set");
+        require(maxTotalStakesPerUser > 0, "Max total stakes per user not set");
+        require(GROWTH_RATE > 0, "Growth rate not set");
         startTimestamp = _startTimestamp;
         freezeTimestamp = _startTimestamp + 90 days;
         emit StakingEnabled(_startTimestamp, freezeTimestamp);
@@ -572,6 +592,16 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         require(_preStakingWindow >= 3 days && _preStakingWindow <= 7 days, "Pre-staking window must be between 3 days and 7 days");
         preStakingWindow = _preStakingWindow;
         emit PreStakingWindowSet(_preStakingWindow);
+    }
+
+    /// @notice Sets the minimum stake amount and maximum total stakes per user to mitigate DOS
+    /// @param _minStakeAmount Minimum stake amount
+    /// @param _maxTotalStakesPerUser Maximum total stakes per user address
+    /// @dev Can only be called by the owner
+    function setStakeLimits(uint256 _minStakeAmount, uint256 _maxTotalStakesPerUser) public onlyOwner {
+        minStakeAmount = _minStakeAmount;
+        maxTotalStakesPerUser = _maxTotalStakesPerUser;
+        emit StakeLimitsSet(minStakeAmount, maxTotalStakesPerUser);
     }
 
     function pause() external onlyOwner {
