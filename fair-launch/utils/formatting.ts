@@ -58,11 +58,11 @@ export const truncateAddress = (address: string): string => {
 
 export const formatLargeNumber = (value: number) => {
   if (value >= 1e9) {
-    return `${(value / 1e9).toFixed(1)} B`; // Format to billions
+    return `${(value / 1e9).toFixed(2)} B`; // Format to billions
   } else if (value >= 1e6) {
-    return `${(value / 1e6).toFixed(1)} M`; // Format to millions
+    return `${(value / 1e6).toFixed(2)} M`; // Format to millions
   } else if (value >= 1e3) {
-    return `${(value / 1e3).toFixed(1)} K`; // Format to thousands
+    return `${(value / 1e3).toFixed(2)} K`; // Format to thousands
   }
   return value.toString();
 };

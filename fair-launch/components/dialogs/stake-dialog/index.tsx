@@ -10,7 +10,6 @@ import { abi as erc20Abi } from "@abi/erc20";
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
 import { MdCelebration, MdLibraryAdd } from "react-icons/md";
 import { type FC, useEffect, useState } from "react";
-import { getGasPrice } from '@wagmi/core'
 import { KLIMA_V0_TOKEN_ADDRESS, FAIR_LAUNCH_CONTRACT_ADDRESS } from "@utils/constants";
 import {
   useAccount,
