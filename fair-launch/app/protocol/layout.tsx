@@ -17,10 +17,10 @@ interface Props {
 
 const Layout: FC<Props> = (props) => (
   <main className={styles.body}>
+    <Navbar />
     <div className={styles.container}>
       <Sidebar />
       <div className={styles.main}>
-        <Navbar />
         <div className={styles.content}>{props.children}</div>
         <Footer />
       </div>
