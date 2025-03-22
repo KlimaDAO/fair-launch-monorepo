@@ -1654,13 +1654,19 @@ contract KlimaFairLaunchStakingTest is Test {
         // Test Day 180 burn
         vm.warp(stakeTime + 180 days);
         uint256 day180Burn = staking.calculateBurn(stakeAmount, stakeTime);
-        // Get the actual calculation from the contract
+
+        // Calculate expected burn using the updated formula with 1e9 scaling
         uint256 baseBurn = (stakeAmount * 25) / 100;
-        uint256 timeBasedBurnPercent = (uint256(180) * uint256(75)) / uint256(365);
-        uint256 timeBasedBurn = (stakeAmount * timeBasedBurnPercent) / 100;
+        
+        // Break down the calculation into steps to avoid type conversion issues
+        uint256 timeElapsedSeconds = 180 days;
+        uint256 yearInSeconds = 365 days;
+        uint256 scaledTimeBasedPercent = (timeElapsedSeconds * 75 * 1e9) / yearInSeconds;
+        
+        uint256 timeBasedBurn = (stakeAmount * scaledTimeBasedPercent) / (100 * 1e9);
         uint256 expected180DayBurn = baseBurn + timeBasedBurn;
         
-        // Use the actual calculated value instead of a hardcoded percentage
+        // Use the actual calculated value with the updated formula
         assertEq(day180Burn, expected180DayBurn, "Day 180 burn should match contract calculation");
         
         // Test Day 365 burn
@@ -1975,24 +1981,25 @@ contract KlimaFairLaunchStakingTest is Test {
         
         // User1 stakes during pre-staking period
         vm.warp(startTime - 2 days); // 2 days before official start
-        uint256 stakeAmount = 100 * 1e12;
+        uint256 stakeAmount = 100 * 1e9;
         createStake(user1, stakeAmount);
         
         // Warp to just after official start
         vm.warp(startTime + 1 hours);
         
-        // Calculate expected burn amount (should be 25% base burn + minimal time-based burn)
+        // Calculate expected burn amount using our new precision-based formula
         uint256 baseBurn = (stakeAmount * 25) / 100; // 25% base burn
-        // Instead of dividing hours by days directly, use whole numbers
-        uint256 hoursStaked = 1;
-        uint256 hoursInYear = 24 * 365;
-        uint256 timeBasedBurnPercent = (hoursStaked * 75) / hoursInYear;
-        uint256 timeBasedBurn = (stakeAmount * timeBasedBurnPercent) / 100;
+        
+        // Use the same calculation as the contract with 1e9 scaling factor
+        uint256 timeElapsedSeconds = 1 hours; // Time since official start
+        uint256 yearInSeconds = 365 days;
+        uint256 scaledTimeBasedPercent = (timeElapsedSeconds * 75 * 1e9) / yearInSeconds;
+        uint256 timeBasedBurn = (stakeAmount * scaledTimeBasedPercent) / (100 * 1e9);
         uint256 expectedBurn = baseBurn + timeBasedBurn;
         
         // Verify that calculateBurn returns the expected amount
         uint256 calculatedBurn = staking.calculateBurn(stakeAmount, startTime);
-        assertEq(calculatedBurn, expectedBurn, "Just after staking starts, burn should be 25% base burn + minimal time-based burn");
+        assertEq(calculatedBurn, expectedBurn, "Just after staking starts, burn should match our calculation");
         
         // Unstake after pre-staking period
         vm.startPrank(user1);
