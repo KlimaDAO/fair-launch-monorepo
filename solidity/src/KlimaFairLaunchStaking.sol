@@ -382,6 +382,12 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         for (uint256 i = 0; i < stakes.length; i++) {
             Stake memory currentStake = stakes[i];
             
+            // Skip if amount is zero
+            if (currentStake.amount == 0) {
+                updatedStakes[i] = currentStake;
+                continue;
+            }
+            
             // Skip if lastUpdateTime is already at or after freeze timestamp
             if (currentStake.lastUpdateTime >= freezeTimestamp) {
                 updatedStakes[i] = currentStake;
@@ -423,6 +429,12 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         // Process all stakes in memory
         for (uint256 i = 0; i < stakes.length; i++) {
             Stake memory currentStake = stakes[i];
+            
+            // Skip if amount is zero
+            if (currentStake.amount == 0) {
+                updatedStakes[i] = currentStake;
+                continue;
+            }
 
             uint256 burnRatioDiff = burnRatio - currentStake.burnRatioSnapshot;
             if (burnRatioDiff > 0) {
