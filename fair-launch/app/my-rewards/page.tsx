@@ -29,10 +29,8 @@ import { LeaderboardsTable } from "@components/tables/leaderboards";
 import { calculateLeaderboardPoints } from "@actions/leaderboards-action";
 
 // @todo - move to utils
-const calculateTokenPercentage = (tokens: number, totalSupply: number) => {
-  if (totalSupply === 0) return 0;
-  return (tokens / totalSupply) * 100;
-};
+const calculateTokenPercentage = (tokens: number, totalSupply: number) =>
+  (tokens / totalSupply) * 100;
 
 const Page: FC = async () => {
   const cookie = (await headers()).get("cookie");
@@ -51,6 +49,12 @@ const Page: FC = async () => {
     functionName: "totalSupply",
   });
 
+  const getTotalPoints = await readContract(config, {
+    abi: klimaFairLaunchAbi,
+    address: FAIR_LAUNCH_CONTRACT_ADDRESS,
+    functionName: "getTotalPoints",
+  });
+
   const previewUserPoints = await readContract(config, {
     abi: klimaFairLaunchAbi,
     address: FAIR_LAUNCH_CONTRACT_ADDRESS,
@@ -59,8 +63,13 @@ const Page: FC = async () => {
   });
 
   const tokenPercentage = calculateTokenPercentage(
-    totalUserStakes(userStakes.stakes || []),
+    Number(formatUnits(BigInt(totalUserStakes(userStakes.stakes || [])), 9)),
     Number(formatGwei(totalSupply as bigint))
+  );
+
+  const totalPointsPercentage = calculateTokenPercentage(
+    Number(formatUnits(BigInt((previewUserPoints as bigint) || 0), 9)),
+    Number(formatGwei(getTotalPoints as bigint))
   );
 
   // calculate penalties to pass to the stakes table
@@ -117,7 +126,7 @@ const Page: FC = async () => {
                 )}
               </div>
             </div>
-            <div id="onborda-step1" className={styles.secondaryText}>
+            <div id="step1" className={styles.secondaryText}>
               <strong>&lt;{tokenPercentage.toFixed(2)}%</strong> of{" "}
               <strong>
                 {formatLargeNumber(Number(formatGwei(totalSupply as bigint)))}
@@ -129,7 +138,7 @@ const Page: FC = async () => {
         <div className={styles.cardInner}>
           <h5 className={styles.cardTitle}>My Points Accumulated</h5>
           <div className={styles.cardContents}>
-            <div id="onborda-step2" className={styles.mainText}>
+            <div id="step2" className={styles.mainText}>
               {formatLargeNumber(
                 Number(
                   formatUnits(BigInt((previewUserPoints as bigint) || 0), 9)
@@ -137,7 +146,12 @@ const Page: FC = async () => {
               )}
             </div>
             <div className={styles.secondaryText}>
-              <strong>&lt;1%</strong> of <strong>12.49</strong> B
+              <strong>&lt;{totalPointsPercentage.toFixed(2)}%</strong> of <strong>
+                {formatLargeNumber(
+                  Number(
+                    formatUnits(BigInt((getTotalPoints as bigint) || 0), 9)
+                  )
+                )}</strong>
             </div>
           </div>
         </div>
