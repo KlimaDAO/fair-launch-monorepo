@@ -1,6 +1,7 @@
 'use client';
 
 import { config } from '../utils/wagmi.client';
+import { baseSepolia } from 'wagmi/chains';
 import type { FC, ReactNode } from "react";
 import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -18,7 +19,7 @@ export const WalletProvider: FC<Props> = (props) => {
   return (
     <WagmiProvider config={config} initialState={initialState}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider>{props.children}</RainbowKitProvider>
+        <RainbowKitProvider initialChain={baseSepolia}>{props.children}</RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>
   );

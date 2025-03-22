@@ -56,7 +56,7 @@ export const StakesTable = <T extends StakeData>({
         header: "Points",
         cell: ({ row }) => {
           const points = row.original.points;
-          return <>{formatUnits(BigInt(points as string), 9)}</>;
+          return <>{points}</>;
         },
       },
       {
