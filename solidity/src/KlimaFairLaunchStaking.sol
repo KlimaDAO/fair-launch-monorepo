@@ -618,7 +618,10 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     /// @param amount Amount of tokens being unstaked
     /// @param stakeStartTime Timestamp when the stake was created
     /// @return Amount of tokens to burn
-    /// @dev Base burn is 25% of amount, additional burn up to 75% based on stake duration to total 100% max burn
+    /// @dev Base burn is 25% of amount, additional burn up to 75% based on stake duration, total 100% max burn at 365 days
+    /// @dev the time-based burn is meant to make a last man standing scenario where the longer you stake, the more you burn thus creating an incentive to stake for as long as it takes to launch klima 2.0 and not unstake early
+    /// @dev If the stake is still in the pre-staking period, only the base burn is applied
+    /// @dev If the stake is after the pre-staking period, the time-based burn is applied
     function calculateBurn(uint256 amount, uint256 stakeStartTime) public view returns (uint256) {
         // Base burn is 25% of amount
         uint256 baseBurn = (amount * 25) / 100;
@@ -628,16 +631,15 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
             return baseBurn;
         }
 
-        // Calculate time-based burn percentage with higher precision (capped at 75%)
-        // Use hours instead of days for more precision
-        uint256 timeBasedBurnPercent = (((block.timestamp - stakeStartTime) / 1 hours) * 75) / (24 * 365);
-        if (timeBasedBurnPercent > 75) timeBasedBurnPercent = 75;
-
-        // Calculate time-based burn amount
-        uint256 timeBasedBurn = (amount * timeBasedBurnPercent) / 100;
-
-        // Return total burn
-        return baseBurn + timeBasedBurn;
+        // Calculate time-based burn percentage with higher precision
+        // Scale by 1e9 (KLIMA V0 decimals) to avoid truncation in the integer division
+        uint256 scaledTimeBasedPercent = ((block.timestamp - stakeStartTime) * 75 * 1e9) / (365 days);
+        
+        // Cap the scaled percentage at 75 * 1e9
+        if (scaledTimeBasedPercent > 75 * 1e9) scaledTimeBasedPercent = 75 * 1e9;
+        
+        // Calculate and return total burn amount (base burn + time-based burn)
+        return baseBurn + ((amount * scaledTimeBasedPercent) / (100 * 1e9));
     }
 
     // view functions
