@@ -105,7 +105,6 @@ export const StakeDialog: FC = () => {
 
   const handleApprove = async () => {
     const stakeAmount = form.state.values["stake-amount"];
-    console.log("stakeAmount::handleApprove", stakeAmount);
     approveContract({
       abi: erc20Abi,
       functionName: "approve",
@@ -284,7 +283,7 @@ export const StakeDialog: FC = () => {
             disabled
             id="contract-address"
             className={styles.input}
-            value="0x8cE...5f8"
+            value={FAIR_LAUNCH_CONTRACT_ADDRESS}
           />
         </div>
         <div className={styles.inputContainer}>

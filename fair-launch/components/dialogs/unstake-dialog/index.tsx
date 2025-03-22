@@ -5,13 +5,13 @@ import Link from 'next/link';
 import type { FC } from "react";
 import { Input } from "@components/input";
 import { Dialog } from "radix-ui";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "@tanstack/react-form";
-import { parseUnits } from 'viem';
-import { useWriteContract } from "wagmi";
+import { formatUnits, parseUnits } from 'viem';
+import { useAccount, useBalance, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { calculateUnstakePenalty } from '@utils/contract';
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
-import { FAIR_LAUNCH_CONTRACT_ADDRESS } from '@utils/constants';
+import { FAIR_LAUNCH_CONTRACT_ADDRESS, KLIMA_V0_TOKEN_ADDRESS } from '@utils/constants';
 import { MdAccountBalance, MdWarningAmber } from "react-icons/md";
 import { formatNumber, formatTokenToValue } from '@utils/formatting';
 import * as styles from './styles';
@@ -33,6 +33,11 @@ enum DialogState {
 
 export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount, startTimestamp }) => {
   const [open, setOpen] = useState(false);
+  const { address } = useAccount();
+  const { data: balance } = useBalance({
+    address: address,
+    token: KLIMA_V0_TOKEN_ADDRESS,
+  });
   const form = useForm({
     defaultValues: {
       'burn-amount': '0',
@@ -42,6 +47,13 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount, startTimestamp }
   });
   const [dialogState, setDialogState] = useState(DialogState.INITIAL);
   const { data: unstakeData, writeContract: unstakeContract } = useWriteContract();
+
+  const klimaBalance = formatUnits(balance?.value ?? BigInt(0), 9);
+
+  const { data: submitReceipt } = useWaitForTransactionReceipt({
+    confirmations: 3,
+    hash: unstakeData,
+  });
 
   const handleDialogState = () => {
     setOpen(!open);
@@ -64,11 +76,12 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount, startTimestamp }
   };
 
   const handleConfirm = () => {
+    const unstakeAmount = form.state.values["unstake-amount"];
     unstakeContract({
       abi: klimaFairLaunchAbi,
       functionName: 'unstake',
       address: FAIR_LAUNCH_CONTRACT_ADDRESS,
-      args: [BigInt(10) * BigInt(10 ** 9)],
+      args: [parseUnits(unstakeAmount, 9)],
     });
   };
 
@@ -78,6 +91,14 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount, startTimestamp }
     form.setFieldValue('burn-amount', formatNumber(penalty.burnValue))
     form.setFieldValue('receive-amount', formatNumber(Number(amount) - Number(penalty.burnValue)))
   }
+
+  useEffect(() => {
+    setOpen(false);
+    // todo - show notification message...
+    if (submitReceipt?.status === "success") {
+      window.location.reload();
+    }
+  }, [submitReceipt]);
 
   const InitialView = () => (
     <>
@@ -139,7 +160,7 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount, startTimestamp }
                   />
                   <button
                     className={styles.maxButton}
-                  // onClick={() => field.handleChange(klimaBalance)}
+                    onClick={() => field.handleChange(klimaBalance)}
                   >
                     Max
                   </button>
@@ -217,13 +238,17 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount, startTimestamp }
           <label htmlFor="contract-address">
             Contract Address
           </label>
-          <Input disabled id="contract-address" value="0x8cE...5f8" />
+          <Input disabled id="contract-address"
+            value={FAIR_LAUNCH_CONTRACT_ADDRESS}
+          />
         </div>
         <div className={styles.inputContainer}>
           <label htmlFor="stake-amount">
             You are sending
           </label>
-          <Input disabled id="stake-amount" value={`${amount} KLIMA`} />
+          <Input disabled id="stake-amount" value={`${formatNumber(
+            Number(form.state.values["unstake-amount"])
+          )} KLIMA`} />
         </div>
       </div>
       <div className={styles.actions}>
