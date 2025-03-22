@@ -132,7 +132,7 @@ export const LeaderboardsTable = <T extends LeaderboardData>({
     <>
       <div className={css({ hideFrom: 'md', width: '100%' })}>
         {table.getRowModel().rows.map((row) => (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0rem', padding: '1.2rem 0', borderBottom: '1px solid #999999' }}>
+          <div key={row.id} style={{ display: 'flex', flexDirection: 'column', gap: '0rem', padding: '1.2rem 0', borderBottom: '1px solid #999999' }}>
             <div style={{ textAlign: 'center', width: '3.3rem', marginBottom: '1.2rem', color: '#1E1e1e', fontWeight: '700', fontSize: '1.8rem' }}>{flexRender(
               row.getAllCells()[0].column.columnDef.cell,
               row.getAllCells()[0].getContext()

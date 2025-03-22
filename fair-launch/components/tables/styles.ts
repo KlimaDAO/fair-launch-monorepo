@@ -33,14 +33,17 @@ export const tableBody = css({
 
 export const tableCell = css({
   padding: '1.2rem 0',
-  // textAlign: 'left',
-  // verticalAlign: 'middle',
   fontWeight: 400,
   fontSize: 'sm',
   color: 'void.80',
   borderBottom: '0.1rem solid token(colors.void.20)',
-
   textAlign: 'right',
+  '&:first-child': {
+    textAlign: 'left'
+  }
+});
+
+export const stakeTableCell = css({
   verticalAlign: 'top',
   '&:first-child': {
     textAlign: 'left'
