@@ -22,7 +22,9 @@ const RootLayout: FC<Props> = async (props) => {
     <html lang="en">
       <body className={`${inter.variable} ${firaCode.variable}`}>
         <WalletProvider cookie={cookie}>
-          <IntroStepProvider>{props.children}</IntroStepProvider>
+          <IntroStepProvider>
+            {props.children}
+          </IntroStepProvider>
         </WalletProvider>
       </body>
     </html>

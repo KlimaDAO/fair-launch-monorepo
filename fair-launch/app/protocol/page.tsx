@@ -1,23 +1,16 @@
 import Image from "next/image";
 import klimav1Logo from "@public/tokens/klima-v1.svg";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@components/table";
 import { config } from "@utils/wagmi.server";
 import { type FC } from "react";
 import { Dropdown } from "@components/dropdown";
 import { formatUnits } from "viem";
 import { readContract } from "@wagmi/core";
 import { formatNumber } from "@utils/formatting";
-import { fetchLeaderboard } from "@utils/queries";
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
 import { FAIR_LAUNCH_CONTRACT_ADDRESS } from "@utils/constants";
 import * as styles from "./styles";
+import { calculateLeaderboardPoints } from "@actions/leaderboards-action";
+import { LeaderboardsTable } from "@components/tables/leaderboards";
 
 const dropdownItems = [
   { value: "1", label: "Points - high to low" },
@@ -28,6 +21,7 @@ const Page: FC = async () => {
   const klimaPrice = await fetch('https://base.klimadao.finance/api/prices?symbols=KLIMA');
   const { data } = await klimaPrice.json();
   const price = data?.KLIMA?.[0]?.quote?.USD?.price;
+  const leaderboardData = await calculateLeaderboardPoints(100);
 
   const totalBurned = await readContract(config, {
     abi: klimaFairLaunchAbi,
@@ -35,8 +29,6 @@ const Page: FC = async () => {
     functionName: "totalBurned",
   }) as bigint;
 
-  // replace this call with react-query?
-  const leaderboard = (await fetchLeaderboard()) || { wallets: [] };
   const totalStaked = (await readContract(config, {
     abi: klimaFairLaunchAbi,
     address: FAIR_LAUNCH_CONTRACT_ADDRESS,
@@ -101,36 +93,7 @@ const Page: FC = async () => {
             />
           </div>
           <div className={styles.cardContents}>
-            <Table className={styles.leaderboardTable}>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Place</TableHead>
-                  <TableHead>Wallet</TableHead>
-                  <TableHead>KLIMA(v0) Staked</TableHead>
-                  <TableHead>Points</TableHead>
-                </TableRow>
-              </TableHeader>
-              {!!leaderboard?.wallets?.length ? (
-                <TableBody>
-                  {leaderboard.wallets.map((wallet, index) => (
-                    <TableRow key={wallet.id}>
-                      <TableCell>{index + 1}</TableCell>
-                      <TableCell>{wallet.id}</TableCell>
-                      <TableCell>
-                        {formatNumber(formatUnits(BigInt(wallet.totalStaked), 9))}
-                      </TableCell>
-                      <TableCell>-</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              ) : (
-                <TableBody>
-                  <TableRow>
-                    <TableCell colSpan={4}>None yet</TableCell>
-                  </TableRow>
-                </TableBody>
-              )}
-            </Table>
+            <LeaderboardsTable data={(leaderboardData as any[]) || []} />
           </div>
           <div>Showing 1 to 2 of 2 results</div>
         </div>

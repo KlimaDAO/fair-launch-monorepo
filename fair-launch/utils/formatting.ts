@@ -57,7 +57,19 @@ export const truncateAddress = (address: string): string => {
 };
 
 export const formatLargeNumber = (value: number) => {
-  if (value >= 1e9) {
+  if (value >= 1e27) {
+    return `${(value / 1e27).toFixed(2)} O`; // Format to octillions
+  } else if (value >= 1e24) {
+    return `${(value / 1e24).toFixed(2)} St`; // Format to septillions
+  } else if (value >= 1e21) {
+    return `${(value / 1e21).toFixed(2)} S`; // Format to sextillions
+  } else if (value >= 1e18) {
+    return `${(value / 1e18).toFixed(2)} Q`; // Format to quintillions
+  } else if (value >= 1e15) {
+    return `${(value / 1e15).toFixed(2)} Q`; // Format to quadrillions
+  } else if (value >= 1e12) {
+    return `${(value / 1e12).toFixed(2)} T`; // Format to trillions
+  } else if (value >= 1e9) {
     return `${(value / 1e9).toFixed(2)} B`; // Format to billions
   } else if (value >= 1e6) {
     return `${(value / 1e6).toFixed(2)} M`; // Format to millions

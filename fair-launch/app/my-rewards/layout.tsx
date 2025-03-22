@@ -4,7 +4,6 @@ import { Sidebar } from "@components/sidebar";
 import type { Metadata } from "next";
 import type { FC, ReactNode } from "react";
 import * as styles from "./styles";
-import { Alert } from "@components/alert";
 import { DisclaimerDialog } from "@components/dialogs/disclaimer-dialog";
 
 export const metadata: Metadata = {
@@ -18,10 +17,10 @@ interface Props {
 
 const Layout: FC<Props> = (props) => (
   <main className={styles.body}>
+    <Navbar />
     <div className={styles.container}>
       <Sidebar />
       <div className={styles.main}>
-        <Navbar />
         <div className={styles.content}>{props.children}</div>
         <Footer />
       </div>

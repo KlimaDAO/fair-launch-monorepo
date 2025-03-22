@@ -1,19 +1,24 @@
 "use client";
 
 import clsx from "clsx";
-import { Alert } from "@components/alert";
-import { Dialog } from "radix-ui";
-import { useForm } from "@tanstack/react-form";
-import { formatUnits, parseGwei } from "viem";
-import { formatNumber } from "@utils/formatting";
+
 import { abi as erc20Abi } from "@abi/erc20";
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
-import { MdCelebration, MdLibraryAdd } from "react-icons/md";
+import { Alert } from "@components/alert";
+import { useForm } from "@tanstack/react-form";
+import {
+  FAIR_LAUNCH_CONTRACT_ADDRESS,
+  KLIMA_V0_TOKEN_ADDRESS,
+} from "@utils/constants";
+import { formatNumber } from "@utils/formatting";
+import { Dialog } from "radix-ui";
 import { type FC, useEffect, useState } from "react";
-import { KLIMA_V0_TOKEN_ADDRESS, FAIR_LAUNCH_CONTRACT_ADDRESS } from "@utils/constants";
+import { MdCelebration, MdLibraryAdd } from "react-icons/md";
+import { formatUnits, parseUnits } from "viem";
 import {
   useAccount,
   useBalance,
+  useEstimateGas,
   useReadContract,
   useWaitForTransactionReceipt,
   useWriteContract,
@@ -44,7 +49,8 @@ export const StakeDialog: FC = () => {
     token: KLIMA_V0_TOKEN_ADDRESS,
   });
 
-  const form = useForm({ defaultValues: { 'stake-amount': '' } });
+  const { data: gasPrice } = useEstimateGas();
+  const form = useForm({ defaultValues: { "stake-amount": "" } });
   const klimaBalance = formatUnits(balance?.value ?? BigInt(0), 9);
 
   const [open, setOpen] = useState(false);
@@ -58,13 +64,15 @@ export const StakeDialog: FC = () => {
 
   const {
     data: stakeData,
+    isError: isStakeError,
     isPending: isStakePending,
     isSuccess: isStakeSuccess,
     writeContract: stakeContract,
   } = useWriteContract();
 
-  console.log('isPending', isStakePending);
-  console.log('isSuccess', isStakeSuccess);
+  // console.log('isPending', isStakePending);
+  // console.log('isSuccess', isStakeSuccess);
+  // console.log('isStakeError', isStakeError);
 
   const { data: allowanceData } = useReadContract({
     ...allowanceConfig,
@@ -96,27 +104,24 @@ export const StakeDialog: FC = () => {
   };
 
   const handleApprove = async () => {
-
     const stakeAmount = form.state.values["stake-amount"];
-    console.log('stakeAmount::handleApprove', stakeAmount);
+    console.log("stakeAmount::handleApprove", stakeAmount);
     approveContract({
       abi: erc20Abi,
       functionName: "approve",
       address: KLIMA_V0_TOKEN_ADDRESS,
-      args: [FAIR_LAUNCH_CONTRACT_ADDRESS, BigInt(stakeAmount) * BigInt(10 ** 9)],
+      args: [FAIR_LAUNCH_CONTRACT_ADDRESS, parseUnits(stakeAmount, 9)],
     });
   };
 
   const handleConfirm = async () => {
-    // const gasPrice = await getGasPrice(config);
-    // console.log('gasPrice::handleApprove', gasPrice);
     const stakeAmount = form.state.values["stake-amount"];
     stakeContract({
       abi: klimaFairLaunchAbi,
       functionName: "stake",
       address: FAIR_LAUNCH_CONTRACT_ADDRESS,
-      args: [BigInt(stakeAmount) * BigInt(10 ** 9)],
-      gas: parseGwei('2'),
+      args: [parseUnits(stakeAmount, 9)],
+      gasPrice: gasPrice,
     });
   };
 
@@ -165,9 +170,7 @@ export const StakeDialog: FC = () => {
           <form.Field name="stake-amount">
             {(field) => (
               <>
-                <label htmlFor={field.name}>
-                  Amount
-                </label>
+                <label htmlFor={field.name}>Amount</label>
                 <div className={styles.inputRow}>
                   <input
                     type="number"
@@ -193,9 +196,9 @@ export const StakeDialog: FC = () => {
         </div>
       </div>
       <Alert variant="default">
-        <strong>Note:</strong> It is best to leave this amount staked until
-        the end of the Fair Launch period. Unstaking your KLIMA early will
-        result in a penalty.
+        <strong>Note:</strong> It is best to leave this amount staked until the
+        end of the Fair Launch period. Unstaking your KLIMA early will result in
+        a penalty.
       </Alert>
       <div className={styles.actions}>
         <button
@@ -217,19 +220,32 @@ export const StakeDialog: FC = () => {
   const ApproveView = () => (
     <>
       <div className={styles.confirmContainer}>
-        <Dialog.Title className={styles.confirmTitle}>Confirm your transaction</Dialog.Title>
+        <Dialog.Title className={styles.confirmTitle}>
+          Confirm your transaction
+        </Dialog.Title>
         <Dialog.Description className={styles.confirmDescription}>
-          To complete this transaction, please allow our smart contract to transfer tokens on your behalf.
+          To complete this transaction, please allow our smart contract to
+          transfer tokens on your behalf.
         </Dialog.Description>
       </div>
       <div className={styles.description}>
         <div className={styles.inputContainer}>
           <label htmlFor="contract-address">Contract Address</label>
-          <input className={styles.input} disabled id="contract-address" value="0x8cE...5f8" />
+          <input
+            className={styles.input}
+            disabled
+            id="contract-address"
+            value="0x8cE...5f8"
+          />
         </div>
         <div className={styles.inputContainer}>
           <label htmlFor="send-amount">You are sending</label>
-          <input className={styles.input} disabled id="send-amount" value={`${form.state.values["stake-amount"]} KLIMA`} />
+          <input
+            className={styles.input}
+            disabled
+            id="send-amount"
+            value={`${form.state.values["stake-amount"]} KLIMA`}
+          />
         </div>
       </div>
       <div className={styles.actions}>
@@ -237,8 +253,7 @@ export const StakeDialog: FC = () => {
           onClick={handleApprove}
           disabled={isApprovePending || (approveData && !isApproved)}
           className={clsx(styles.primaryButton, {
-            [styles.disabled]:
-              isApprovePending || (approveData && !isApproved),
+            [styles.disabled]: isApprovePending || (approveData && !isApproved),
           })}
         >
           Approve{" "}
@@ -278,7 +293,9 @@ export const StakeDialog: FC = () => {
             disabled
             id="send-amount"
             className={styles.input}
-            value={`${formatNumber(Number(form.state.values["stake-amount"]))} KLIMA`}
+            value={`${formatNumber(
+              Number(form.state.values["stake-amount"])
+            )} KLIMA`}
           />
         </div>
       </div>
@@ -298,7 +315,6 @@ export const StakeDialog: FC = () => {
       </div>
     </>
   );
-
 
   return (
     <Dialog.Root open={open} onOpenChange={handleDialogState}>

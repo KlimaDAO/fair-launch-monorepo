@@ -20,6 +20,10 @@ export const tableHead = css({
   borderBottom: '1px solid token(colors.void.20)',
   '& th': {
     fontWeight: 400,
+    textAlign: 'right',
+    '&:first-child': {
+      textAlign: 'left'
+    },
   },
 });
 
@@ -29,10 +33,27 @@ export const tableBody = css({
 
 export const tableCell = css({
   padding: '1.2rem 0',
-  textAlign: 'left',
-  verticalAlign: 'middle',
+  // textAlign: 'left',
+  // verticalAlign: 'middle',
   fontWeight: 400,
   fontSize: 'sm',
   color: 'void.80',
   borderBottom: '0.1rem solid token(colors.void.20)',
+
+  textAlign: 'right',
+  verticalAlign: 'top',
+  '&:first-child': {
+    textAlign: 'left'
+  }
+});
+
+export const penaltyText = css({
+  fontSize: 'sm',
+  lineHeight: 'sm',
+  fontWeight: 400,
+  color: 'red.600',
+});
+
+export const userWalletText = css({
+  color: 'green.70',
 });
