@@ -234,7 +234,7 @@ export const StakeDialog: FC = () => {
             className={styles.input}
             disabled
             id="contract-address"
-            value="0x8cE...5f8"
+            value={FAIR_LAUNCH_CONTRACT_ADDRESS}
           />
         </div>
         <div className={styles.inputContainer}>
@@ -243,7 +243,9 @@ export const StakeDialog: FC = () => {
             className={styles.input}
             disabled
             id="send-amount"
-            value={`${form.state.values["stake-amount"]} KLIMA`}
+            value={`${formatNumber(
+              Number(form.state.values["stake-amount"])
+            )} KLIMA`}
           />
         </div>
       </div>

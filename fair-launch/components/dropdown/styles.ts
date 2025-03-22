@@ -28,11 +28,11 @@ export const icon = css({
 });
 
 export const content = css({
+  width: '100%',
   cursor: "pointer",
   overflow: "hidden",
   backgroundColor: "white",
   borderRadius: "0.4rem",
-  width: "var(--radix-select-trigger-width)",
   maxHeight: "var(--radix-select-content-available-height)",
   border: "0.1rem solid token(colors.void.50)",
   boxShadow:
@@ -41,6 +41,10 @@ export const content = css({
   "& span > svg": {
     display: "none !important",
   },
+
+  lg: {
+    width: "var(--radix-select-trigger-width)",
+  }
 });
 
 export const viewport = css({

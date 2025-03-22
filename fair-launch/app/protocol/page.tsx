@@ -11,6 +11,7 @@ import { FAIR_LAUNCH_CONTRACT_ADDRESS } from "@utils/constants";
 import * as styles from "./styles";
 import { calculateLeaderboardPoints } from "@actions/leaderboards-action";
 import { LeaderboardsTable } from "@components/tables/leaderboards";
+import { css } from "styled-system/css";
 
 const dropdownItems = [
   { value: "1", label: "Points - high to low" },
@@ -95,7 +96,7 @@ const Page: FC = async () => {
           <div className={styles.cardContents}>
             <LeaderboardsTable data={(leaderboardData as any[]) || []} />
           </div>
-          <div>Showing 1 to 2 of 2 results</div>
+          <div className={css({ hideBelow: 'md' })}>Showing 1 to 2 of 2 results</div>
         </div>
       </div>
     </>

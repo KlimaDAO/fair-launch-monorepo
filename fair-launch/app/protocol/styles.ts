@@ -96,9 +96,15 @@ export const cardTitle = css({
 
 export const cardContents = css({
   display: 'flex',
-  alignItems: 'center',
-  flexDirection: 'row',
-  justifyContent: 'space-between'
+  alignItems: 'flex-start',
+  flexDirection: 'column',
+  justifyContent: 'space-between',
+  gap: '1.2rem',
+
+  lg: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  }
 });
 
 export const mainText = css({
