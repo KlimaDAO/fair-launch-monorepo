@@ -11,9 +11,11 @@ import { formatNumber, formatTimestamp } from "@utils/formatting";
 import { useMemo } from "react";
 import { formatUnits } from "viem";
 import * as styles from "../styles";
+import { totalUserStakes } from "@utils/contract";
 
 interface Props<T> {
   data: T[];
+  totalStaked: number;
 }
 
 export interface StakeData {
@@ -25,7 +27,7 @@ export interface StakeData {
   startTimestamp: string;
 }
 
-export const StakesTable = <T extends StakeData>({ data }: Props<T>) => {
+export const StakesTable = <T extends StakeData>({ data, totalStaked }: Props<T>) => {
   const columns: ColumnDef<T>[] = useMemo(
     () => [
       {
@@ -80,11 +82,12 @@ export const StakesTable = <T extends StakeData>({ data }: Props<T>) => {
           <UnstakeDialog
             amount={row.original.amount}
             startTimestamp={row.original.startTimestamp}
+            totalStaked={totalStaked}
           />
         ),
       },
     ],
-    []
+    [data, totalStaked]
   );
 
   const table = useReactTable({

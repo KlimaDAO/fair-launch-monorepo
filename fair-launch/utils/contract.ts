@@ -29,3 +29,6 @@ export const calculateUserPoints = (growthRate: string, stakeAmount: number, mul
   const elapsedTime = currentTimestamp - stakeTimestamp;
   return BigInt((Number(stakeAmount) * multiplier * elapsedTime * Number(growthRate)) / 100000);
 }
+
+export const totalUserStakes = (stakes: { amount: string }[]): number =>
+  stakes.reduce((total, stake) => total + parseFloat(stake.amount), 0);

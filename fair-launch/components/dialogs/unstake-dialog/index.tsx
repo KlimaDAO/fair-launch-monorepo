@@ -8,10 +8,10 @@ import { Dialog } from "radix-ui";
 import { useEffect, useState } from "react";
 import { useForm } from "@tanstack/react-form";
 import { formatUnits, parseUnits } from 'viem';
-import { useAccount, useBalance, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { calculateUnstakePenalty } from '@utils/contract';
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
-import { FAIR_LAUNCH_CONTRACT_ADDRESS, KLIMA_V0_TOKEN_ADDRESS } from '@utils/constants';
+import { FAIR_LAUNCH_CONTRACT_ADDRESS } from '@utils/constants';
 import { MdAccountBalance, MdWarningAmber } from "react-icons/md";
 import { formatNumber, formatTokenToValue } from '@utils/formatting';
 import * as styles from './styles';
@@ -22,6 +22,7 @@ type PointerDownOutsideEvent = CustomEvent<{ originalEvent: PointerEvent }>;
 interface UnstakeDialogProps {
   amount: string;
   startTimestamp: string;
+  totalStaked: number;
 }
 
 enum DialogState {
@@ -31,13 +32,12 @@ enum DialogState {
   CONFIRM,
 }
 
-export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount, startTimestamp }) => {
+export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount, startTimestamp, totalStaked }) => {
   const [open, setOpen] = useState(false);
-  const { address } = useAccount();
-  const { data: balance } = useBalance({
-    address: address,
-    token: KLIMA_V0_TOKEN_ADDRESS,
-  });
+  const stakedBalance = formatUnits(BigInt(totalStaked) ?? BigInt(0), 9);
+  const [dialogState, setDialogState] = useState(DialogState.INITIAL);
+  const { data: unstakeData, writeContract: unstakeContract } = useWriteContract();
+  
   const form = useForm({
     defaultValues: {
       'burn-amount': '0',
@@ -45,23 +45,11 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount, startTimestamp }
       'unstake-amount': formatTokenToValue(amount),
     }
   });
-  const [dialogState, setDialogState] = useState(DialogState.INITIAL);
-  const { data: unstakeData, writeContract: unstakeContract } = useWriteContract();
-
-  const klimaBalance = formatUnits(balance?.value ?? BigInt(0), 9);
 
   const { data: submitReceipt } = useWaitForTransactionReceipt({
     confirmations: 3,
     hash: unstakeData,
   });
-
-  const handleDialogState = () => {
-    setOpen(!open);
-    if (open) {
-      setDialogState(DialogState.INITIAL);
-      form.reset();
-    }
-  };
 
   const handleProceed = () => {
     setDialogState(DialogState.UNSTAKE);
@@ -85,11 +73,19 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount, startTimestamp }
     });
   };
 
+  const handleDialogState = () => {
+    setOpen(!open);
+    if (open) {
+      setDialogState(DialogState.INITIAL);
+      form.reset();
+    }
+  };
+
   const generateAllocationInfo = async (amount: string) => {
     // todo -> cleanup
     const penalty = await calculateUnstakePenalty(parseUnits(amount, 9), startTimestamp);
-    form.setFieldValue('burn-amount', formatNumber(penalty.burnValue))
-    form.setFieldValue('receive-amount', formatNumber(Number(amount) - Number(penalty.burnValue)))
+    form.setFieldValue('burn-amount', formatNumber(penalty.burnValue, 2))
+    form.setFieldValue('receive-amount', formatNumber(Number(amount) - Number(penalty.burnValue), 2))
   }
 
   useEffect(() => {
@@ -155,12 +151,12 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount, startTimestamp }
                     id={field.name}
                     name={field.name}
                     className={styles.input}
-                    defaultValue={field.state.value}
+                    value={field.state.value}
                     onChange={(e) => field.handleChange(e.target.value)}
                   />
                   <button
                     className={styles.maxButton}
-                    onClick={() => field.handleChange(klimaBalance)}
+                    onClick={() => field.handleChange(stakedBalance)}
                   >
                     Max
                   </button>

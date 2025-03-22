@@ -10,17 +10,14 @@ import {
   FAIR_LAUNCH_CONTRACT_ADDRESS,
   KLIMA_V0_TOKEN_ADDRESS,
 } from "@utils/constants";
-import { calculateUnstakePenalty, calculateUserPoints } from "@utils/contract";
+import { calculateUnstakePenalty, calculateUserPoints, totalUserStakes } from "@utils/contract";
 import {
   formatLargeNumber,
   formatNumber,
-  formatValueToNumber,
-  truncateAddress,
 } from "@utils/formatting";
-import { fetchLeaderboard, fetchUserStakes } from "@utils/queries";
+import { fetchUserStakes } from "@utils/queries";
 import { config } from "@utils/wagmi.server";
 import { readContract } from "@wagmi/core";
-import clsx from "clsx";
 import { headers } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
@@ -36,10 +33,6 @@ const calculateTokenPercentage = (tokens: number, totalSupply: number) => {
   if (totalSupply === 0) return 0;
   return (tokens / totalSupply) * 100;
 };
-
-const totalUserStakes = (stakes: { amount: string }[]): number =>
-  stakes.reduce((total, stake) => total + parseFloat(stake.amount), 0);
-
 
 const Page: FC = async () => {
   const cookie = (await headers()).get("cookie");
@@ -153,7 +146,10 @@ const Page: FC = async () => {
         <div className={styles.cardInner}>
           <h5 className={styles.cardTitle}>Stake History</h5>
           <div className={styles.cardContents}>
-            <StakesTable data={(userStakesData as StakeData[]) || []} />
+            <StakesTable
+              data={(userStakesData as StakeData[]) || []}
+              totalStaked={totalUserStakes(userStakes.stakes || [])}
+            />
           </div>
         </div>
       </div>
