@@ -1,17 +1,21 @@
-import Image from "next/image";
-import klimav1Logo from "@public/tokens/klima-v1.svg";
-import { config } from "@utils/wagmi.server";
-import { type FC } from "react";
-import { Dropdown } from "@components/dropdown";
-import { formatUnits } from "viem";
-import { readContract } from "@wagmi/core";
-import { formatNumber } from "@utils/formatting";
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
-import { FAIR_LAUNCH_CONTRACT_ADDRESS } from "@utils/constants";
-import * as styles from "./styles";
 import { calculateLeaderboardPoints } from "@actions/leaderboards-action";
+import { Dropdown } from "@components/dropdown";
 import { LeaderboardsTable } from "@components/tables/leaderboards";
+import klimav1Logo from "@public/tokens/klima-v1.svg";
+import {
+  FAIR_LAUNCH_CONTRACT_ADDRESS,
+  KLIMA_V0_TOKEN_ADDRESS,
+} from "@utils/constants";
+import { calculateTokenPercentage } from "@utils/contract";
+import { formatLargeNumber, formatNumber } from "@utils/formatting";
+import { config } from "@utils/wagmi.server";
+import { readContract } from "@wagmi/core";
+import Image from "next/image";
+import { type FC } from "react";
 import { css } from "styled-system/css";
+import { erc20Abi, formatGwei, formatUnits } from "viem";
+import * as styles from "./styles";
 
 const dropdownItems = [
   { value: "1", label: "Points - high to low" },
@@ -19,22 +23,35 @@ const dropdownItems = [
 ];
 
 const Page: FC = async () => {
-  const klimaPrice = await fetch('https://base.klimadao.finance/api/prices?symbols=KLIMA');
+  const klimaPrice = await fetch(
+    "https://base.klimadao.finance/api/prices?symbols=KLIMA"
+  );
   const { data } = await klimaPrice.json();
   const price = data?.KLIMA?.[0]?.quote?.USD?.price;
   const leaderboardData = await calculateLeaderboardPoints(100);
 
-  const totalBurned = await readContract(config, {
+  const totalBurned = (await readContract(config, {
     abi: klimaFairLaunchAbi,
     address: FAIR_LAUNCH_CONTRACT_ADDRESS,
     functionName: "totalBurned",
-  }) as bigint;
+  })) as bigint;
 
   const totalStaked = (await readContract(config, {
     abi: klimaFairLaunchAbi,
     address: FAIR_LAUNCH_CONTRACT_ADDRESS,
     functionName: "totalStaked",
   })) as bigint;
+
+  const totalSupply = await readContract(config, {
+    abi: erc20Abi,
+    address: KLIMA_V0_TOKEN_ADDRESS,
+    functionName: "totalSupply",
+  });
+
+  const tokenPercentage = calculateTokenPercentage(
+    Number(formatUnits(BigInt(totalStaked), 9)),
+    Number(formatGwei(totalSupply as bigint))
+  );
 
   return (
     <>
@@ -54,7 +71,10 @@ const Page: FC = async () => {
               </div>
             </div>
             <div className={styles.secondaryText}>
-              <strong>50%</strong> of <strong>42</strong> MM
+              <strong>{tokenPercentage.toFixed(2)}%</strong> of{" "}
+              <strong>
+                {formatLargeNumber(Number(formatGwei(totalSupply as bigint)))}
+              </strong>{" "}
             </div>
           </div>
         </div>
@@ -96,7 +116,9 @@ const Page: FC = async () => {
           <div className={styles.cardContents}>
             <LeaderboardsTable data={(leaderboardData as any[]) || []} />
           </div>
-          <div className={css({ hideBelow: 'md' })}>Showing 1 to 2 of 2 results</div>
+          <div className={css({ hideBelow: "md" })}>
+            Showing 1 to 2 of 2 results
+          </div>
         </div>
       </div>
     </>

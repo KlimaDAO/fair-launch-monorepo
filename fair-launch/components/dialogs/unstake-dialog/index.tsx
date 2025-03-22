@@ -1,20 +1,20 @@
-'use client';
+"use client";
 
-import clsx from 'clsx';
-import Link from 'next/link';
-import type { FC } from "react";
-import { Input } from "@components/input";
-import { Dialog } from "radix-ui";
-import { useEffect, useState } from "react";
-import { useForm } from "@tanstack/react-form";
-import { formatUnits, parseUnits } from 'viem';
-import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
-import { calculateUnstakePenalty } from '@utils/contract';
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
-import { FAIR_LAUNCH_CONTRACT_ADDRESS } from '@utils/constants';
+import { Input } from "@components/input";
+import { useForm } from "@tanstack/react-form";
+import { FAIR_LAUNCH_CONTRACT_ADDRESS } from "@utils/constants";
+import { calculateUnstakePenalty } from "@utils/contract";
+import { formatNumber, formatTokenToValue } from "@utils/formatting";
+import clsx from "clsx";
+import Link from "next/link";
+import { Dialog } from "radix-ui";
+import type { FC } from "react";
+import { useEffect, useState } from "react";
 import { MdAccountBalance, MdWarningAmber } from "react-icons/md";
-import { formatNumber, formatTokenToValue } from '@utils/formatting';
-import * as styles from './styles';
+import { formatUnits, parseUnits } from "viem";
+import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import * as styles from "./styles";
 
 type FocusOutsideEvent = CustomEvent<{ originalEvent: FocusEvent }>;
 type PointerDownOutsideEvent = CustomEvent<{ originalEvent: PointerEvent }>;
@@ -32,18 +32,23 @@ enum DialogState {
   CONFIRM,
 }
 
-export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount, startTimestamp, totalStaked }) => {
+export const UnstakeDialog: FC<UnstakeDialogProps> = ({
+  amount,
+  startTimestamp,
+  totalStaked,
+}) => {
   const [open, setOpen] = useState(false);
   const stakedBalance = formatUnits(BigInt(totalStaked) ?? BigInt(0), 9);
   const [dialogState, setDialogState] = useState(DialogState.INITIAL);
-  const { data: unstakeData, writeContract: unstakeContract } = useWriteContract();
-  
+  const { data: unstakeData, writeContract: unstakeContract } =
+    useWriteContract();
+
   const form = useForm({
     defaultValues: {
-      'burn-amount': '0',
-      'receive-amount': '0',
-      'unstake-amount': formatTokenToValue(amount),
-    }
+      "burn-amount": "0",
+      "receive-amount": "0",
+      "unstake-amount": formatTokenToValue(amount),
+    },
   });
 
   const { data: submitReceipt } = useWaitForTransactionReceipt({
@@ -67,7 +72,7 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount, startTimestamp, 
     const unstakeAmount = form.state.values["unstake-amount"];
     unstakeContract({
       abi: klimaFairLaunchAbi,
-      functionName: 'unstake',
+      functionName: "unstake",
       address: FAIR_LAUNCH_CONTRACT_ADDRESS,
       args: [parseUnits(unstakeAmount, 9)],
     });
@@ -83,10 +88,16 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount, startTimestamp, 
 
   const generateAllocationInfo = async (amount: string) => {
     // todo -> cleanup
-    const penalty = await calculateUnstakePenalty(parseUnits(amount, 9), startTimestamp);
-    form.setFieldValue('burn-amount', formatNumber(penalty.burnValue, 2))
-    form.setFieldValue('receive-amount', formatNumber(Number(amount) - Number(penalty.burnValue), 2))
-  }
+    const penalty = await calculateUnstakePenalty(
+      parseUnits(amount, 9),
+      startTimestamp
+    );
+    form.setFieldValue("burn-amount", formatNumber(penalty.burnValue, 2));
+    form.setFieldValue(
+      "receive-amount",
+      formatNumber(Number(amount) - Number(penalty.burnValue), 2)
+    );
+  };
 
   useEffect(() => {
     setOpen(false);
@@ -105,21 +116,23 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount, startTimestamp, 
         Hold on there, partner!
       </Dialog.Title>
       <div className={styles.altDescription}>
-        <div>The longer you leave your KLIMA staked, the better your rewards! If you unstake now, you’ll not only lose out on some KLIMA through <Link href="/">the burn mechanism</Link>,
-          but you’ll also miss out on KLIMAX!</div>
-        <div>Make sure you have a good reason to unstake before you go clickin’ buttons.</div>
+        <div>
+          The longer you leave your KLIMA staked, the better your rewards! If
+          you unstake now, you’ll not only lose out on some KLIMA through{" "}
+          <Link href="/">the burn mechanism</Link>, but you’ll also miss out on
+          KLIMAX!
+        </div>
+        <div>
+          Make sure you have a good reason to unstake before you go clickin’
+          buttons.
+        </div>
       </div>
       <div className={styles.actions}>
-        <button
-          onClick={handleProceed}
-          className={styles.primaryButton}
-        >
+        <button onClick={handleProceed} className={styles.primaryButton}>
           Proceed
         </button>
         <Dialog.Close asChild>
-          <button className={styles.secondaryButton}>
-            Cancel
-          </button>
+          <button className={styles.secondaryButton}>Cancel</button>
         </Dialog.Close>
       </div>
     </>
@@ -137,14 +150,13 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount, startTimestamp, 
             name="unstake-amount"
             listeners={{
               onMount: async ({ value }) => await generateAllocationInfo(value),
-              onChange: async ({ value }) => await generateAllocationInfo(value),
+              onChange: async ({ value }) =>
+                await generateAllocationInfo(value),
             }}
           >
             {(field) => (
               <>
-                <label htmlFor={field.name}>
-                  Amount
-                </label>
+                <label htmlFor={field.name}>Amount</label>
                 <div className={styles.inputRow}>
                   <input
                     type="number"
@@ -169,13 +181,21 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount, startTimestamp, 
           <div className={styles.infoRow}>
             <p>Burn Amount</p>
             <form.Field name="burn-amount">
-              {(field) => <p><strong>{field.state.value}</strong> KLIMA</p>}
+              {(field) => (
+                <p>
+                  <strong>{field.state.value}</strong> KLIMA
+                </p>
+              )}
             </form.Field>
           </div>
           <div className={styles.infoRow}>
             <p>Receive Amount</p>
             <form.Field name="receive-amount">
-              {(field) => <p><strong>{field.state.value}</strong> KLIMA</p>}
+              {(field) => (
+                <p>
+                  <strong>{field.state.value}</strong> KLIMA
+                </p>
+              )}
             </form.Field>
           </div>
         </div>
@@ -191,21 +211,24 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount, startTimestamp, 
     </div>
   );
 
-
   const ConfirmUnstakeView = () => (
     <>
       <div className={styles.icon}>
         <MdWarningAmber />
       </div>
-      <Dialog.Title className={styles.title}>
-        Confirm Unstake
-      </Dialog.Title>
+      <Dialog.Title className={styles.title}>Confirm Unstake</Dialog.Title>
       <form.Subscribe
         selector={(state) => state.values}
         children={(values) => (
           <div className={styles.altDescription}>
-            <div>Are you sure you'd like to unstake {values['unstake-amount']} KLIMA? You will burn {values['burn-amount']} KLIMA and <strong>will not be able to re-stake it.</strong></div>
-            <div>You will still get to keep the points and KLIMAX you've accrued.</div>
+            <div>
+              Are you sure you'd like to unstake {values["unstake-amount"]}{" "}
+              KLIMA? You will burn {values["burn-amount"]} KLIMA and{" "}
+              <strong>will not be able to re-stake it.</strong>
+            </div>
+            <div>
+              You will still get to keep the points and KLIMAX you've accrued.
+            </div>
             <Link href="/">Learn more about burning KLIMA.</Link>
           </div>
         )}
@@ -215,9 +238,7 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount, startTimestamp, 
           Confirm
         </button>
         <Dialog.Close asChild>
-          <button className={styles.secondaryButton}>
-            Cancel
-          </button>
+          <button className={styles.secondaryButton}>Cancel</button>
         </Dialog.Close>
       </div>
     </>
@@ -229,22 +250,27 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount, startTimestamp, 
         Confirm your transaction
       </Dialog.Title>
       <div className={styles.description}>
-        <p>Give the transaction one final review before submitting to the blockchain.</p>
+        <p>
+          Give the transaction one final review before submitting to the
+          blockchain.
+        </p>
         <div className={styles.inputContainer}>
-          <label htmlFor="contract-address">
-            Contract Address
-          </label>
-          <Input disabled id="contract-address"
+          <label htmlFor="contract-address">Contract Address</label>
+          <Input
+            disabled
+            id="contract-address"
             value={FAIR_LAUNCH_CONTRACT_ADDRESS}
           />
         </div>
         <div className={styles.inputContainer}>
-          <label htmlFor="stake-amount">
-            You are sending
-          </label>
-          <Input disabled id="stake-amount" value={`${formatNumber(
-            Number(form.state.values["unstake-amount"])
-          )} KLIMA`} />
+          <label htmlFor="stake-amount">You are sending</label>
+          <Input
+            disabled
+            id="stake-amount"
+            value={`${formatNumber(
+              Number(form.state.values["unstake-amount"])
+            )} KLIMA`}
+          />
         </div>
       </div>
       <div className={styles.actions}>
@@ -252,9 +278,7 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount, startTimestamp, 
           Submit
         </button>
         <Dialog.Close asChild>
-          <button className={styles.secondaryButton}>
-            Cancel
-          </button>
+          <button className={styles.secondaryButton}>Cancel</button>
         </Dialog.Close>
       </div>
     </>
@@ -262,28 +286,32 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({ amount, startTimestamp, 
 
   return (
     <Dialog.Root open={open} onOpenChange={handleDialogState}>
-      <Dialog.Trigger className={styles.unstakeButton}>
-        Unstake
-      </Dialog.Trigger>
+      <Dialog.Trigger className={styles.unstakeButton}>Unstake</Dialog.Trigger>
       <Dialog.Portal>
-        <Dialog.Overlay className={clsx(styles.overlay, {
-          [styles.confirmOverlay]:
-            dialogState === DialogState.CONFIRM_UNSTAKE ||
-            dialogState === DialogState.CONFIRM,
-        })} />
+        <Dialog.Overlay
+          className={clsx(styles.overlay, {
+            [styles.confirmOverlay]:
+              dialogState === DialogState.CONFIRM_UNSTAKE ||
+              dialogState === DialogState.CONFIRM,
+          })}
+        />
         <Dialog.Content
           className={styles.content}
-          onInteractOutside={(e: PointerDownOutsideEvent | FocusOutsideEvent) => {
+          onInteractOutside={(
+            e: PointerDownOutsideEvent | FocusOutsideEvent
+          ) => {
             e.preventDefault();
             e.stopPropagation();
-          }}>
-
+          }}
+        >
           {dialogState === DialogState.INITIAL && <InitialView />}
           {dialogState === DialogState.UNSTAKE && <UnstakeView />}
-          {dialogState === DialogState.CONFIRM_UNSTAKE && <ConfirmUnstakeView />}
+          {dialogState === DialogState.CONFIRM_UNSTAKE && (
+            <ConfirmUnstakeView />
+          )}
           {dialogState === DialogState.CONFIRM && <ConfirmView />}
         </Dialog.Content>
-      </Dialog.Portal >
-    </Dialog.Root >
-  )
+      </Dialog.Portal>
+    </Dialog.Root>
+  );
 };

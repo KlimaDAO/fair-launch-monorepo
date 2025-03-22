@@ -1,7 +1,9 @@
 import { abi as erc20Abi } from "@abi/erc20";
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
+import { calculateLeaderboardPoints } from "@actions/leaderboards-action";
 import { Badge } from "@components/badge";
 import { StakeDialog } from "@components/dialogs/stake-dialog";
+import { LeaderboardsTable } from "@components/tables/leaderboards";
 import { StakeData, StakesTable } from "@components/tables/stakes";
 import { Tooltip } from "@components/tooltip";
 import gklimaLogo from "@public/tokens/g-klima.svg";
@@ -10,11 +12,13 @@ import {
   FAIR_LAUNCH_CONTRACT_ADDRESS,
   KLIMA_V0_TOKEN_ADDRESS,
 } from "@utils/constants";
-import { calculateUnstakePenalty, calculateUserPoints, totalUserStakes } from "@utils/contract";
 import {
-  formatLargeNumber,
-  formatNumber,
-} from "@utils/formatting";
+  calculateTokenPercentage,
+  calculateUnstakePenalty,
+  calculateUserPoints,
+  totalUserStakes,
+} from "@utils/contract";
+import { formatLargeNumber, formatNumber } from "@utils/formatting";
 import { fetchUserStakes } from "@utils/queries";
 import { config } from "@utils/wagmi.server";
 import { readContract } from "@wagmi/core";
@@ -25,12 +29,6 @@ import { type FC } from "react";
 import { formatGwei, formatUnits } from "viem";
 import { cookieToInitialState } from "wagmi";
 import * as styles from "./styles";
-import { LeaderboardsTable } from "@components/tables/leaderboards";
-import { calculateLeaderboardPoints } from "@actions/leaderboards-action";
-
-// @todo - move to utils
-const calculateTokenPercentage = (tokens: number, totalSupply: number) =>
-  (tokens / totalSupply) * 100;
 
 const Page: FC = async () => {
   const cookie = (await headers()).get("cookie");
@@ -146,12 +144,14 @@ const Page: FC = async () => {
               )}
             </div>
             <div className={styles.secondaryText}>
-              <strong>&lt;{totalPointsPercentage.toFixed(2)}%</strong> of <strong>
+              <strong>&lt;{totalPointsPercentage.toFixed(2)}%</strong> of{" "}
+              <strong>
                 {formatLargeNumber(
                   Number(
                     formatUnits(BigInt((getTotalPoints as bigint) || 0), 9)
                   )
-                )}</strong>
+                )}
+              </strong>
             </div>
           </div>
         </div>

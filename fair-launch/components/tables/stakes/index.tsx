@@ -1,6 +1,5 @@
 "use client";
 
-import clsx from "clsx";
 import { UnstakeDialog } from "@components/dialogs/unstake-dialog";
 import {
   ColumnDef,
@@ -9,6 +8,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { formatNumber, formatTimestamp } from "@utils/formatting";
+import clsx from "clsx";
 import { useMemo } from "react";
 import { formatUnits } from "viem";
 import * as styles from "../styles";
@@ -27,7 +27,10 @@ export interface StakeData {
   startTimestamp: string;
 }
 
-export const StakesTable = <T extends StakeData>({ data, totalStaked }: Props<T>) => {
+export const StakesTable = <T extends StakeData>({
+  data,
+  totalStaked,
+}: Props<T>) => {
   const columns: ColumnDef<T>[] = useMemo(
     () => [
       {
@@ -132,7 +135,13 @@ export const StakesTable = <T extends StakeData>({ data, totalStaked }: Props<T>
                 <tr key={row.id}>
                   {row.getVisibleCells().map((cell) => {
                     return (
-                      <td className={clsx(styles.tableCell, styles.stakeTableCell)} key={cell.id}>
+                      <td
+                        className={clsx(
+                          styles.tableCell,
+                          styles.stakeTableCell
+                        )}
+                        key={cell.id}
+                      >
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext()
