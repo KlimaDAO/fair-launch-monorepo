@@ -15,32 +15,58 @@ export const main = css({
 
 export const content = css({
   flex: 1,
-  gap: "2rem",
+  gap: "4rem",
   display: "flex",
-  padding: "8rem",
+  padding: "4rem",
   flexDirection: "column",
   position: "relative",
+
+  lg: {
+    gap: "2rem",
+    padding: "8rem",
+  }
 });
 
 export const title = css({
   color: "white",
-  fontSize: "8xl",
-  lineHeight: "8xl",
-  fontWeight: 700,
+  fontSize: "7xl",
+  lineHeight: "7xl",
+  textAlign: "center",
+
+  lg: {
+    fontSize: "8xl",
+    lineHeight: "8xl",
+    fontWeight: 700,
+    textAlign: "left",
+  }
 });
 
 export const subtitle = css({
   color: "white",
-  fontSize: "3xl",
-  lineHeight: "3xl",
-  fontWeight: 400,
+  fontSize: "2xl",
+  lineHeight: "2xl",
+  textAlign: "center",
+
+  lg: {
+    fontSize: "3xl",
+    lineHeight: "3xl",
+    fontWeight: 400,
+    textAlign: "left",
+  }
 });
 
 export const description = css({
   color: "white",
-  fontSize: "xl",
-  lineHeight: "xl",
+  fontSize: "lg",
+  lineHeight: "lg",
   fontWeight: 400,
+  textAlign: "center",
+
+  lg: {
+    fontSize: "xl",
+    lineHeight: "xl",
+    textAlign: "left",
+  }
 });
 
 export const learnMore = css({
@@ -50,6 +76,11 @@ export const learnMore = css({
   lineHeight: "sm",
   fontWeight: 400,
   width: "fit-content",
+  margin: "0 auto",
+
+  lg: {
+    margin: "0",
+  }
 });
 
 export const backgroundImage = css({

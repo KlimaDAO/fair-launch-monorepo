@@ -10,6 +10,7 @@ import {
   coinbaseWallet,
   phantomWallet,
   walletConnectWallet,
+  metaMaskWallet,
 } from '@rainbow-me/rainbowkit/wallets';
 
 import { connectorsForWallets } from '@rainbow-me/rainbowkit';
@@ -17,8 +18,8 @@ import { connectorsForWallets } from '@rainbow-me/rainbowkit';
 const connectors = connectorsForWallets(
   [
     {
-      groupName: 'Recommended',
-      wallets: [coinbaseWallet, phantomWallet, walletConnectWallet],
+      groupName: 'Popular',
+      wallets: [metaMaskWallet, coinbaseWallet, phantomWallet, walletConnectWallet],
     },
   ],
   {

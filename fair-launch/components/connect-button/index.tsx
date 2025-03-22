@@ -20,6 +20,7 @@ export const ConnectButton = () => {
 
         return (
           <div
+            className={styles.connectButtonContainer}
             {...(!ready && {
               "aria-hidden": true,
               style: {
