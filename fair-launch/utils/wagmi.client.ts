@@ -8,15 +8,17 @@ import {
 } from 'wagmi';
 import {
   coinbaseWallet,
+  phantomWallet,
   walletConnectWallet,
 } from '@rainbow-me/rainbowkit/wallets';
+
 import { connectorsForWallets } from '@rainbow-me/rainbowkit';
 
 const connectors = connectorsForWallets(
   [
     {
       groupName: 'Recommended',
-      wallets: [coinbaseWallet, walletConnectWallet],
+      wallets: [coinbaseWallet, phantomWallet, walletConnectWallet],
     },
   ],
   {

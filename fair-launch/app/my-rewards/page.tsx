@@ -53,6 +53,12 @@ const Page: FC = async () => {
     functionName: "getTotalPoints",
   });
 
+  const growthRate = await readContract(config, {
+    abi: klimaFairLaunchAbi,
+    address: FAIR_LAUNCH_CONTRACT_ADDRESS,
+    functionName: "GROWTH_RATE",
+  });
+
   const previewUserPoints = await readContract(config, {
     abi: klimaFairLaunchAbi,
     address: FAIR_LAUNCH_CONTRACT_ADDRESS,
@@ -74,7 +80,8 @@ const Page: FC = async () => {
   const userStakesData = await Promise.all(
     (userStakes.stakes || []).map(async (row) => {
       const points = calculateUserPoints(
-        String(row.amount),
+        String(growthRate),
+        Number(row.amount),
         Number(row.multiplier),
         Number(row.startTimestamp)
       );

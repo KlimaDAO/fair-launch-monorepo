@@ -22,7 +22,7 @@ export interface StakeData {
   amount: string;
   multiplier: string;
   burnValue: string;
-  points: bigint | string;
+  points: bigint | number | string;
   burnPercentage: string;
   startTimestamp: string;
 }

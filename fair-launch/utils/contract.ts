@@ -1,8 +1,9 @@
+import { parseUnits, formatUnits } from "viem";
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
 import { config } from "@utils/wagmi.server";
 import { readContract } from "@wagmi/core";
 import { FAIR_LAUNCH_CONTRACT_ADDRESS } from "./constants";
-import { formatTokenToValue } from "./formatting";
+import { formatLargeNumber, formatTokenToValue } from "./formatting";
 
 export const calculateBurnFn = async (amount: bigint, timestamp: string) => {
   return (await readContract(config, {
@@ -36,13 +37,14 @@ export const calculateUserPoints = (
   growthRate: string,
   stakeAmount: number,
   multiplier = 0,
-  stakeTimestamp = 3
+  stakeTimestamp: number
 ) => {
   const currentTimestamp = Math.floor(Date.now() / 1000);
   const elapsedTime = currentTimestamp - stakeTimestamp;
-  return BigInt(
-    (Number(stakeAmount) * multiplier * elapsedTime * Number(growthRate)) /
-      100000
+  const stakeAmountFormatted = parseUnits(String(stakeAmount), 9);
+  const value = (Number(stakeAmountFormatted) * multiplier * elapsedTime * Number(growthRate)) / 100000;
+  return (
+    formatLargeNumber(Number(formatUnits(BigInt(value), 9)))
   );
 };
 
