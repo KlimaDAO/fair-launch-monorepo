@@ -67,7 +67,7 @@ const Page: FC = async () => {
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <Image src={klimav1Logo} alt="Klima V1 Logo" />
               <div className={styles.mainText}>
-                {formatNumber(formatUnits(totalStaked, 9))}
+                {formatNumber(formatUnits(totalStaked, 9), 2)}
               </div>
             </div>
             <div className={styles.secondaryText}>
