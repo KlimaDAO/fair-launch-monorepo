@@ -24,6 +24,11 @@ export const tableHead = css({
     '&:first-child': {
       textAlign: 'left'
     },
+    '&[aria-label="leaderboard-table-head"]': { 
+      '&:nth-child(2)': {
+      textAlign: 'left'
+      }
+    }
   },
 });
 
@@ -40,6 +45,11 @@ export const tableCell = css({
   textAlign: 'right',
   '&:first-child': {
     textAlign: 'left'
+  },
+  '&[aria-label="leaderboard-table-cell"]': {
+    '&:nth-child(1)': {
+      textAlign: 'left'
+    }
   }
 });
 

@@ -105,13 +105,16 @@ const Page: FC = async () => {
         <div className={styles.cardInner}>
           <div className={styles.cardContents}>
             <div className={styles.cardTitle}>Leaderboard</div>
-            <Dropdown
-              selected={dropdownItems[0]}
-              items={[
-                { value: "1", label: "Points - high to low" },
-                { value: "2", label: "Points - low to high" },
-              ]}
-            />
+            <div className={styles.cardContents}>
+              <label className={styles.sortByLabel}>Sort by</label>
+              <Dropdown
+                selected={dropdownItems[0]}
+                items={[
+                  { value: "1", label: "Points - high to low" },
+                  { value: "2", label: "Points - low to high" },
+                ]}
+              />
+            </div>
           </div>
           <div className={styles.cardContents}>
             <LeaderboardsTable data={(leaderboardData as any[]) || []} />

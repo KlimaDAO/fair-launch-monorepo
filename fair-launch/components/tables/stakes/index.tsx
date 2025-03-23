@@ -155,7 +155,7 @@ export const StakesTable = <T extends StakeData>({
           ) : (
             <tr>
               <td className={styles.tableCell} colSpan={6}>
-                None yet
+                <i>None yet</i>
               </td>
             </tr>
           )}

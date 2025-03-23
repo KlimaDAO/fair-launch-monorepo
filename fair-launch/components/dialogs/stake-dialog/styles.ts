@@ -110,6 +110,11 @@ export const primaryButton = css({
   fontWeight: 500,
   height: '4rem',
   cursor: 'pointer',
+
+  '&:disabled': {
+    opacity: 0.85,
+    cursor: 'not-allowed',
+  }
 });
 
 export const secondaryButton = css({
@@ -152,6 +157,7 @@ export const participateButton = css({
 
 export const input = css({
   flex: 1,
+  gap: '0.8rem',
   display: 'flex',
   height: '4rem',
   width: '100%',

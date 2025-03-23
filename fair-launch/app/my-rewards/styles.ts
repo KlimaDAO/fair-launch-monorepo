@@ -100,8 +100,8 @@ export const cardTitle = css({
 
 export const cardContents = css({
   display: 'flex',
-  alignItems: 'center',
   flexDirection: 'row',
+  alignItems: 'baseline',
   justifyContent: 'space-between',
 });
 

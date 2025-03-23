@@ -1,5 +1,7 @@
 "use client";
 
+import clsx from "clsx";
+import { css } from "styled-system/css";
 import { useRouter } from "next/navigation";
 import { ConnectButton as ConnectButtonRainbow } from "@rainbow-me/rainbowkit";
 import * as styles from "./styles";
@@ -12,7 +14,7 @@ export const ConnectButton = () => {
         const ready = mounted;
         const connected = ready && account && chain;
         // after successful connection, redirect to /my-rewards
-        if (connected) {
+        if (connected && !chain.unsupported) {
           setTimeout(() => {
             router.push('/my-rewards')
           }, 1);
@@ -34,8 +36,8 @@ export const ConnectButton = () => {
               if (!connected) {
                 return (
                   <button
-                    onClick={openConnectModal}
                     type="button"
+                    onClick={openConnectModal}
                     className={styles.connectButton}
                   >
                     Connect
@@ -56,10 +58,14 @@ export const ConnectButton = () => {
               return (
                 <div style={{ display: "flex", gap: 12 }}>
                   <button
-                    onClick={openChainModal}
-                    style={{ display: "flex", alignItems: "center" }}
                     type="button"
-                    className={styles.connectButton}
+                    onClick={openChainModal}
+                    className={clsx(styles.connectButton, css({
+                      display: "flex",
+                      justifyContent: 'center',
+                      alignItems: "center",
+                      textAlign: 'center',
+                    }))}
                   >
                     {account.displayName}
                     {account.displayBalance ? ` (${account.displayBalance})` : ""}

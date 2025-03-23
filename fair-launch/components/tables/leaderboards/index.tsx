@@ -234,8 +234,9 @@ export const LeaderboardsTable = <T extends LeaderboardData>({
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
                   <th
-                    className={styles.tableHead}
                     key={header.id}
+                    aria-label="leaderboard-table-head"
+                    className={styles.tableHead}
                     colSpan={header.colSpan}
                   >
                     <div>
@@ -256,7 +257,11 @@ export const LeaderboardsTable = <T extends LeaderboardData>({
                   <tr key={row.id}>
                     {row.getVisibleCells().map((cell) => {
                       return (
-                        <td className={styles.tableCell} key={cell.id}>
+                        <td
+                          key={cell.id}
+                          aria-label="leaderboard-table-cell"
+                          className={styles.tableCell}
+                        >
                           {flexRender(
                             cell.column.columnDef.cell,
                             cell.getContext()
@@ -269,8 +274,8 @@ export const LeaderboardsTable = <T extends LeaderboardData>({
               </>
             ) : (
               <tr>
-                <td className={styles.tableCell} colSpan={6}>
-                  None yet
+                <td className={styles.tableCell} colSpan={4}>
+                  <i>No data to display yet</i>
                 </td>
               </tr>
             )}

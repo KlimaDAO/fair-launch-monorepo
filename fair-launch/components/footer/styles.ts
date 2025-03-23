@@ -49,9 +49,19 @@ export const socials = css({
   justifyContent: 'center',
   gap: '1.6rem',
 
+
   '& svg': {
     fill: 'void.20',
     fontSize: '2rem',
+  },
+
+  '& a': {
+    '& svg': {
+      '&:hover': {
+        fill: 'white',
+        transition: 'all 1s ease',
+      }
+    }
   }
 });
 

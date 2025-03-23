@@ -96,15 +96,21 @@ export const cardTitle = css({
 
 export const cardContents = css({
   display: 'flex',
-  alignItems: 'flex-start',
+  alignItems: 'baseline',
   flexDirection: 'column',
   justifyContent: 'space-between',
   gap: '1.2rem',
 
   lg: {
     flexDirection: 'row',
-    alignItems: 'center',
   }
+});
+
+export const sortByLabel = css({
+  fontSize: 'sm',
+  lineHeight: 'sm',
+  fontWeight: 500,
+  color: 'void.80',
 });
 
 export const mainText = css({

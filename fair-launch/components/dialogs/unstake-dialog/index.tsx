@@ -1,11 +1,16 @@
 "use client";
 
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
-import { Input } from "@components/input";
 import { useForm } from "@tanstack/react-form";
 import { FAIR_LAUNCH_CONTRACT_ADDRESS } from "@utils/constants";
 import { calculateUnstakePenalty } from "@utils/contract";
-import { formatNumber, formatTokenToValue } from "@utils/formatting";
+import Image from "next/image";
+import klimav1Logo from "@public/tokens/klima-v1.svg";
+import {
+  formatNumber,
+  formatTokenToValue,
+  truncateAddress,
+} from "@utils/formatting";
 import clsx from "clsx";
 import Link from "next/link";
 import { Dialog } from "radix-ui";
@@ -255,22 +260,19 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({
           blockchain.
         </p>
         <div className={styles.inputContainer}>
-          <label htmlFor="contract-address">Contract Address</label>
-          <Input
-            disabled
-            id="contract-address"
-            value={FAIR_LAUNCH_CONTRACT_ADDRESS}
-          />
+          <label htmlFor="confirm-unstake-contract-address">Contract Address</label>
+          <div id="confirm-unstake-contract-address" className={styles.input}>
+            {truncateAddress(FAIR_LAUNCH_CONTRACT_ADDRESS)}
+          </div>
         </div>
         <div className={styles.inputContainer}>
-          <label htmlFor="stake-amount">You are sending</label>
-          <Input
-            disabled
-            id="stake-amount"
-            value={`${formatNumber(
+          <label htmlFor="confirm-unstake-amount">You are sending</label>
+          <div id="confirm-unstake-amount" className={styles.input}>
+            <Image src={klimav1Logo} alt="Klima V1 Logo" />
+            <div>{`${formatNumber(
               Number(form.state.values["unstake-amount"])
-            )} KLIMA`}
-          />
+            )} KLIMA`}</div>
+          </div>
         </div>
       </div>
       <div className={styles.actions}>

@@ -1,16 +1,17 @@
 "use client";
 
 import clsx from "clsx";
-
 import { abi as erc20Abi } from "@abi/erc20";
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
 import { Alert } from "@components/alert";
 import { useForm } from "@tanstack/react-form";
+import Image from "next/image";
 import {
   FAIR_LAUNCH_CONTRACT_ADDRESS,
   KLIMA_V0_TOKEN_ADDRESS,
 } from "@utils/constants";
-import { formatNumber } from "@utils/formatting";
+import klimav1Logo from "@public/tokens/klima-v1.svg";
+import { formatNumber, truncateAddress } from "@utils/formatting";
 import { Dialog } from "radix-ui";
 import { type FC, useEffect, useState } from "react";
 import { MdCelebration, MdLibraryAdd } from "react-icons/md";
@@ -50,7 +51,7 @@ export const StakeDialog: FC = () => {
   });
 
   const { data: gasPrice } = useEstimateGas();
-  const form = useForm({ defaultValues: { "stake-amount": "" } });
+  const form = useForm({ defaultValues: { "stake-amount": "0" } });
   const klimaBalance = formatUnits(balance?.value ?? BigInt(0), 9);
 
   const [open, setOpen] = useState(false);
@@ -85,6 +86,7 @@ export const StakeDialog: FC = () => {
     confirmations: 3,
     hash: stakeData,
   });
+  const isSubmitSuccess = receipt?.status === "success";
 
   const handleDialogState = () => {
     setOpen(!open);
@@ -160,59 +162,58 @@ export const StakeDialog: FC = () => {
 
   const StakeView = () => (
     <>
-      <div className={styles.icon}>
-        <MdLibraryAdd />
-      </div>
-      <Dialog.Title className={styles.title}>Stake KLIMA</Dialog.Title>
-      <div className={styles.description}>
-        <div className={styles.inputContainer}>
-          <form.Field name="stake-amount">
-            {(field) => (
-              <>
-                <label htmlFor={field.name}>Amount</label>
-                <div className={styles.inputRow}>
-                  <input
-                    type="number"
-                    id={field.name}
-                    name={field.name}
-                    value={field.state.value}
-                    className={styles.input}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                  />
-                  <button
-                    className={styles.maxButton}
-                    onClick={() => field.handleChange(klimaBalance)}
-                  >
-                    Max
-                  </button>
-                </div>
-                {/* {field.state.meta.errors ? (
-                    <em role="alert">{field.state.meta.errors.join(', ')}</em>
-                  ) : null} */}
-              </>
-            )}
-          </form.Field>
-        </div>
-      </div>
-      <Alert variant="default">
-        <strong>Note:</strong> It is best to leave this amount staked until the
-        end of the Fair Launch period. Unstaking your KLIMA early will result in
-        a penalty.
-      </Alert>
-      <div className={styles.actions}>
-        <button
-          onClick={handleStake}
-          disabled={Number(klimaBalance) <= 0}
-          className={clsx(styles.primaryButton, {
-            [styles.disabled]: Number(klimaBalance) <= 0,
-          })}
-        >
-          Stake
-        </button>
-        <Dialog.Close asChild>
-          <button className={styles.secondaryButton}>Cancel</button>
-        </Dialog.Close>
-      </div>
+      <form.Field name="stake-amount">
+        {(field) => (
+          <>
+            <div className={styles.icon}>
+              <MdLibraryAdd />
+            </div>
+            <Dialog.Title className={styles.title}>Stake KLIMA</Dialog.Title>
+            <div className={styles.description}>
+              <div className={styles.inputContainer}>
+                <>
+                  <label htmlFor={field.name}>Amount</label>
+                  <div className={styles.inputRow}>
+                    <input
+                      type="number"
+                      id={field.name}
+                      name={field.name}
+                      value={field.state.value}
+                      className={styles.input}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                    />
+                    <button
+                      className={styles.maxButton}
+                      onClick={() => field.handleChange(klimaBalance)}
+                    >
+                      Max
+                    </button>
+                  </div>
+                </>
+              </div>
+            </div>
+            <Alert variant="default">
+              <strong>Note:</strong> It is best to leave this amount staked until the
+              end of the Fair Launch period. Unstaking your KLIMA early will result in
+              a penalty.
+            </Alert>
+            <div className={styles.actions}>
+              <button
+                onClick={handleStake}
+                disabled={Number(klimaBalance) <= 0 || Number(field.state.value) <= 0}
+                className={clsx(styles.primaryButton, {
+                  [styles.disabled]: Number(klimaBalance) <= 0 || Number(field.state.value) <= 0,
+                })}
+              >
+                Stake
+              </button>
+              <Dialog.Close asChild>
+                <button className={styles.secondaryButton}>Cancel</button>
+              </Dialog.Close>
+            </div>
+          </>
+        )}
+      </form.Field>
     </>
   );
 
@@ -229,24 +230,19 @@ export const StakeDialog: FC = () => {
       </div>
       <div className={styles.description}>
         <div className={styles.inputContainer}>
-          <label htmlFor="contract-address">Contract Address</label>
-          <input
-            className={styles.input}
-            disabled
-            id="contract-address"
-            value={FAIR_LAUNCH_CONTRACT_ADDRESS}
-          />
+          <label htmlFor="approve-contract-address">Contract Address</label>
+          <div id="approve-contract-address" className={styles.input}>
+            {truncateAddress(FAIR_LAUNCH_CONTRACT_ADDRESS)}
+          </div>
         </div>
         <div className={styles.inputContainer}>
-          <label htmlFor="send-amount">You are sending</label>
-          <input
-            className={styles.input}
-            disabled
-            id="send-amount"
-            value={`${formatNumber(
+          <label htmlFor="approve-send-amount">You are sending</label>
+          <div id="approve-send-amount" className={styles.input}>
+            <Image src={klimav1Logo} alt="Klima V1 Logo" />
+            <div>{`${formatNumber(
               Number(form.state.values["stake-amount"])
-            )} KLIMA`}
-          />
+            )} KLIMA`}</div>
+          </div>
         </div>
       </div>
       <div className={styles.actions}>
@@ -280,35 +276,30 @@ export const StakeDialog: FC = () => {
       </div>
       <div className={styles.description}>
         <div className={styles.inputContainer}>
-          <label htmlFor="contract-address">Contract Address</label>
-          <input
-            disabled
-            id="contract-address"
-            className={styles.input}
-            value={FAIR_LAUNCH_CONTRACT_ADDRESS}
-          />
+          <label htmlFor="confirm-contract-address">Contract Address</label>
+          <div id="confirm-contract-address" className={styles.input}>
+            {truncateAddress(FAIR_LAUNCH_CONTRACT_ADDRESS)}
+          </div>
         </div>
         <div className={styles.inputContainer}>
-          <label htmlFor="send-amount">You are sending</label>
-          <input
-            disabled
-            id="send-amount"
-            className={styles.input}
-            value={`${formatNumber(
+          <label htmlFor="confirm-send-amount">You are sending</label>
+          <div id="confirm-send-amount" className={styles.input}>
+            <Image src={klimav1Logo} alt="Klima V1 Logo" />
+            <div>{`${formatNumber(
               Number(form.state.values["stake-amount"])
-            )} KLIMA`}
-          />
+            )} KLIMA`}</div>
+          </div>
         </div>
       </div>
       <div className={styles.actions}>
         <button
           onClick={handleConfirm}
-          disabled={isStakePending}
+          disabled={isStakePending || (stakeData && !isSubmitSuccess)}
           className={clsx(styles.primaryButton, {
-            [styles.disabled]: isStakePending,
+            [styles.disabled]: isStakePending || (stakeData && !isSubmitSuccess),
           })}
         >
-          Submit {isStakePending ? "..." : ""}
+          Submit {isStakePending || (stakeData && !isSubmitSuccess) ? "..." : ""}
         </button>
         <Dialog.Close asChild>
           <button className={styles.secondaryButton}>Cancel</button>

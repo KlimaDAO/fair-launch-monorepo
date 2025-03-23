@@ -12,7 +12,7 @@ export const Input = React.forwardRef<
     <input
       ref={ref}
       type={type}
-      onChange={onChange} // Use the onChange prop directly
+      onChange={onChange}
       className={clsx(styles.input, className)}
       {...props}
     />

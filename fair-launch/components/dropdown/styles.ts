@@ -58,7 +58,7 @@ export const item = css({
   display: "flex",
   alignItems: "center",
   height: "3.5rem",
-  padding: "0 0.1rem",
+  padding: "0 1rem",
   position: "relative",
   userSelect: "none",
   "&[data-disabled]": {
@@ -67,7 +67,7 @@ export const item = css({
   },
   "&[data-highlighted]": {
     outline: "none",
-    backgroundColor: "void.40",
+    backgroundColor: "transparent",
     color: "void.60",
   },
 });
