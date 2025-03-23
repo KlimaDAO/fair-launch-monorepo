@@ -139,90 +139,105 @@ export const LeaderboardsTable = <T extends LeaderboardData>({
       <div className={css({ hideFrom: "md", width: "100%" })}>
         {table.getRowModel().rows.length ? (
           <>
-            {table.getRowModel().rows.map((row) => (
-              <div
-                key={row.id}
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "0rem",
-                  padding: "1.2rem 0",
-                  borderBottom: "1px solid #999999",
-                }}
-              >
+            {table.getRowModel().rows.map((row) => {
+              const firstCell = row.getAllCells()[0];
+              const walletAddress = row.getAllCells()[1].getContext().getValue()
+              return (
                 <div
+                  key={row.id}
                   style={{
-                    textAlign: "center",
-                    width: "3.3rem",
-                    marginBottom: "1.2rem",
-                    color: "#1E1e1e",
-                    fontWeight: "700",
-                    fontSize: "1.8rem",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "0rem",
+                    padding: "1.2rem 0",
+                    borderBottom: "1px solid #999999",
                   }}
                 >
-                  {flexRender(
-                    row.getAllCells()[0].column.columnDef.cell,
-                    row.getAllCells()[0].getContext()
-                  )}
-                </div>
-                {table.getHeaderGroups().map((headerGroup) => (
                   <div
-                    className={css({
+                    style={{
+                      width: '100%',
+                      marginBottom: "1.2rem",
+                      color: "#1E1e1e",
+                      fontWeight: "700",
+                      fontSize: "1.8rem",
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '0.8rem',
+                    }}
+                  >
+                    <div className={css({
+                      textAlign: "center",
+                      width: "3.3rem",
+                    })}>
+                      {flexRender(
+                        firstCell?.column?.columnDef?.cell,
+                        firstCell?.getContext()
+                      )}
+                    </div>
+                    {isUserWallet(walletAddress as string, address as string) && (
+                      <Badge variant="table" title="You" />
+                    )}
+                  </div>
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <div
+                      className={css({
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: "0rem",
+                      })}
+                      key={headerGroup.id}
+                    >
+                      {headerGroup.headers.map((header) => {
+                        if (header.id === "place") return null;
+                        return (
+                          <div
+                            className={css({
+                              fontWeight: 400,
+                              fontSize: "1.2rem",
+                              lineHeight: "1.6rem",
+                              color: "#777",
+                            })}
+                            key={header.id}
+                          >
+                            {flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ))}
+                  <div
+                    style={{
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
-                      gap: "0rem",
-                    })}
-                    key={headerGroup.id}
+                      gap: "0.8rem",
+                    }}
                   >
-                    {headerGroup.headers.map((header) => {
-                      if (header.id === "place") return null;
+                    {row.getVisibleCells().map((cell) => {
+                      if (cell.column.id === "place") return null;
                       return (
                         <div
                           className={css({
                             fontWeight: 400,
-                            fontSize: "1.2rem",
-                            lineHeight: "1.6rem",
-                            color: "#777",
+                            fontSize: "1.4rem",
+                            lineHeight: "2rem",
+                            color: "#1E1e1e",
                           })}
-                          key={header.id}
+                          key={cell.id}
                         >
-                          {flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </div>
                       );
                     })}
                   </div>
-                ))}
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: "0.8rem",
-                  }}
-                >
-                  {row.getVisibleCells().map((cell) => {
-                    if (cell.column.id === "place") return null;
-                    return (
-                      <div
-                        className={css({
-                          fontWeight: 400,
-                          fontSize: "1.4rem",
-                          lineHeight: "2rem",
-                          color: "#1E1e1e",
-                        })}
-                        key={cell.id}
-                      >
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </div>
-                    );
-                  })}
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </>) : (
           <div className={styles.tableCell}>
             <i>No data to display yet</i>
