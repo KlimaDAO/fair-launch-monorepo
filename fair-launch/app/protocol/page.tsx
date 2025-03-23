@@ -1,3 +1,4 @@
+import clsx from "clsx";
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
 import { calculateLeaderboardPoints } from "@actions/leaderboards-action";
 import { Dropdown } from "@components/dropdown";
@@ -103,9 +104,15 @@ const Page: FC = async () => {
 
       <div className={styles.card}>
         <div className={styles.cardInner}>
-          <div className={styles.cardContents}>
+          <div className={clsx(styles.cardContents, css({
+            flexDirection: 'column !important',
+            lg: { flexDirection: 'row' }
+          }))}>
             <div className={styles.cardTitle}>Leaderboard</div>
-            <div className={styles.cardContents}>
+            <div className={clsx(styles.cardContents, css({
+              flexDirection: 'column !important',
+              lg: { flexDirection: 'row' }
+            }))}>
               <label className={styles.sortByLabel}>Sort by</label>
               <Dropdown
                 selected={dropdownItems[0]}

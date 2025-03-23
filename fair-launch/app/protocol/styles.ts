@@ -97,13 +97,9 @@ export const cardTitle = css({
 export const cardContents = css({
   display: 'flex',
   alignItems: 'baseline',
-  flexDirection: 'column',
+  flexDirection: 'row',
   justifyContent: 'space-between',
   gap: '1.2rem',
-
-  lg: {
-    flexDirection: 'row',
-  }
 });
 
 export const sortByLabel = css({
