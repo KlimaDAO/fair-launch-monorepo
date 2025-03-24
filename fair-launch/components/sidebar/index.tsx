@@ -7,7 +7,7 @@ import Image from "next/image";
 import klimaLogo from "@public/kp-logo.svg";
 import { usePathname, useRouter } from 'next/navigation';
 import { IoTrophySharp } from "react-icons/io5";
-import { IntroWalkthrough } from "@components/intro-walkthrough/intro";
+import { IntroWalkthrough } from "@components/intro-walkthrough";
 import { MdDashboard, MdLogout } from "react-icons/md";
 import { useAccount, useDisconnect } from "wagmi";
 import * as styles from './styles';

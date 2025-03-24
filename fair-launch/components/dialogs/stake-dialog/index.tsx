@@ -65,15 +65,9 @@ export const StakeDialog: FC = () => {
 
   const {
     data: stakeData,
-    isError: isStakeError,
     isPending: isStakePending,
-    isSuccess: isStakeSuccess,
     writeContract: stakeContract,
   } = useWriteContract();
-
-  // console.log('isPending', isStakePending);
-  // console.log('isSuccess', isStakeSuccess);
-  // console.log('isStakeError', isStakeError);
 
   const { data: allowanceData } = useReadContract({
     ...allowanceConfig,
@@ -82,11 +76,14 @@ export const StakeDialog: FC = () => {
 
   const { data: receipt } = useWaitForTransactionReceipt({ hash: approveData });
   const isApproved = receipt?.status === "success";
+  const isApprovalSuccess = isApprovePending || (approveData && !isApproved);
+
   const { data: submitReceipt } = useWaitForTransactionReceipt({
     confirmations: 3,
     hash: stakeData,
   });
   const isSubmitSuccess = receipt?.status === "success";
+  const isTransactionSuccess = isStakePending || (stakeData && !isSubmitSuccess)
 
   const handleDialogState = () => {
     setOpen(!open);
@@ -248,13 +245,12 @@ export const StakeDialog: FC = () => {
       <div className={styles.actions}>
         <button
           onClick={handleApprove}
-          disabled={isApprovePending || (approveData && !isApproved)}
+          disabled={isApprovalSuccess}
           className={clsx(styles.primaryButton, {
-            [styles.disabled]: isApprovePending || (approveData && !isApproved),
+            [styles.disabled]: isApprovalSuccess,
           })}
         >
-          Approve{" "}
-          {isApprovePending || (approveData && !isApproved) ? "..." : ""}
+          {isApprovalSuccess ? "Approving ..." : "Approve"}
         </button>
         <Dialog.Close asChild>
           <button className={styles.secondaryButton}>Cancel</button>
@@ -294,12 +290,12 @@ export const StakeDialog: FC = () => {
       <div className={styles.actions}>
         <button
           onClick={handleConfirm}
-          disabled={isStakePending || (stakeData && !isSubmitSuccess)}
+          disabled={isTransactionSuccess}
           className={clsx(styles.primaryButton, {
-            [styles.disabled]: isStakePending || (stakeData && !isSubmitSuccess),
+            [styles.disabled]: isTransactionSuccess,
           })}
         >
-          Submit {isStakePending || (stakeData && !isSubmitSuccess) ? "..." : ""}
+          {isTransactionSuccess ? "Submitting ..." : "Submit"}
         </button>
         <Dialog.Close asChild>
           <button className={styles.secondaryButton}>Cancel</button>

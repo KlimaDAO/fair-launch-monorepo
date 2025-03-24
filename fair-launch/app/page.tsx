@@ -21,7 +21,11 @@ const Page: FC = () => (
         <p className={styles.subtitle}>To Klima Fair Launch 2025.</p>
         <p className={styles.description}>Connect a wallet to get started.</p>
         <ConnectButton />
-        <Link className={styles.learnMore} href="/my-rewards">
+        <Link
+          target="_blank"
+          className={styles.learnMore}
+          href="https://github.com/KlimaDAO/klimadao-docs/blob/main/klima%202.0/KlimaDAO%20-%20Klima%202.0%20-%20Fair%20Launch%20FAQ%20-%20February%2021%2C%202025.md"
+        >
           Learn more about Klima Fair Launch
         </Link>
       </div>

@@ -2,7 +2,7 @@
 
 import type { FC } from 'react';
 import { useNextStep } from 'nextstepjs';
-import * as styles from './intro.styles';
+import * as styles from './styles';
 import { MdHelpOutline } from 'react-icons/md';
 
 export const IntroWalkthrough: FC = () => {

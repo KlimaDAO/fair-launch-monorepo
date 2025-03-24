@@ -1,17 +1,17 @@
 "use client";
 
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
+import klimav1Logo from "@public/tokens/klima-v1.svg";
 import { useForm } from "@tanstack/react-form";
 import { FAIR_LAUNCH_CONTRACT_ADDRESS } from "@utils/constants";
 import { calculateUnstakePenalty } from "@utils/contract";
-import Image from "next/image";
-import klimav1Logo from "@public/tokens/klima-v1.svg";
 import {
   formatNumber,
   formatTokenToValue,
   truncateAddress,
 } from "@utils/formatting";
 import clsx from "clsx";
+import Image from "next/image";
 import Link from "next/link";
 import { Dialog } from "radix-ui";
 import type { FC } from "react";
@@ -45,7 +45,7 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({
   const [open, setOpen] = useState(false);
   const stakedBalance = formatUnits(BigInt(totalStaked) ?? BigInt(0), 9);
   const [dialogState, setDialogState] = useState(DialogState.INITIAL);
-  const { data: unstakeData, writeContract: unstakeContract } =
+  const { data: unstakeData, isPending: isUnstakePending, writeContract: unstakeContract } =
     useWriteContract();
 
   const form = useForm({
@@ -56,10 +56,12 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({
     },
   });
 
-  const { data: submitReceipt } = useWaitForTransactionReceipt({
+  const { data: submitReceipt, isSuccess } = useWaitForTransactionReceipt({
     confirmations: 3,
     hash: unstakeData,
   });
+
+  const isTransactionSuccess = isUnstakePending || (unstakeData && !isSuccess)
 
   const handleProceed = () => {
     setDialogState(DialogState.UNSTAKE);
@@ -260,7 +262,9 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({
           blockchain.
         </p>
         <div className={styles.inputContainer}>
-          <label htmlFor="confirm-unstake-contract-address">Contract Address</label>
+          <label htmlFor="confirm-unstake-contract-address">
+            Contract Address
+          </label>
           <div id="confirm-unstake-contract-address" className={styles.input}>
             {truncateAddress(FAIR_LAUNCH_CONTRACT_ADDRESS)}
           </div>
@@ -276,8 +280,14 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({
         </div>
       </div>
       <div className={styles.actions}>
-        <button className={styles.primaryButton} onClick={handleConfirm}>
-          Submit
+        <button
+          onClick={handleConfirm}
+          disabled={isTransactionSuccess}
+          className={clsx(styles.primaryButton, {
+            [styles.disabled]: isTransactionSuccess,
+          })}
+        >
+          {isTransactionSuccess ? "Submitting ..." : "Submit"}
         </button>
         <Dialog.Close asChild>
           <button className={styles.secondaryButton}>Cancel</button>

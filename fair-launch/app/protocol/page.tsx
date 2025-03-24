@@ -1,4 +1,3 @@
-import clsx from "clsx";
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
 import { calculateLeaderboardPoints } from "@actions/leaderboards-action";
 import { Dropdown } from "@components/dropdown";
@@ -12,6 +11,7 @@ import { calculateTokenPercentage } from "@utils/contract";
 import { formatLargeNumber, formatNumber } from "@utils/formatting";
 import { config } from "@utils/wagmi.server";
 import { readContract } from "@wagmi/core";
+import clsx from "clsx";
 import Image from "next/image";
 import { type FC } from "react";
 import { css } from "styled-system/css";
@@ -101,18 +101,27 @@ const Page: FC = async () => {
           </div>
         </div>
       </div>
-
       <div className={styles.card}>
         <div className={styles.cardInner}>
-          <div className={clsx(styles.cardContents, css({
-            flexDirection: 'column !important',
-            lg: { flexDirection: 'row' }
-          }))}>
+          <div
+            className={clsx(
+              styles.cardContents,
+              css({
+                flexDirection: "column !important",
+                lg: { flexDirection: "row !important" },
+              })
+            )}
+          >
             <div className={styles.cardTitle}>Leaderboard</div>
-            <div className={clsx(styles.cardContents, css({
-              flexDirection: 'column !important',
-              lg: { flexDirection: 'row' }
-            }))}>
+            <div
+              className={clsx(
+                styles.cardContents,
+                css({
+                  flexDirection: "column !important",
+                  lg: { flexDirection: "row !important" },
+                })
+              )}
+            >
               <label className={styles.sortByLabel}>Sort by</label>
               <Dropdown
                 selected={dropdownItems[0]}

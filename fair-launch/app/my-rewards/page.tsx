@@ -127,7 +127,8 @@ const Page: FC = async () => {
                   formatUnits(
                     BigInt(totalUserStakes(userStakes.stakes || [])),
                     9
-                  ), 2
+                  ),
+                  2
                 )}
               </div>
             </div>

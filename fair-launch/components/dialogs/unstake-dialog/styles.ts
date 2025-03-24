@@ -114,6 +114,7 @@ export const inputContainer = css({
 
 export const input = css({
   flex: 1,
+  gap: '0.8rem',
   display: 'flex',
   height: '4rem',
   width: '100%',
@@ -211,4 +212,9 @@ export const maxButton = css({
   lineHeight: 'sm',
   fontWeight: 700,
   cursor: 'pointer',
+});
+
+export const disabled = css({
+  opacity: 0.65,
+  cursor: 'not-allowed',
 });

@@ -17,8 +17,7 @@ export const confirmOverlay = css({
 });
 
 export const disabled = css({
-  backgroundColor: 'void.20',
-  color: 'void.40',
+  opacity: 0.65,
   cursor: 'not-allowed',
 });
 

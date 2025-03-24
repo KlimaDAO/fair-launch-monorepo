@@ -2,12 +2,11 @@
 
 import type { FC } from 'react';
 import { CardComponentProps } from 'nextstepjs';
-import * as styles from './intro-card.styles';
+import * as styles from './styles';
 
 export const CustomIntroCard: FC<CardComponentProps> = (props) => {
   const { step, currentStep, prevStep, totalSteps, nextStep } = props;
   const isLastStep = currentStep === totalSteps - 1;
-
   return (
     <div className={styles.card}>
       <div>{step.title}</div>

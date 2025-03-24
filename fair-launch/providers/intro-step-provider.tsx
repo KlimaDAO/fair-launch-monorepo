@@ -1,5 +1,5 @@
 import type { FC, ReactNode } from "react";
-import { CustomIntroCard } from '../components/intro-card/intro-card';
+import { CustomIntroCard } from '../components/intro-card';
 import { NextStepProvider, NextStep } from 'nextstepjs';
 
 interface Props {

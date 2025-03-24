@@ -10,9 +10,9 @@ import {
 import { formatNumber, formatTimestamp } from "@utils/formatting";
 import clsx from "clsx";
 import { useMemo } from "react";
+import { css } from "styled-system/css";
 import { formatUnits } from "viem";
 import * as styles from "../styles";
-import { css } from "styled-system/css";
 
 interface Props<T> {
   data: T[];
@@ -65,15 +65,17 @@ export const StakesTable = <T extends StakeData>({
         header: "Unstake Penalty",
         cell: ({ row }) => {
           return (
-            <div className={css({
-              display: 'flex',
-              flexDirection: 'row',
-              justifyContent: 'flex-end',
-              gap: '0.4rem',
-              lg: {
-                flexDirection: 'column',
-              }
-            })}>
+            <div
+              className={css({
+                display: "flex",
+                flexDirection: "row",
+                justifyContent: "flex-end",
+                gap: "0.4rem",
+                lg: {
+                  flexDirection: "column",
+                },
+              })}
+            >
               <div>-{row.original.burnValue} KLIMA</div>
               <div className={styles.penaltyText}>
                 {row.original.burnPercentage}
@@ -130,55 +132,55 @@ export const StakesTable = <T extends StakeData>({
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
-                      flexWrap: 'wrap',
+                      flexWrap: "wrap",
                       gap: "1.2rem",
                     })}
                     key={headerGroup.id}
                   >
-                    {headerGroup.headers.map((header, index) => {
-                      return (
-                        <div 
+                    {headerGroup.headers.map((header, index) => (
+                      <div
                         key={header.id}
                         className={css({
-                          flex: '0 0 calc(50% - 1.2rem)',
-                          textAlign: index % 2 === 0 ? 'left' : 'right'
-                        })}>
-                          <div
-                            className={css({
-                              fontWeight: 400,
-                              fontSize: "1.2rem",
-                              lineHeight: "1.6rem",
-                              color: "#777",
-                              flex: '50%',
-                            })}
-                            key={header.id}
-                          >
-                            {flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                          </div>
-                          <div
-                            className={css({
-                              fontWeight: 400,
-                              fontSize: "1.4rem",
-                              lineHeight: "2rem",
-                              color: "#1E1e1e",
-                            })}
-                          >
-                            {flexRender(
-                              row.getAllCells()[index].column.columnDef.cell,
-                              row.getAllCells()[index].getContext()
-                            )}
-                          </div>
+                          flex: "0 0 calc(50% - 1.2rem)",
+                          textAlign: index % 2 === 0 ? "left" : "right",
+                        })}
+                      >
+                        <div
+                          className={css({
+                            fontWeight: 400,
+                            fontSize: "1.2rem",
+                            lineHeight: "1.6rem",
+                            color: "#777",
+                            flex: "50%",
+                          })}
+                          key={header.id}
+                        >
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
                         </div>
-                      );
-                    })}
+                        <div
+                          className={css({
+                            fontWeight: 400,
+                            fontSize: "1.4rem",
+                            lineHeight: "2rem",
+                            color: "#1E1e1e",
+                          })}
+                        >
+                          {flexRender(
+                            row.getAllCells()[index].column.columnDef.cell,
+                            row.getAllCells()[index].getContext()
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 ))}
               </div>
             ))}
-          </>) : (
+          </>
+        ) : (
           <div className={styles.tableCell}>
             <i>None yet</i>
           </div>
@@ -214,22 +216,20 @@ export const StakesTable = <T extends StakeData>({
               <>
                 {table.getRowModel().rows.map((row) => (
                   <tr key={row.id}>
-                    {row.getVisibleCells().map((cell) => {
-                      return (
-                        <td
-                          className={clsx(
-                            styles.tableCell,
-                            styles.stakeTableCell
-                          )}
-                          key={cell.id}
-                        >
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext()
-                          )}
-                        </td>
-                      );
-                    })}
+                    {row.getVisibleCells().map((cell) => (
+                      <td
+                        className={clsx(
+                          styles.tableCell,
+                          styles.stakeTableCell
+                        )}
+                        key={cell.id}
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </td>
+                    ))}
                   </tr>
                 ))}
               </>

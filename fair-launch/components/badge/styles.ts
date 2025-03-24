@@ -26,7 +26,6 @@ export const badgeVariants = cva({
         color: 'green.100'
       },
       table: {
-
         padding: '0.4rem 1.2rem',
         backgroundColor: 'green.10',
         color: 'green.90'
