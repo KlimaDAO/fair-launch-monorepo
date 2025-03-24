@@ -23,6 +23,7 @@ import { formatUnits } from "viem";
 import { useAccount } from "wagmi";
 import * as styles from "../styles";
 import { MdKeyboardArrowLeft, MdKeyboardArrowRight } from "react-icons/md";
+import { Dropdown } from "@components/dropdown";
 
 interface Props<T> {
   data: T[];
@@ -39,9 +40,15 @@ const isUserWallet = (walletAddress: string, address: string) => {
   return walletAddress.toLowerCase() === address?.toLowerCase();
 };
 
+const dropdownItems = [
+  { value: "asc", label: "Points - high to low" },
+  { value: "desc", label: "Points - low to high" },
+];
+
 export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) => {
   const { address } = useAccount();
   const [sorting, setSorting] = useState<SortingState>([])
+
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 2,
@@ -142,15 +149,51 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
     columns,
     data: props.data,
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(), 
+    getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     onPaginationChange: setPagination,
-    state: props.showPagination ? { pagination, sorting } : undefined,
+    onSortingChange: setSorting,
+    state: props.showPagination ? {
+      pagination,
+      sorting
+    } : undefined,
   });
+
+  const handleSortOrderChange = (value: string) =>
+    setSorting([{ id: 'totalPoints', desc: value !== 'desc' }]);
 
   return (
     <>
-      <div className={css({ hideFrom: "md", width: "100%" })}>
+      <div
+        className={clsx(
+          styles.flexRow,
+          css({
+            flexDirection: "column !important",
+            lg: { flexDirection: "row !important" },
+          })
+        )}
+      >
+        <div className={styles.title}>Leaderboard</div>
+        {props.showPagination && (
+          <div
+            className={clsx(
+              styles.flexRow,
+              css({
+                flexDirection: "column !important",
+                lg: { flexDirection: "row !important" },
+              })
+            )}
+          >
+            <label className={styles.sortByLabel}>Sort by</label>
+            <Dropdown
+              items={dropdownItems}
+              defaultSelected={dropdownItems[0]}
+              onSelect={(value) => handleSortOrderChange(value)}
+            />
+          </div>
+        )}
+      </div>
+      <div className={clsx(styles.flexRow, css({ hideFrom: "md", width: "100%" }))}>
         {table.getRowModel().rows.length ? (
           <>
             {table.getRowModel().rows.map((row) => {

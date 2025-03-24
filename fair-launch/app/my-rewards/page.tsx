@@ -2,6 +2,7 @@ import { abi as erc20Abi } from "@abi/erc20";
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
 import { calculateLeaderboardPoints } from "@actions/leaderboards-action";
 import { Badge } from "@components/badge";
+import { NextStepViewport } from "nextstepjs";
 import { StakeDialog } from "@components/dialogs/stake-dialog";
 import { LeaderboardsTable } from "@components/tables/leaderboards";
 import { StakeData, StakesTable } from "@components/tables/stakes";
@@ -113,7 +114,7 @@ const Page: FC = async () => {
       <div className={styles.card}>
         <div className={styles.cardInner}>
           <h5 className={styles.cardTitle}>My KLIMA(v0) Deposited</h5>
-          <div className={styles.cardContents}>
+          <div id="step1" className={styles.cardContents}>
             <div
               style={{
                 display: "flex",
@@ -132,7 +133,7 @@ const Page: FC = async () => {
                 )}
               </div>
             </div>
-            <div id="step1" className={styles.secondaryText}>
+            <div className={styles.secondaryText}>
               <strong>&lt;{tokenPercentage.toFixed(2)}%</strong> of{" "}
               <strong>
                 {formatLargeNumber(Number(formatGwei(totalSupply as bigint)))}
@@ -178,10 +179,7 @@ const Page: FC = async () => {
       <div className={styles.twoCols}>
         <div className={styles.card}>
           <div className={styles.cardInner}>
-            <h5 className={styles.cardTitle}>Leaderboard</h5>
-            <div className={styles.cardContents}>
-              <LeaderboardsTable data={(leaderboardData as any[]) || []} />
-            </div>
+            <LeaderboardsTable data={(leaderboardData as any[]) || []} />
             <Link className={styles.leaderboardLink} href="/protocol">
               View full leaderboard
             </Link>

@@ -5,6 +5,7 @@ import "@styles/globals.css";
 import { firaCode, inter } from "@utils/fonts";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import { NextStepProvider } from "nextstepjs";
 import type { FC, ReactNode } from "react";
 
 export const metadata: Metadata = {
@@ -22,9 +23,9 @@ const RootLayout: FC<Props> = async (props) => {
     <html lang="en">
       <body className={`${inter.variable} ${firaCode.variable}`}>
         <WalletProvider cookie={cookie}>
-          <IntroStepProvider>
+          <NextStepProvider>
             {props.children}
-          </IntroStepProvider>
+          </NextStepProvider>
         </WalletProvider>
       </body>
     </html>

@@ -102,13 +102,6 @@ export const cardContents = css({
   gap: '1.2rem',
 });
 
-export const sortByLabel = css({
-  fontSize: 'sm',
-  lineHeight: 'sm',
-  fontWeight: 500,
-  color: 'void.80',
-});
-
 export const mainText = css({
   fontSize: '2rem',
   fontWeight: 700,

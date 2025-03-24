@@ -18,11 +18,6 @@ import { css } from "styled-system/css";
 import { erc20Abi, formatGwei, formatUnits } from "viem";
 import * as styles from "./styles";
 
-const dropdownItems = [
-  { value: "1", label: "Points - high to low" },
-  { value: "2", label: "Points - low to high" },
-];
-
 const Page: FC = async () => {
   const klimaPrice = await fetch(
     "https://base.klimadao.finance/api/prices?symbols=KLIMA"
@@ -103,38 +98,7 @@ const Page: FC = async () => {
       </div>
       <div className={styles.card}>
         <div className={styles.cardInner}>
-          <div
-            className={clsx(
-              styles.cardContents,
-              css({
-                flexDirection: "column !important",
-                lg: { flexDirection: "row !important" },
-              })
-            )}
-          >
-            <div className={styles.cardTitle}>Leaderboard</div>
-            <div
-              className={clsx(
-                styles.cardContents,
-                css({
-                  flexDirection: "column !important",
-                  lg: { flexDirection: "row !important" },
-                })
-              )}
-            >
-              <label className={styles.sortByLabel}>Sort by</label>
-              <Dropdown
-                selected={dropdownItems[0]}
-                items={[
-                  { value: "1", label: "Points - high to low" },
-                  { value: "2", label: "Points - low to high" },
-                ]}
-              />
-            </div>
-          </div>
-          <div className={styles.cardContents}>
-            <LeaderboardsTable showPagination data={(leaderboardData as any[]) || []} />
-          </div>
+          <LeaderboardsTable showPagination data={(leaderboardData as any[]) || []} />
         </div>
       </div>
     </>

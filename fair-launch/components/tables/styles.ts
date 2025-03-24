@@ -98,3 +98,25 @@ export const paginationText = css({
   fontWeight: 400,
   color: 'void.60',
 });
+
+export const title = css({
+  fontSize: 'base',
+  lineHeight: 'base',
+  fontWeight: 400,
+  color: 'void.80',
+});
+
+export const sortByLabel = css({
+  fontSize: 'sm',
+  lineHeight: 'sm',
+  fontWeight: 500,
+  color: 'void.80',
+});
+
+export const flexRow = css({
+  display: 'flex',
+  alignItems: 'center',
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  gap: '1.2rem',
+});
