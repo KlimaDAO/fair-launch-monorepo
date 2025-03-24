@@ -51,7 +51,7 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
 
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
-    pageSize: 2,
+    pageSize: 100,
   })
 
   const columns: ColumnDef<T>[] = useMemo(
@@ -116,7 +116,7 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
                 [styles.userWalletText]: userWallet,
               })}
             >
-              {formatNumber(formatUnits(BigInt(value as string), 9))}
+              {formatNumber(formatUnits(BigInt(value as string), 9), 2)}
             </div>
           );
         },

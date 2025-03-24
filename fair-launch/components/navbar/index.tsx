@@ -5,7 +5,7 @@ import Image from "next/image";
 import klimaLogo from "@public/kp-logo.svg";
 import { LuMenu } from "react-icons/lu";
 import * as styles from "./styles";
-import { MdClose, MdLogout } from "react-icons/md";
+import { MdClose } from "react-icons/md";
 import { useAccount, useDisconnect } from "wagmi";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -36,7 +36,6 @@ export const Navbar: FC = () => {
           </button>
         )}
       </div>
-
       {isMenuOpen && (
         <div className={styles.fullScreenMenu}>
           <button onClick={toggleMenu} className={styles.closeButton}>
