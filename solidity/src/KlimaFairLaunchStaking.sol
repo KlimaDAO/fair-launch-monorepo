@@ -422,34 +422,42 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     /// @param _user Address of the user to update
     /// @dev Distributes burned tokens proportionally based on organic points
     function _updateBurnDistribution(address _user) internal {
-        // Load stakes into memory
-        Stake[] memory stakes = userStakes[_user];
-        Stake[] memory updatedStakes = new Stake[](stakes.length);
-
-        // Process all stakes in memory
-        for (uint256 i = 0; i < stakes.length; i++) {
-            Stake memory currentStake = stakes[i];
+        // Skip if burnRatio is zero (no burns have occurred)
+        if (burnRatio == 0) {
+            return;
+        }
+        
+        // Get reference to storage array (no copy made yet)
+        Stake[] storage userStakesList = userStakes[_user];
+        
+        // Skip if no stakes to update
+        if (userStakesList.length == 0) {
+            return;
+        }
+        
+        // Process stakes directly from storage to memory and back
+        for (uint256 i = 0; i < userStakesList.length; i++) {
+            // Load stake into memory
+            Stake memory currentStake = userStakesList[i];
             
             // Skip if amount is zero
             if (currentStake.amount == 0) {
-                updatedStakes[i] = currentStake;
                 continue;
             }
-
+            
+            // Skip if burnRatio hasn't changed for this stake
             uint256 burnRatioDiff = burnRatio - currentStake.burnRatioSnapshot;
-            if (burnRatioDiff > 0) {
-                uint256 newBurnAccrual = (currentStake.organicPoints * burnRatioDiff) / GROWTH_DENOMINATOR;
-                currentStake.burnAccrued += newBurnAccrual;
+            if (burnRatioDiff == 0) {
+                continue;
             }
+            
+            // Only update if there's a difference in burn ratio
+            uint256 newBurnAccrual = (currentStake.organicPoints * burnRatioDiff) / GROWTH_DENOMINATOR;
+            currentStake.burnAccrued += newBurnAccrual;
             currentStake.burnRatioSnapshot = burnRatio;
             
-            updatedStakes[i] = currentStake;
-        }
-
-        // Update storage once
-        Stake[] storage userStakesList = userStakes[_user];
-        for (uint256 i = 0; i < stakes.length; i++) {
-            userStakesList[i] = updatedStakes[i];
+            // Only write back to storage if modified
+            userStakesList[i] = currentStake;
         }
     }
 
