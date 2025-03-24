@@ -92,10 +92,10 @@ const Page: FC = async () => {
         <div className={styles.cardInner}>
           <h5 className={styles.cardTitle}>KLIMA(v1) Burned</h5>
           <div className={styles.cardContents}>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.8rem" }}>
               <Image src={klimav1Logo} alt="Klima V1 Logo" />
               <div className={styles.mainText}>
-                {formatNumber(formatUnits(totalBurned, 9))}
+                {formatNumber(formatUnits(totalBurned, 9), 2)}
               </div>
             </div>
           </div>
@@ -133,10 +133,7 @@ const Page: FC = async () => {
             </div>
           </div>
           <div className={styles.cardContents}>
-            <LeaderboardsTable data={(leaderboardData as any[]) || []} />
-          </div>
-          <div className={css({ hideBelow: "md" })}>
-            Showing 1 to 2 of 2 results
+            <LeaderboardsTable showPagination data={(leaderboardData as any[]) || []} />
           </div>
         </div>
       </div>

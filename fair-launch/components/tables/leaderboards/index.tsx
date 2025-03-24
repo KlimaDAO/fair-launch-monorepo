@@ -5,6 +5,10 @@ import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  PaginationState,
+  SortingState,
   useReactTable,
 } from "@tanstack/react-table";
 import {
@@ -13,14 +17,16 @@ import {
   truncateAddress,
 } from "@utils/formatting";
 import clsx from "clsx";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { css } from "styled-system/css";
 import { formatUnits } from "viem";
 import { useAccount } from "wagmi";
 import * as styles from "../styles";
+import { MdKeyboardArrowLeft, MdKeyboardArrowRight } from "react-icons/md";
 
 interface Props<T> {
   data: T[];
+  showPagination?: boolean;
 }
 
 export interface LeaderboardData {
@@ -33,10 +39,14 @@ const isUserWallet = (walletAddress: string, address: string) => {
   return walletAddress.toLowerCase() === address?.toLowerCase();
 };
 
-export const LeaderboardsTable = <T extends LeaderboardData>({
-  data,
-}: Props<T>) => {
+export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) => {
   const { address } = useAccount();
+  const [sorting, setSorting] = useState<SortingState>([])
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 2,
+  })
+
   const columns: ColumnDef<T>[] = useMemo(
     () => [
       {
@@ -129,9 +139,13 @@ export const LeaderboardsTable = <T extends LeaderboardData>({
   );
 
   const table = useReactTable({
-    data,
     columns,
+    data: props.data,
     getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(), 
+    getPaginationRowModel: getPaginationRowModel(),
+    onPaginationChange: setPagination,
+    state: props.showPagination ? { pagination, sorting } : undefined,
   });
 
   return (
@@ -303,6 +317,36 @@ export const LeaderboardsTable = <T extends LeaderboardData>({
             )}
           </tbody>
         </table>
+        {props.showPagination && <div className={styles.pagination}>
+          <div>
+            {/* <span className="flex items-center gap-1">
+              <strong>
+                {table.getState().pagination.pageIndex + 1} of{' '}
+                {table.getPageCount().toLocaleString()}
+              </strong>
+            </span> */}
+            <div className={styles.paginationText}>
+              Showing {table.getRowModel().rows.length.toLocaleString()} of{' '}
+              {table.getRowCount().toLocaleString()} results
+            </div>
+          </div>
+          <div>
+            <button
+              className={styles.paginationButton}
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              <MdKeyboardArrowLeft fontSize="2rem" />
+            </button>
+            <button
+              className={styles.paginationButton}
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              <MdKeyboardArrowRight fontSize="2rem" />
+            </button>
+          </div>
+        </div>}
       </div>
     </>
   );

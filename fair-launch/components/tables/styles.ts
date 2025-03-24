@@ -38,6 +38,7 @@ export const tableBody = css({
 
 export const tableCell = css({
   padding: '1.2rem 0',
+  height: '5.3rem',
   fontWeight: 400,
   fontSize: 'sm',
   color: 'void.80',
@@ -69,4 +70,31 @@ export const penaltyText = css({
 
 export const userWalletText = css({
   color: 'green.70',
+});
+
+export const pagination = css({
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  gap: '1.2rem',
+  marginTop: '1.8rem',
+});
+
+export const paginationButton = css({
+  border: '0.1rem solid token(colors.void.40)',
+  borderRadius: '0.4rem',
+  padding: '0.4rem 0.6rem',
+  cursor: 'pointer',
+  height: '3.2rem',
+  '&:disabled': {
+    cursor: 'not-allowed',
+    opacity: 0.5,
+  },
+});
+
+export const paginationText = css({
+  fontSize: 'sm',
+  lineHeight: 'sm',
+  fontWeight: 400,
+  color: 'void.60',
 });
