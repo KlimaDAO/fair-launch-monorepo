@@ -430,11 +430,6 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         // Get reference to storage array (no copy made yet)
         Stake[] storage userStakesList = userStakes[_user];
         
-        // Skip if no stakes to update
-        if (userStakesList.length == 0) {
-            return;
-        }
-        
         // Process stakes directly from storage to memory and back
         for (uint256 i = 0; i < userStakesList.length; i++) {
             // Load stake into memory
