@@ -193,204 +193,212 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
           </div>
         )}
       </div>
-      <div className={clsx(styles.flexRow, css({ hideFrom: "md", width: "100%" }))}>
-        {table.getRowModel().rows.length ? (
-          <>
-            {table.getRowModel().rows.map((row) => {
-              const firstCell = row.getAllCells()[0];
-              const walletAddress = row.getAllCells()[1].getContext().getValue()
-              return (
-                <div
-                  key={row.id}
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "0rem",
-                    padding: "1.2rem 0",
-                    borderBottom: "1px solid #999999",
-                  }}
-                >
+      <div className={clsx(styles.flexRow,
+        css({
+          hideFrom: "md", width: "100%",
+          flexDirection: "column !important",
+          lg: { flexDirection: "row !important" },
+        }))}>
+        {
+          table.getRowModel().rows.length ? (
+            <>
+              {table.getRowModel().rows.map((row) => {
+                const firstCell = row.getAllCells()[0];
+                const walletAddress = row.getAllCells()[1].getContext().getValue()
+                return (
                   <div
+                    key={row.id}
                     style={{
                       width: '100%',
-                      marginBottom: "1.2rem",
-                      color: "#1E1e1e",
-                      fontWeight: "700",
-                      fontSize: "1.8rem",
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: '0.8rem',
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "0rem",
+                      padding: "1.2rem 0",
+                      borderBottom: "1px solid #999999",
                     }}
                   >
-                    <div className={css({
-                      textAlign: "center",
-                      width: "3.3rem",
-                    })}>
-                      {flexRender(
-                        firstCell?.column?.columnDef?.cell,
-                        firstCell?.getContext()
+                    <div
+                      style={{
+                        width: '100%',
+                        marginBottom: "1.2rem",
+                        color: "#1E1e1e",
+                        fontWeight: "700",
+                        fontSize: "1.8rem",
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '0.8rem',
+                      }}
+                    >
+                      <div className={css({
+                        textAlign: "center",
+                        width: "3.3rem",
+                      })}>
+                        {flexRender(
+                          firstCell?.column?.columnDef?.cell,
+                          firstCell?.getContext()
+                        )}
+                      </div>
+                      {isUserWallet(walletAddress as string, address as string) && (
+                        <Badge variant="table" title="You" />
                       )}
                     </div>
-                    {isUserWallet(walletAddress as string, address as string) && (
-                      <Badge variant="table" title="You" />
-                    )}
-                  </div>
-                  {table.getHeaderGroups().map((headerGroup) => (
+                    {table.getHeaderGroups().map((headerGroup) => (
+                      <div
+                        className={css({
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          gap: "0rem",
+                        })}
+                        key={headerGroup.id}
+                      >
+                        {headerGroup.headers.map((header) => {
+                          if (header.id === "place") return null;
+                          return (
+                            <div
+                              className={css({
+                                fontWeight: 400,
+                                fontSize: "1.2rem",
+                                lineHeight: "1.6rem",
+                                color: "#777",
+                              })}
+                              key={header.id}
+                            >
+                              {flexRender(
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ))}
                     <div
-                      className={css({
+                      style={{
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "space-between",
-                        gap: "0rem",
-                      })}
-                      key={headerGroup.id}
+                        gap: "0.8rem",
+                      }}
                     >
-                      {headerGroup.headers.map((header) => {
-                        if (header.id === "place") return null;
+                      {row.getVisibleCells().map((cell) => {
+                        if (cell.column.id === "place") return null;
                         return (
                           <div
                             className={css({
                               fontWeight: 400,
-                              fontSize: "1.2rem",
-                              lineHeight: "1.6rem",
-                              color: "#777",
+                              fontSize: "1.4rem",
+                              lineHeight: "2rem",
+                              color: "#1E1e1e",
                             })}
-                            key={header.id}
+                            key={cell.id}
                           >
-                            {flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
                           </div>
                         );
                       })}
                     </div>
-                  ))}
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      gap: "0.8rem",
-                    }}
-                  >
-                    {row.getVisibleCells().map((cell) => {
-                      if (cell.column.id === "place") return null;
-                      return (
-                        <div
-                          className={css({
-                            fontWeight: 400,
-                            fontSize: "1.4rem",
-                            lineHeight: "2rem",
-                            color: "#1E1e1e",
-                          })}
-                          key={cell.id}
-                        >
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </div>
-                      );
-                    })}
                   </div>
-                </div>
-              )
-            })}
-          </>) : (
-          <div className={styles.tableCell}>
-            <i>No data to display yet</i>
-          </div>
-        )}
-      </div>
-      <div
-        className={clsx(
-          styles.tableContainer,
-          css({ hideBelow: "md", width: "100%" })
-        )}
-      >
-        <table className={styles.table}>
-          <thead className={styles.tableHead}>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <th
-                    key={header.id}
-                    aria-label="leaderboard-table-head"
-                    className={styles.tableHead}
-                    colSpan={header.colSpan}
-                  >
-                    <div>
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                    </div>
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody className={styles.tableBody}>
-            {table.getRowModel().rows.length ? (
-              <>
-                {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id}>
-                    {row.getVisibleCells().map((cell) => {
-                      return (
-                        <td
-                          key={cell.id}
-                          aria-label="leaderboard-table-cell"
-                          className={styles.tableCell}
-                        >
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext()
-                          )}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </>
-            ) : (
-              <tr>
-                <td className={styles.tableCell} colSpan={4}>
-                  <i>No data to display yet</i>
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-        {props.showPagination && <div className={styles.pagination}>
-          <div>
-            {/* <span className="flex items-center gap-1">
+                )
+              })}
+            </>) : (
+            <div className={styles.tableCell}>
+              <i>No data to display yet</i>
+            </div>
+          )
+        }
+      </div >
+    <div
+      className={clsx(
+        styles.tableContainer,
+        css({ hideBelow: "md", width: "100%" })
+      )}
+    >
+      <table className={styles.table}>
+        <thead className={styles.tableHead}>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <tr key={headerGroup.id}>
+              {headerGroup.headers.map((header) => (
+                <th
+                  key={header.id}
+                  aria-label="leaderboard-table-head"
+                  className={styles.tableHead}
+                  colSpan={header.colSpan}
+                >
+                  <div>
+                    {flexRender(
+                      header.column.columnDef.header,
+                      header.getContext()
+                    )}
+                  </div>
+                </th>
+              ))}
+            </tr>
+          ))}
+        </thead>
+        <tbody className={styles.tableBody}>
+          {table.getRowModel().rows.length ? (
+            <>
+              {table.getRowModel().rows.map((row) => (
+                <tr key={row.id}>
+                  {row.getVisibleCells().map((cell) => {
+                    return (
+                      <td
+                        key={cell.id}
+                        aria-label="leaderboard-table-cell"
+                        className={styles.tableCell}
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </>
+          ) : (
+            <tr>
+              <td className={styles.tableCell} colSpan={4}>
+                <i>No data to display yet</i>
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+      {props.showPagination && <div className={styles.pagination}>
+        <div>
+          {/* <span className="flex items-center gap-1">
               <strong>
                 {table.getState().pagination.pageIndex + 1} of{' '}
                 {table.getPageCount().toLocaleString()}
               </strong>
             </span> */}
-            <div className={styles.paginationText}>
-              Showing {table.getRowModel().rows.length.toLocaleString()} of{' '}
-              {table.getRowCount().toLocaleString()} results
-            </div>
+          <div className={styles.paginationText}>
+            Showing {table.getRowModel().rows.length.toLocaleString()} of{' '}
+            {table.getRowCount().toLocaleString()} results
           </div>
-          <div>
-            <button
-              className={styles.paginationButton}
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-            >
-              <MdKeyboardArrowLeft fontSize="2rem" />
-            </button>
-            <button
-              className={styles.paginationButton}
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-            >
-              <MdKeyboardArrowRight fontSize="2rem" />
-            </button>
-          </div>
-        </div>}
-      </div>
+        </div>
+        <div>
+          <button
+            className={styles.paginationButton}
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            <MdKeyboardArrowLeft fontSize="2rem" />
+          </button>
+          <button
+            className={styles.paginationButton}
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            <MdKeyboardArrowRight fontSize="2rem" />
+          </button>
+        </div>
+      </div>}
+    </div>
     </>
   );
 };

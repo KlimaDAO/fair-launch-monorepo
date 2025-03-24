@@ -15,7 +15,7 @@ export function middleware(request: NextRequest) {
   const totalConnections = cookieValue?.state?.connections?.value?.length ?? 0;
 
   if (totalConnections === 0 && pathname !== '/') {
-    //   // if no connections exist, redirect to home
+    // if no connections exist, redirect to home
     return NextResponse.redirect(new URL('/', request.url));
   } else if (totalConnections > 0 && pathname === '/') {
     // if connections exist, redirect to my rewards

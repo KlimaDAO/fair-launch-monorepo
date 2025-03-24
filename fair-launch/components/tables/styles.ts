@@ -115,8 +115,12 @@ export const sortByLabel = css({
 
 export const flexRow = css({
   display: 'flex',
-  alignItems: 'center',
+  alignItems: 'flex-start',
   flexDirection: 'row',
   justifyContent: 'space-between',
   gap: '1.2rem',
+
+  lg: {
+    alignItems: 'center',
+  }
 });
