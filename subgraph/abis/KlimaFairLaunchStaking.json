@@ -147,6 +147,20 @@
   },
   {
     "type": "function",
+    "name": "maxTotalStakesPerUser",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "minStakeAmount",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "owner",
     "inputs": [],
     "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
@@ -251,6 +265,24 @@
     "inputs": [
       {
         "name": "_preStakingWindow",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setStakeLimits",
+    "inputs": [
+      {
+        "name": "_minStakeAmount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "_maxTotalStakesPerUser",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -605,6 +637,25 @@
       },
       {
         "name": "startTimestamp",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "StakeLimitsSet",
+    "inputs": [
+      {
+        "name": "minStakeAmount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "maxTotalStakesPerUser",
         "type": "uint256",
         "indexed": false,
         "internalType": "uint256"

@@ -8,9 +8,9 @@ dataSources:
     name: KlimaFairLaunchStaking
     network: base-sepolia
     source:
-      address: '0x779085797E1AC3973dCCCf7499EE09033e5b2BBE'
+      address: '0x458B094a27E3841Cb6dCe2AAda1150ff23dF04bf'
       abi: KlimaFairLaunchStaking
-      startBlock: 23156880
+      startBlock: 23269275
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
