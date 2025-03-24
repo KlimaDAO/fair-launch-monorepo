@@ -61,7 +61,11 @@
     "name": "calculateBurn",
     "inputs": [
       { "name": "amount", "type": "uint256", "internalType": "uint256" },
-      { "name": "stakeStartTime", "type": "uint256", "internalType": "uint256" }
+      {
+        "name": "stakeStartTime",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
     ],
     "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
     "stateMutability": "view"
@@ -164,6 +168,13 @@
   },
   {
     "type": "function",
+    "name": "preStakingWindow",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "previewUserPoints",
     "inputs": [
       { "name": "user", "type": "address", "internalType": "address" }
@@ -230,6 +241,19 @@
     "name": "setKlimaXSupply",
     "inputs": [
       { "name": "_newValue", "type": "uint256", "internalType": "uint256" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setPreStakingWindow",
+    "inputs": [
+      {
+        "name": "_preStakingWindow",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
@@ -360,14 +384,22 @@
         "type": "uint256",
         "internalType": "uint256"
       },
-      { "name": "organicPoints", "type": "uint256", "internalType": "uint256" },
+      {
+        "name": "organicPoints",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
       {
         "name": "burnRatioSnapshot",
         "type": "uint256",
         "internalType": "uint256"
       },
       { "name": "burnAccrued", "type": "uint256", "internalType": "uint256" },
-      { "name": "hasBeenClaimed", "type": "uint256", "internalType": "uint256" }
+      {
+        "name": "hasBeenClaimed",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
     ],
     "stateMutability": "view"
   },
@@ -470,6 +502,19 @@
         "type": "address",
         "indexed": false,
         "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "PreStakingWindowSet",
+    "inputs": [
+      {
+        "name": "preStakingWindow",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
       }
     ],
     "anonymous": false
@@ -661,7 +706,11 @@
     "type": "error",
     "name": "ERC1967InvalidImplementation",
     "inputs": [
-      { "name": "implementation", "type": "address", "internalType": "address" }
+      {
+        "name": "implementation",
+        "type": "address",
+        "internalType": "address"
+      }
     ]
   },
   { "type": "error", "name": "ERC1967NonPayable", "inputs": [] },
