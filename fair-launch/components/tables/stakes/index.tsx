@@ -7,7 +7,7 @@ import {
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { formatNumber, formatTimestamp } from "@utils/formatting";
+import { formatLargeNumber, formatNumber, formatTimestamp } from "@utils/formatting";
 import clsx from "clsx";
 import { useMemo } from "react";
 import { css } from "styled-system/css";
@@ -57,7 +57,7 @@ export const StakesTable = <T extends StakeData>({
         header: "Points",
         cell: ({ row }) => {
           const points = row.original.points;
-          return <>{points}</>;
+          return <>{formatLargeNumber(Number(formatUnits(BigInt(points as string), 9)))}</>;
         },
       },
       {

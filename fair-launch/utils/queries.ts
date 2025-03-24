@@ -1,5 +1,6 @@
 import { request } from "graphql-request";
-import { SUBGRAPH_URL } from "./constants";
+import { FAIR_LAUNCH_CONTRACT_ADDRESS, SUBGRAPH_URL } from "./constants";
+import { readContract } from "viem/actions";
 
 export interface Stake {
   id: string;
@@ -27,7 +28,7 @@ export const fetchUserStakes = async (address: string | null): Promise<{ stakes?
   const result = await request(
     SUBGRAPH_URL,
     `query ($address: String!) {
-      stakes(first: 100, orderBy: startTimestamp, orderDirection: desc, where: { wallet: $address }) {
+      stakes(first: 100, orderBy: startTimestamp, orderDirection: asc, where: { wallet: $address }) {
         id
         amount
         startTimestamp
@@ -37,6 +38,7 @@ export const fetchUserStakes = async (address: string | null): Promise<{ stakes?
     }`,
     { address: address.toLowerCase() }
   );
+
   return result || { stakes: [] };
 };
 

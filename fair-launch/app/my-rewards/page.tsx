@@ -42,6 +42,12 @@ const Page: FC = async () => {
   const userStakes = await fetchUserStakes(walletAddress ?? null);
   const leaderboardData = await calculateLeaderboardPoints(5);
 
+  const burnRatio = await readContract(config, {
+    abi: klimaFairLaunchAbi,
+    address: FAIR_LAUNCH_CONTRACT_ADDRESS,
+    functionName: "burnRatio",
+  });
+
   const totalSupply = await readContract(config, {
     abi: erc20Abi,
     address: KLIMA_V0_TOKEN_ADDRESS,
@@ -67,6 +73,42 @@ const Page: FC = async () => {
     args: [walletAddress],
   });
 
+  const userStakesInfo = await Promise.all(
+    (userStakes?.stakes || []).map(async (stake, index) => {
+      console.log('stake', stake);
+      let userStakesInfo = await readContract(config, {
+        abi: klimaFairLaunchAbi,
+        address: FAIR_LAUNCH_CONTRACT_ADDRESS,
+        functionName: "userStakes",
+        args: [walletAddress, index],
+      });
+
+      let [amount, stakeStartTime, , bonusMultiplier, organicPoints, burnRatioSnapshot, burnAccrued] = userStakesInfo as [string, string, string, string, string, string, string];
+      const currentTimestamp = Math.floor(Date.now() / 1000);
+      const elapsedTime = currentTimestamp - Number(stakeStartTime);
+      const newPoints = (Number(amount) * Number(bonusMultiplier) * elapsedTime * Number(growthRate)) / 100000;
+      organicPoints = (Number(organicPoints) + Number(newPoints)).toString();
+
+      const burnRatioDiff = Number(burnRatio) - Number(burnRatioSnapshot);
+      if (burnRatioDiff > 0) {
+        const newBurnAccrual = (Number(organicPoints) * burnRatioDiff) / 100000;
+        burnAccrued = (Number(burnAccrued) + Number(newBurnAccrual)).toString();
+      }
+      // let totalPoints = Number(organicPoints) + Number(burnAccrued);
+
+      return {
+        id: stake.id,
+        amount: stake.amount,
+        startTimestamp: stake.startTimestamp,
+        stakeCreationHash: stake.stakeCreationHash,
+        multiplier: stake.multiplier,
+        points: newPoints,
+      };
+    }));
+
+  console.log('userStakes.stakes', userStakes.stakes);
+  console.log('userStakesInfo12', userStakesInfo);
+
   const tokenPercentage = calculateTokenPercentage(
     Number(formatUnits(BigInt(totalUserStakes(userStakes.stakes || [])), 9)),
     Number(formatGwei(totalSupply as bigint))
@@ -77,15 +119,22 @@ const Page: FC = async () => {
     Number(formatGwei(getTotalPoints as bigint))
   );
 
+  // const klimaXAllocation = await readContract(config, {
+  //   abi: klimaFairLaunchAbi,
+  //   address: FAIR_LAUNCH_CONTRACT_ADDRESS,
+  //   functionName: "klimaXAllocation",
+  //   args: [previewUserPoints],
+  // });
+
   // calculate penalties to pass to the stakes table
   const userStakesData = await Promise.all(
-    (userStakes.stakes || []).map(async (row) => {
-      const points = calculateUserPoints(
-        String(growthRate),
-        Number(row.amount),
-        Number(row.multiplier),
-        Number(row.startTimestamp)
-      );
+    (userStakesInfo || []).sort((a, b) => Number(b.startTimestamp) - Number(a.startTimestamp)).map(async (row) => {
+      // const points = calculateUserPoints(
+      //   String(growthRate),
+      //   Number(row.amount),
+      //   Number(row.multiplier),
+      //   Number(row.startTimestamp)
+      // );
       const { burnValue, percentage } = await calculateUnstakePenalty(
         row.amount,
         row.startTimestamp
@@ -93,7 +142,7 @@ const Page: FC = async () => {
       return {
         ...row,
         id: row.id,
-        points,
+        points: row.points,
         burnValue,
         burnPercentage: percentage,
       };
