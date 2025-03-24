@@ -229,10 +229,6 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         Stake[] storage userStakesList = userStakes[msg.sender];
         require(userStakesList.length > 0, "No stakes found");
 
-        // Track which indices were modified
-        uint256[] memory modifiedIndices = new uint256[](userStakesList.length);
-        uint256 modifiedCount = 0;
-        
         // Process stakes from newest to oldest
         for (uint256 i = userStakesList.length; i > 0 && totalUnstake < amount; i--) {
             uint256 index = i - 1;
@@ -264,7 +260,6 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
             // Only write back to storage if modified
             if (stakeUnstakeAmount > 0) {
                 userStakesList[index] = currentStake;
-                modifiedIndices[modifiedCount++] = index;
             }
         }
 
