@@ -42,6 +42,13 @@ const Page: FC = async () => {
   const userStakes = await fetchUserStakes(walletAddress ?? null);
   const leaderboardData = await calculateLeaderboardPoints(5);
 
+  const klimaXSupply = await readContract(config, {
+    abi: klimaFairLaunchAbi,
+    address: FAIR_LAUNCH_CONTRACT_ADDRESS,
+    functionName: "KLIMAX_SUPPLY",
+  });
+
+
   const burnRatio = await readContract(config, {
     abi: klimaFairLaunchAbi,
     address: FAIR_LAUNCH_CONTRACT_ADDRESS,
@@ -73,6 +80,8 @@ const Page: FC = async () => {
     args: [walletAddress],
   });
 
+  // ;
+
   const userStakesInfo = await Promise.all(
     (userStakes?.stakes || []).map(async (stake, index) => {
       console.log('stake', stake);
@@ -85,15 +94,17 @@ const Page: FC = async () => {
 
       let [amount, stakeStartTime, , bonusMultiplier, organicPoints, burnRatioSnapshot, burnAccrued] = userStakesInfo as [string, string, string, string, string, string, string];
       const currentTimestamp = Math.floor(Date.now() / 1000);
-      const elapsedTime = currentTimestamp - Number(stakeStartTime);
-      const newPoints = (Number(amount) * Number(bonusMultiplier) * elapsedTime * Number(growthRate)) / 100000;
-      organicPoints = (Number(organicPoints) + Number(newPoints)).toString();
+      const elapsedTime = BigInt(currentTimestamp) - BigInt(stakeStartTime);
+      const newPoints = (BigInt(amount) * BigInt(bonusMultiplier) * BigInt(elapsedTime) * BigInt(growthRate as bigint)) / BigInt(100000);
+      organicPoints = (BigInt(organicPoints) + BigInt(newPoints)).toString();
 
-      const burnRatioDiff = Number(burnRatio) - Number(burnRatioSnapshot);
+      const burnRatioDiff = BigInt(burnRatio as bigint) - BigInt(burnRatioSnapshot);
       if (burnRatioDiff > 0) {
-        const newBurnAccrual = (Number(organicPoints) * burnRatioDiff) / 100000;
-        burnAccrued = (Number(burnAccrued) + Number(newBurnAccrual)).toString();
+        const newBurnAccrual = (BigInt(organicPoints) * burnRatioDiff) / BigInt(100000);
+        burnAccrued = (BigInt(burnAccrued) + BigInt(newBurnAccrual)).toString();
       }
+
+      let klimaxAllocation = (BigInt(newPoints) * BigInt(klimaXSupply as bigint)) / BigInt(getTotalPoints as bigint);
       // let totalPoints = Number(organicPoints) + Number(burnAccrued);
 
       return {
@@ -103,11 +114,9 @@ const Page: FC = async () => {
         stakeCreationHash: stake.stakeCreationHash,
         multiplier: stake.multiplier,
         points: newPoints,
+        klimaxAllocation: klimaxAllocation,
       };
     }));
-
-  console.log('userStakes.stakes', userStakes.stakes);
-  console.log('userStakesInfo12', userStakesInfo);
 
   const tokenPercentage = calculateTokenPercentage(
     Number(formatUnits(BigInt(totalUserStakes(userStakes.stakes || [])), 9)),
@@ -119,22 +128,9 @@ const Page: FC = async () => {
     Number(formatGwei(getTotalPoints as bigint))
   );
 
-  // const klimaXAllocation = await readContract(config, {
-  //   abi: klimaFairLaunchAbi,
-  //   address: FAIR_LAUNCH_CONTRACT_ADDRESS,
-  //   functionName: "klimaXAllocation",
-  //   args: [previewUserPoints],
-  // });
-
   // calculate penalties to pass to the stakes table
   const userStakesData = await Promise.all(
     (userStakesInfo || []).sort((a, b) => Number(b.startTimestamp) - Number(a.startTimestamp)).map(async (row) => {
-      // const points = calculateUserPoints(
-      //   String(growthRate),
-      //   Number(row.amount),
-      //   Number(row.multiplier),
-      //   Number(row.startTimestamp)
-      // );
       const { burnValue, percentage } = await calculateUnstakePenalty(
         row.amount,
         row.startTimestamp
