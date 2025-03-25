@@ -173,7 +173,7 @@ export const KlimaXAllocationTable = <T extends Data>({
             ) : (
               <tr>
                 <td className={styles.tableCell} colSpan={6}>
-                  <i>None yet</i>
+                  <i>No data to show yet</i>
                 </td>
               </tr>
             )}

@@ -4,9 +4,7 @@ import { Sidebar } from "@components/sidebar";
 import type { Metadata } from "next";
 import type { FC, ReactNode } from "react";
 import * as styles from "./styles";
-import { IntroStepProvider } from "@providers/intro-step-provider";
 import { DisclaimerDialog } from "@components/dialogs/disclaimer-dialog";
-import { NextStepViewport } from "nextstepjs";
 
 export const metadata: Metadata = {
   title: "Klima Fair Launch dApp - My Rewards",
@@ -20,17 +18,15 @@ interface Props {
 const Layout: FC<Props> = (props) => (
   <main className={styles.body}>
     <Navbar />
-    <IntroStepProvider>
-      <div className={styles.container}>
-        <Sidebar />
-        <div className={styles.main}>
-          <div className={styles.content}>
-            {props.children}
-          </div>
-          <Footer />
+    <div className={styles.container}>
+      <Sidebar />
+      <div className={styles.main}>
+        <div className={styles.content}>
+          {props.children}
         </div>
+        <Footer />
       </div>
-    </IntroStepProvider>
+    </div>
     <DisclaimerDialog />
   </main>
 );

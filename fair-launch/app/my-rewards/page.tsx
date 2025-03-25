@@ -171,16 +171,17 @@ const Page: FC = async () => {
       <div className={styles.card}>
         <div className={styles.cardInner}>
           <h5 className={styles.cardTitle}>My KLIMA(v0) Deposited</h5>
-          <div id="step1" className={styles.cardContents}>
+          <div className={styles.cardContents}>
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
                 gap: "0.8rem",
               }}
+              id="step1"
             >
               <Image src={klimav1Logo} alt="Klima V1 Logo" />
-              <div className={styles.mainText}>
+              <div  className={styles.mainText}>
                 {formatNumber(
                   formatUnits(
                     BigInt(totalUserStakes(userStakes.stakes || [])),
@@ -192,7 +193,7 @@ const Page: FC = async () => {
             </div>
             <div className={styles.secondaryText}>
               <strong>&lt;{tokenPercentage.toFixed(2)}%</strong> of{" "}
-              <strong>
+              <strong >
                 {formatLargeNumber(Number(formatGwei(totalSupply as bigint)))}
               </strong>{" "}
             </div>

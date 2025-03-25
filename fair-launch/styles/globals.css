@@ -3,14 +3,14 @@
 :root {
   --background: #000;
   --foreground: #000;
-  --background-secondary: #FAFAFA;
+  --background-secondary: #fafafa;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #000;
     --foreground: #000;
-    --background-secondary: #FAFAFA;
+    --background-secondary: #fafafa;
   }
 }
 
@@ -41,4 +41,76 @@ a {
   html {
     color-scheme: dark;
   }
+}
+
+.driver-popover {
+  font-family: var(--font-inter) !important;
+  background-color: #464646 !important;
+}
+
+.driver-popover-arrow-side-top {
+  border-top-color: #464646 !important;
+}
+
+.driver-popover-arrow-side-bottom {
+  border-bottom-color: #464646 !important;
+}
+
+.driver-popover-arrow-side-left {
+  border-left-color: #464646 !important;
+}
+
+.driver-popover-arrow-side-right {
+  border-right-color: #464646 !important;
+}
+
+.driver-popover-description div {
+  font-family: var(--font-inter) !important;
+}
+
+.driver-popover-navigation-btns {
+  width: 100% !important;
+  margin: 1.6rem 0;
+  gap: 0.8rem;
+  display: flex !important;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between !important;
+}
+
+.driver-popover-progress-text {
+  color: #fff !important;
+  font-family: var(--font-inter) !important;
+  font-size: 1.2rem !important;
+  font-weight: 400 !important;
+}
+
+.driver-popover-footer {
+  margin-top: 0 !important;
+  flex-direction: column-reverse !important;
+}
+
+.driver-popover-prev-btn,
+.driver-popover-next-btn {
+  width: 100% !important;
+  text-align: center !important;
+  background-color: #fff !important;
+  height: 2.8rem !important;
+  border: none !important;
+  border-radius: 0.4rem !important;
+  font: unset !important;
+  font-size: 1.4rem !important;
+  font-weight: 500 !important;
+  font-family: var(--font-inter) !important;
+  text-shadow: none !important;
+}
+
+.driver-popover-prev-btn {
+  background-color: transparent !important;
+  border: 0.1rem solid #fff !important;
+  color: #fff !important;
+}
+
+.driver-popover-navigation-btns button+button {
+  margin-left: 0 !important;
 }

@@ -1,12 +1,11 @@
-import { IntroStepProvider } from "@providers/intro-step-provider";
 import { WalletProvider } from "@providers/wallet-provider";
 import "@rainbow-me/rainbowkit/styles.css";
 import "@styles/globals.css";
 import { firaCode, inter } from "@utils/fonts";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
-import { NextStepProvider } from "nextstepjs";
 import type { FC, ReactNode } from "react";
+import "driver.js/dist/driver.css";
 
 export const metadata: Metadata = {
   title: "Klima Fair Launch",
@@ -23,9 +22,7 @@ const RootLayout: FC<Props> = async (props) => {
     <html lang="en">
       <body className={`${inter.variable} ${firaCode.variable}`}>
         <WalletProvider cookie={cookie}>
-          <NextStepProvider>
-            {props.children}
-          </NextStepProvider>
+          {props.children}
         </WalletProvider>
       </body>
     </html>

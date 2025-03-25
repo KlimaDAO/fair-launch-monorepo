@@ -202,6 +202,7 @@ export const StakesTable = <T extends StakeData>({
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
                   <th
+                    id={header.id === "klimaxAllocation" ? "step4" : ""}
                     className={styles.tableHead}
                     key={header.id}
                     colSpan={header.colSpan}
@@ -218,15 +219,16 @@ export const StakesTable = <T extends StakeData>({
           <tbody className={styles.tableBody}>
             {table.getRowModel().rows.length ? (
               <>
-                {table.getRowModel().rows.map((row) => (
+                {table.getRowModel().rows.map((row, rowIndex) => (
                   <tr key={row.id}>
-                    {row.getVisibleCells().map((cell) => (
+                    {row.getVisibleCells().map((cell, cellIndex) => (
                       <td
                         className={clsx(
                           styles.tableCell,
                           styles.stakeTableCell
                         )}
                         key={cell.id}
+                        id={rowIndex === 0 && cellIndex === 0 ? "step3" : ""}
                       >
                         {flexRender(
                           cell.column.columnDef.cell,

@@ -37,6 +37,7 @@ export const Sidebar: FC = () => {
           <Link
             key={link.href}
             href={link.href}
+            id={link.href === '/protocol' ? 'step5' : ''}
             className={
               clsx(
                 styles.navLink,
