@@ -14,6 +14,19 @@ export const calculateBurnFn = async (amount: bigint, timestamp: string) => {
   })) as bigint;
 };
 
+export const getKlimaXSupply = async () => {
+  try {
+    return await readContract(config, {
+      abi: klimaFairLaunchAbi,
+      address: FAIR_LAUNCH_CONTRACT_ADDRESS,
+      functionName: "KLIMAX_SUPPLY",
+    });
+  } catch (error) {
+    console.error("Error getting KLIMAX supply", error);
+    return 0;
+  }
+};
+
 const calculatePenaltyPercentage = (part: number, total: number) =>
   (part / total) * 100;
 

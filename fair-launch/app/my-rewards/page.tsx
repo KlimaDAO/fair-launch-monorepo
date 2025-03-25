@@ -2,7 +2,6 @@ import { abi as erc20Abi } from "@abi/erc20";
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
 import { calculateLeaderboardPoints } from "@actions/leaderboards-action";
 import { Badge } from "@components/badge";
-import { NextStepViewport } from "nextstepjs";
 import { StakeDialog } from "@components/dialogs/stake-dialog";
 import { LeaderboardsTable } from "@components/tables/leaderboards";
 import { StakeData, StakesTable } from "@components/tables/stakes";
@@ -16,7 +15,7 @@ import {
 import {
   calculateTokenPercentage,
   calculateUnstakePenalty,
-  calculateUserPoints,
+  getKlimaXSupply,
   totalUserStakes,
 } from "@utils/contract";
 import { formatLargeNumber, formatNumber } from "@utils/formatting";
@@ -42,13 +41,7 @@ const Page: FC = async () => {
   const userStakes = await fetchUserStakes(walletAddress ?? null);
   const leaderboardData = await calculateLeaderboardPoints(5);
 
-  const klimaXSupply = await readContract(config, {
-    abi: klimaFairLaunchAbi,
-    address: FAIR_LAUNCH_CONTRACT_ADDRESS,
-    functionName: "KLIMAX_SUPPLY",
-  });
-
-
+  // group these contract calls into readContracts
   const burnRatio = await readContract(config, {
     abi: klimaFairLaunchAbi,
     address: FAIR_LAUNCH_CONTRACT_ADDRESS,
@@ -80,8 +73,7 @@ const Page: FC = async () => {
     args: [walletAddress],
   });
 
-  // ;
-
+  // todo - move this function out...
   const userStakesInfo = await Promise.all(
     (userStakes?.stakes || []).map(async (stake, index) => {
       console.log('stake', stake);
@@ -104,7 +96,8 @@ const Page: FC = async () => {
         burnAccrued = (BigInt(burnAccrued) + BigInt(newBurnAccrual)).toString();
       }
 
-      let klimaxAllocation = (BigInt(newPoints) * BigInt(klimaXSupply as bigint)) / BigInt(getTotalPoints as bigint);
+      const klimaXSupply = await getKlimaXSupply();
+      const klimaxAllocation = (BigInt(newPoints) * BigInt(klimaXSupply as bigint)) / BigInt(getTotalPoints as bigint);
       // let totalPoints = Number(organicPoints) + Number(burnAccrued);
 
       return {
@@ -114,7 +107,7 @@ const Page: FC = async () => {
         stakeCreationHash: stake.stakeCreationHash,
         multiplier: stake.multiplier,
         points: newPoints,
-        klimaxAllocation: klimaxAllocation,
+        klimaxAllocation,
       };
     }));
 
@@ -137,8 +130,6 @@ const Page: FC = async () => {
       );
       return {
         ...row,
-        id: row.id,
-        points: row.points,
         burnValue,
         burnPercentage: percentage,
       };

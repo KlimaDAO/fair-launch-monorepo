@@ -26,6 +26,7 @@ export interface StakeData {
   points: bigint | number | string;
   burnPercentage: string;
   startTimestamp: string;
+  klimaxAllocation: bigint | number | string;
 }
 
 export const StakesTable = <T extends StakeData>({
@@ -87,7 +88,10 @@ export const StakesTable = <T extends StakeData>({
       {
         id: "klimaxAllocation",
         header: "KLIMAX Allocation",
-        cell: () => "-",
+        cell: ({ row }) => {
+          const klimaxAllocation = row.original.klimaxAllocation;
+          return <><strong>{formatLargeNumber(Number(formatUnits(BigInt(klimaxAllocation as string), 9)))}</strong> KLIMAX</>;
+        },
       },
       {
         id: "actions",
