@@ -76,7 +76,6 @@ const Page: FC = async () => {
   // todo - move this function out...
   const userStakesInfo = await Promise.all(
     (userStakes?.stakes || []).map(async (stake, index) => {
-      console.log('stake', stake);
       let userStakesInfo = await readContract(config, {
         abi: klimaFairLaunchAbi,
         address: FAIR_LAUNCH_CONTRACT_ADDRESS,

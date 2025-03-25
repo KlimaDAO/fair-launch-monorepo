@@ -1,6 +1,5 @@
 import { request } from "graphql-request";
-import { FAIR_LAUNCH_CONTRACT_ADDRESS, SUBGRAPH_URL } from "./constants";
-import { readContract } from "viem/actions";
+import { SUBGRAPH_URL } from "./constants";
 
 export interface Stake {
   id: string;

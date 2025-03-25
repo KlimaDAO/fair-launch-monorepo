@@ -80,16 +80,33 @@ export const pagination = css({
   marginTop: '1.8rem',
 });
 
+export const paginationButtons = css({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+});
+
 export const paginationButton = css({
+  borderLeft: 'none',
   border: '0.1rem solid token(colors.void.40)',
-  borderRadius: '0.4rem',
-  padding: '0.4rem 0.6rem',
+  borderRadius: '0',
+  padding: '0rem 0.6rem',
   cursor: 'pointer',
   height: '3.2rem',
+  minWidth: '3.4rem',
   '&:disabled': {
     cursor: 'not-allowed',
     opacity: 0.5,
   },
+  '&:first-child': {
+    padding: '0.4rem 0.6rem',
+    borderLeft: '0.1rem solid token(colors.void.40)',
+    borderRadius: '0.4rem 0 0 0.4rem',
+  },
+  '&:last-child': {
+    padding: '0.4rem 0.6rem',
+    borderRadius: '0 0.4rem 0.4rem 0',
+  }
 });
 
 export const paginationText = css({
@@ -123,4 +140,9 @@ export const flexRow = css({
   lg: {
     alignItems: 'center',
   }
+});
+
+export const active = css({
+  backgroundColor: 'void.80',
+  color: 'white',
 });

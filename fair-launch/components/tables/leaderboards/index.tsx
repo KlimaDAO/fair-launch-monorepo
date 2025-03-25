@@ -388,25 +388,15 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
             )}
           </tbody>
         </table>
-        {/* <> {console.log('state', table.getState().pagination)}</>
-        <> {console.log('table.getPageCount().toLocaleString()', table.getPageCount().toLocaleString())}</>
-        <> {console.log('table.getRowCount().toLocaleString()', table.getRowCount().toLocaleString())}</>
-        <> {console.log('table.getRowModel().rows.length.toLocaleString()', table.getRowModel().rows.length.toLocaleString())}</>
-        <> {console.log('table.getRowCount().toLocaleString()', table.getRowCount().toLocaleString())}</> */}
         {props.showPagination && <div className={styles.pagination}>
           <div>
-            {/* <span className="flex items-center gap-1">
-              <strong>
-                {table.getState().pagination.pageIndex + 1} of{' '}
-                {table.getPageCount().toLocaleString()}
-              </strong>
-            </span> */}
             <div className={styles.paginationText}>
-              Showing {table.getRowModel().rows.length.toLocaleString()} of{' '}
+              Showing {table.getState().pagination.pageIndex * pagination.pageSize + 1} -
+              {Math.min((table.getState().pagination.pageIndex + 1) * pagination.pageSize, table.getRowCount())} of{' '}
               {table.getRowCount().toLocaleString()} results
             </div>
           </div>
-          <div>
+          <div className={styles.paginationButtons}>
             <button
               className={styles.paginationButton}
               onClick={() => table.previousPage()}
@@ -414,6 +404,27 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
             >
               <MdKeyboardArrowLeft fontSize="2rem" />
             </button>
+            {Array.from({ length: Math.ceil(table.getRowCount() / pagination.pageSize) }, (_, index) => index + 1)
+              .map((page) => {
+                const isCurrentPage = page === table.getState().pagination.pageIndex + 1;
+                return (
+                  <button
+                    key={page}
+                    className={clsx(styles.paginationButton, { [styles.active]: isCurrentPage })}
+                    onClick={() => table.setPageIndex(page - 1)}
+                  >
+                    {page}
+                  </button>
+                );
+              })
+              .reduce((acc, curr, index, array) => {
+                if (index > 0 && index < array.length - 1 && (curr.props.children - array[index - 1].props.children > 1)) {
+                  acc.push(<span key={`ellipsis-${index}`}>...</span>);
+                }
+                acc.push(curr);
+                return acc;
+              }, [] as React.ReactNode[])
+            }
             <button
               className={styles.paginationButton}
               onClick={() => table.nextPage()}
