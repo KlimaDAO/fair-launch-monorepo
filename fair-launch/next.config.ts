@@ -5,7 +5,6 @@ const nextConfig: NextConfig = {
   experimental: {
     useCache: true,
   },
-  transpilePackages: ['nextstepjs'],
   webpack: (config) => {
     config.externals.push('pino-pretty', 'lokijs', 'encoding');
     return config;
