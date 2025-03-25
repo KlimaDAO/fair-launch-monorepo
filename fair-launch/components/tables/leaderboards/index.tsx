@@ -51,7 +51,7 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
 
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
-    pageSize: 100,
+    pageSize: 10,
   })
 
   const columns: ColumnDef<T>[] = useMemo(
@@ -262,6 +262,16 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
                                 fontSize: "1.2rem",
                                 lineHeight: "1.6rem",
                                 color: "#777",
+                                display: "flex",
+                                flex: 1,
+                                alignItems: "center",
+                                justifyContent: "center",
+                                '&:first-child': {
+                                  justifyContent: "flex-start",
+                                },
+                                '&:last-child': {
+                                  justifyContent: "flex-end",
+                                },
                               })}
                               key={header.id}
                             >
@@ -291,6 +301,16 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
                               fontSize: "1.4rem",
                               lineHeight: "2rem",
                               color: "#1E1e1e",
+                              display: "flex",
+                              flex: 1,
+                              alignItems: "center",
+                              justifyContent: "center",
+                              '&:first-child': {
+                                justifyContent: "flex-start",
+                              },
+                              '&:last-child': {
+                                justifyContent: "flex-end",
+                              },
                             })}
                             key={cell.id}
                           >
@@ -309,96 +329,101 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
           )
         }
       </div >
-    <div
-      className={clsx(
-        styles.tableContainer,
-        css({ hideBelow: "md", width: "100%" })
-      )}
-    >
-      <table className={styles.table}>
-        <thead className={styles.tableHead}>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <th
-                  key={header.id}
-                  aria-label="leaderboard-table-head"
-                  className={styles.tableHead}
-                  colSpan={header.colSpan}
-                >
-                  <div>
-                    {flexRender(
-                      header.column.columnDef.header,
-                      header.getContext()
-                    )}
-                  </div>
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody className={styles.tableBody}>
-          {table.getRowModel().rows.length ? (
-            <>
-              {table.getRowModel().rows.map((row) => (
-                <tr key={row.id}>
-                  {row.getVisibleCells().map((cell) => {
-                    return (
-                      <td
-                        key={cell.id}
-                        aria-label="leaderboard-table-cell"
-                        className={styles.tableCell}
-                      >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-            </>
-          ) : (
-            <tr>
-              <td className={styles.tableCell} colSpan={4}>
-                <i>No data to display yet</i>
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-      {props.showPagination && <div className={styles.pagination}>
-        <div>
-          {/* <span className="flex items-center gap-1">
+      <div
+        className={clsx(
+          styles.tableContainer,
+          css({ hideBelow: "md", width: "100%" })
+        )}
+      >
+        <table className={styles.table}>
+          <thead className={styles.tableHead}>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <th
+                    key={header.id}
+                    aria-label="leaderboard-table-head"
+                    className={styles.tableHead}
+                    colSpan={header.colSpan}
+                  >
+                    <div>
+                      {flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
+                    </div>
+                  </th>
+                ))}
+              </tr>
+            ))}
+          </thead>
+          <tbody className={styles.tableBody}>
+            {table.getRowModel().rows.length ? (
+              <>
+                {table.getRowModel().rows.map((row) => (
+                  <tr key={row.id}>
+                    {row.getVisibleCells().map((cell) => {
+                      return (
+                        <td
+                          key={cell.id}
+                          aria-label="leaderboard-table-cell"
+                          className={styles.tableCell}
+                        >
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </>
+            ) : (
+              <tr>
+                <td className={styles.tableCell} colSpan={4}>
+                  <i>No data to display yet</i>
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+        {/* <> {console.log('state', table.getState().pagination)}</>
+        <> {console.log('table.getPageCount().toLocaleString()', table.getPageCount().toLocaleString())}</>
+        <> {console.log('table.getRowCount().toLocaleString()', table.getRowCount().toLocaleString())}</>
+        <> {console.log('table.getRowModel().rows.length.toLocaleString()', table.getRowModel().rows.length.toLocaleString())}</>
+        <> {console.log('table.getRowCount().toLocaleString()', table.getRowCount().toLocaleString())}</> */}
+        {props.showPagination && <div className={styles.pagination}>
+          <div>
+            {/* <span className="flex items-center gap-1">
               <strong>
                 {table.getState().pagination.pageIndex + 1} of{' '}
                 {table.getPageCount().toLocaleString()}
               </strong>
             </span> */}
-          <div className={styles.paginationText}>
-            Showing {table.getRowModel().rows.length.toLocaleString()} of{' '}
-            {table.getRowCount().toLocaleString()} results
+            <div className={styles.paginationText}>
+              Showing {table.getRowModel().rows.length.toLocaleString()} of{' '}
+              {table.getRowCount().toLocaleString()} results
+            </div>
           </div>
-        </div>
-        <div>
-          <button
-            className={styles.paginationButton}
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            <MdKeyboardArrowLeft fontSize="2rem" />
-          </button>
-          <button
-            className={styles.paginationButton}
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            <MdKeyboardArrowRight fontSize="2rem" />
-          </button>
-        </div>
-      </div>}
-    </div>
+          <div>
+            <button
+              className={styles.paginationButton}
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              <MdKeyboardArrowLeft fontSize="2rem" />
+            </button>
+            <button
+              className={styles.paginationButton}
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              <MdKeyboardArrowRight fontSize="2rem" />
+            </button>
+          </div>
+        </div>}
+      </div>
     </>
   );
 };
