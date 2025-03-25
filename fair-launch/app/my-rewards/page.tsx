@@ -118,8 +118,10 @@ const Page: FC = async () => {
       }
 
       const klimaXSupply = await getKlimaXSupply();
-      const klimaxAllocation = (BigInt(newPoints) * BigInt(klimaXSupply as bigint)) / BigInt(getTotalPoints as bigint);
-      // let totalPoints = Number(organicPoints) + Number(burnAccrued);
+      // (points * KLIMAX_SUPPLY) / finalTotalPoints;
+      // convert klimaXSupply to 9 decimals first?
+      const supply = formatUnits(BigInt(klimaXSupply as bigint), 9);
+      const klimaxAllocation = BigInt(newPoints) * BigInt(supply) / BigInt(getTotalPoints as bigint);
 
       return {
         id: stake.id,
@@ -181,7 +183,7 @@ const Page: FC = async () => {
               id="step1"
             >
               <Image src={klimav1Logo} alt="Klima V1 Logo" />
-              <div  className={styles.mainText}>
+              <div className={styles.mainText}>
                 {formatNumber(
                   formatUnits(
                     BigInt(totalUserStakes(userStakes.stakes || [])),
