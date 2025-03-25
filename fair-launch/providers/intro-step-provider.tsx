@@ -8,7 +8,6 @@ interface Props {
 
 export const IntroStepProvider: FC<Props> = (props) => {
   return (
-
     <NextStep
       displayArrow={true}
       steps={[
@@ -49,14 +48,12 @@ export const IntroStepProvider: FC<Props> = (props) => {
               side: "bottom-right",
               showControls: true,
               showSkip: true,
-              // viewportID: "scrollable-viewport"
-
             },
           ]
         }
       ]}
       shadowOpacity="0"
-      // cardComponent={CustomIntroCard}
+      cardComponent={CustomIntroCard}
       cardTransition={{ duration: 0.25, ease: 'easeInOut' }}>
       {props.children}
     </NextStep>

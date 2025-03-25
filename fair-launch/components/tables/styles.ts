@@ -16,7 +16,7 @@ export const tableHead = css({
   fontSize: 'sm',
   textAlign: 'left',
   verticalAlign: 'middle',
-  padding: '2.4rem 0 1.2rem 0',
+  padding: '1.2rem 0 1.2rem 0',
   borderBottom: '1px solid token(colors.void.20)',
   '& th': {
     fontWeight: 400,

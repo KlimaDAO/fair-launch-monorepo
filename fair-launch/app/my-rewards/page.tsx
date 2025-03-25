@@ -29,6 +29,7 @@ import { type FC } from "react";
 import { formatGwei, formatUnits } from "viem";
 import { cookieToInitialState } from "wagmi";
 import * as styles from "./styles";
+import { KlimaXAllocationTable } from "@components/tables/klimax-allocation";
 
 const Page: FC = async () => {
   const cookie = (await headers()).get("cookie");
@@ -73,9 +74,30 @@ const Page: FC = async () => {
     args: [walletAddress],
   });
 
+
+  // let totalUnstake = 0;
+
   // todo - move this function out...
   const userStakesInfo = await Promise.all(
     (userStakes?.stakes || []).map(async (stake, index) => {
+
+
+      // for (let i = (userStakes?.stakes || []).length; i > 0 && totalUnstake < Number(stake.amount); i--) {
+      //   console.log('i', i);
+
+      //   // Skip stakes with zero amount
+      //   if (Number(stake.amount) == 0) continue;
+
+      //   let stakeUnstakeAmount = Number(stake.amount) - Number(totalUnstake);
+      //   if (stakeUnstakeAmount > Number(stake.amount)) {
+      //     stakeUnstakeAmount = Number(stake.amount);
+      //   }
+      //   totalUnstake += stakeUnstakeAmount;
+      // }
+
+      // console.log('totalUnstake', totalUnstake);
+
+
       let userStakesInfo = await readContract(config, {
         abi: klimaFairLaunchAbi,
         address: FAIR_LAUNCH_CONTRACT_ADDRESS,
@@ -232,6 +254,9 @@ const Page: FC = async () => {
             >
               <Image src={gklimaLogo} alt="Klima Logo" />
               <h5 className={styles.cardTitle}>KLIMAX Allocation Value at:</h5>
+            </div>
+            <div className={styles.cardContents}>
+              <KlimaXAllocationTable data={[]} />
             </div>
           </div>
         </div>
