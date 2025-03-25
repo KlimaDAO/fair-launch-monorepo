@@ -87,10 +87,10 @@ export const StakesTable = <T extends StakeData>({
       },
       {
         id: "klimaxAllocation",
-        header: "KLIMAX Allocation",
+        header: "KlimaX Allocation",
         cell: ({ row }) => {
           const klimaxAllocation = row.original.klimaxAllocation;
-          return <><strong>{formatLargeNumber(Number(formatUnits(BigInt(klimaxAllocation as string), 9)))}</strong> KLIMAX</>;
+          return <><strong>{formatLargeNumber(Number(formatUnits(BigInt(klimaxAllocation as string), 9)))}</strong> KlimaX</>;
         },
       },
       {

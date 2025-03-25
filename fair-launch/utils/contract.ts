@@ -22,7 +22,7 @@ export const getKlimaXSupply = async () => {
       functionName: "KLIMAX_SUPPLY",
     });
   } catch (error) {
-    console.error("Error getting KLIMAX supply", error);
+    console.error("Error getting KlimaX supply", error);
     return 0;
   }
 };

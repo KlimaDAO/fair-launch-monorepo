@@ -127,7 +127,7 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({
           The longer you leave your KLIMA staked, the better your rewards! If
           you unstake now, you’ll not only lose out on some KLIMA through{" "}
           <Link href="/">the burn mechanism</Link>, but you’ll also miss out on
-          KLIMAX!
+          KlimaX!
         </div>
         <div>
           Make sure you have a good reason to unstake before you go clickin’
@@ -234,7 +234,7 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({
               <strong>will not be able to re-stake it.</strong>
             </div>
             <div>
-              You will still get to keep the points and KLIMAX you've accrued.
+              You will still get to keep the points and KlimaX you've accrued.
             </div>
             <Link href="/">Learn more about burning KLIMA.</Link>
           </div>

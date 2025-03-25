@@ -254,7 +254,7 @@ const Page: FC = async () => {
               }}
             >
               <Image src={gklimaLogo} alt="Klima Logo" />
-              <h5 className={styles.cardTitle}>KLIMAX Allocation Value at:</h5>
+              <h5 className={styles.cardTitle}>KlimaX Allocation Value at:</h5>
             </div>
             <div className={styles.cardContents}>
               <KlimaXAllocationTable data={[]} />
