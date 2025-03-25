@@ -391,7 +391,7 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
         {props.showPagination && <div className={styles.pagination}>
           <div>
             <div className={styles.paginationText}>
-              Showing {table.getState().pagination.pageIndex * pagination.pageSize + 1} -
+              Showing {table.getState().pagination.pageIndex * pagination.pageSize + 1} to{" "}
               {Math.min((table.getState().pagination.pageIndex + 1) * pagination.pageSize, table.getRowCount())} of{' '}
               {table.getRowCount().toLocaleString()} results
             </div>
