@@ -43,7 +43,6 @@ export const Navbar: FC = () => {
           </button>
           <nav className={styles.nav}>
             <ul>
-              <li><Link href="/">Home</Link></li>
               <li><Link href="/my-rewards">My Rewards</Link></li>
               <li><Link href="/protocol">Protocol</Link></li>
               <li><div onClick={handleLogout}>Logout</div></li>
