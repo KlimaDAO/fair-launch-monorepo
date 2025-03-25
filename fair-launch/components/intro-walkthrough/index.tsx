@@ -4,8 +4,11 @@ import type { FC } from 'react';
 import * as styles from './styles';
 import { MdHelpOutline } from 'react-icons/md';
 import { driver } from 'driver.js';
+import { usePathname } from 'next/navigation';
 
 export const IntroWalkthrough: FC = () => {
+  const pathname = usePathname();
+
   const handleWalkthrough = () => {
     const driverObj = driver({
       showProgress: true,
@@ -122,7 +125,11 @@ export const IntroWalkthrough: FC = () => {
   }
 
   return (
-    <button className={styles.button} onClick={handleWalkthrough}>
+    <button
+      disabled={!pathname.includes('my-rewards')}
+      className={styles.button}
+      onClick={handleWalkthrough}
+    >
       <MdHelpOutline />
       Show me around
     </button>
