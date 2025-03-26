@@ -18,7 +18,7 @@ import {
   getKlimaXSupply,
   totalUserStakes,
 } from "@utils/contract";
-import { formatLargeNumber, formatNumber } from "@utils/formatting";
+import { formatLargeNumber, formatNumber, formatTokenToValue } from "@utils/formatting";
 import { fetchUserStakes } from "@utils/queries";
 import { config } from "@utils/wagmi.server";
 import { readContract } from "@wagmi/core";
@@ -75,36 +75,9 @@ const Page: FC = async () => {
     args: [walletAddress],
   }) as bigint;
 
-  // const firstValue = BigInt("250000000000000000000000000")
-  // const userKlimaXPercentage = (BigInt(previewUserPoints) / BigInt(getTotalPoints)) * BigInt(100);
-
-  // const supply1 = formatUnits(BigInt(firstValue), 9);
-
-  // const userKlimaXPercentage1 = getTotalPoints > BigInt(0) 
-  // ? (BigInt(previewUserPoints) * BigInt(10000)) / (BigInt(getTotalPoints)) // Scale by 10000 for two decimal places
-  // : BigInt(0); // Handle division by zero case
-  // const res = Number(supply1) * Number(0.40) * (Number(userKlimaXPercentage1) / 100000);
-
-  // console.log('resresresresresresres', formatLargeNumber(res));
-  // console.log('previewUserPoints', previewUserPoints);
-  // console.log('getTotalPoints', getTotalPoints);
-  // console.log('userKlimaXPercentage', userKlimaXPercentage);
-
   // todo - move this function out...
   const userStakesInfo = await Promise.all(
     (userStakes?.stakes || []).map(async (stake, index) => {
-      // for (let i = (userStakes?.stakes || []).length; i > 0 && totalUnstake < Number(stake.amount); i--) {
-      //   console.log('i', i);
-      //   // Skip stakes with zero amount
-      //   if (Number(stake.amount) == 0) continue;
-      //   let stakeUnstakeAmount = Number(stake.amount) - Number(totalUnstake);
-      //   if (stakeUnstakeAmount > Number(stake.amount)) {
-      //     stakeUnstakeAmount = Number(stake.amount);
-      //   }
-      //   totalUnstake += stakeUnstakeAmount;
-      // }
-      // console.log('totalUnstake', totalUnstake);
-
       const userStakesInfo = await readContract(config, {
         abi: klimaFairLaunchAbi,
         address: FAIR_LAUNCH_CONTRACT_ADDRESS,
@@ -128,7 +101,7 @@ const Page: FC = async () => {
 
       return {
         id: stake.id,
-        amount: stake.amount,
+        amount: BigInt(amount),
         startTimestamp: stake.startTimestamp,
         stakeCreationHash: stake.stakeCreationHash,
         multiplier: stake.multiplier,
@@ -138,7 +111,7 @@ const Page: FC = async () => {
     }));
 
   const tokenPercentage = calculateTokenPercentage(
-    Number(formatUnits(BigInt(totalUserStakes(userStakes.stakes || [])), 9)),
+    Number(formatUnits(BigInt(totalUserStakes(userStakesInfo || [])), 9)),
     Number(formatUnits(totalSupply, 9))
   );
 
@@ -146,9 +119,6 @@ const Page: FC = async () => {
     Number(formatUnits(previewUserPoints, 9)),
     Number(formatUnits(getTotalPoints, 9))
   );
-
-
-  // console.log('totalPointsPercentage', formatUnits(BigInt(previewUserPoints, 9)) / formatUnits(BigInt(getTotalPoints), 9));
 
   // calculate penalties to pass to the stakes table
   const userStakesData = await Promise.all(
@@ -191,7 +161,7 @@ const Page: FC = async () => {
               <div className={styles.mainText}>
                 {formatNumber(
                   formatUnits(
-                    BigInt(totalUserStakes(userStakes.stakes || [])),
+                    BigInt(totalUserStakes(userStakesInfo || [])),
                     9
                   ),
                   2
@@ -235,7 +205,7 @@ const Page: FC = async () => {
         <div className={styles.cardContents}>
           <StakesTable
             data={(userStakesData as StakeData[]) || []}
-            totalStaked={totalUserStakes(userStakes.stakes || [])}
+            totalStaked={Number(totalUserStakes(userStakesInfo || []))}
           />
         </div>
       </Card>

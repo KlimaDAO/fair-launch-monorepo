@@ -20,7 +20,7 @@ interface Props<T> {
 }
 
 export interface StakeData {
-  amount: string;
+  amount: bigint | number | string;
   multiplier: string;
   burnValue: string;
   points: bigint | number | string;
@@ -98,7 +98,7 @@ export const StakesTable = <T extends StakeData>({
         header: "",
         cell: ({ row }) => (
           <UnstakeDialog
-            amount={row.original.amount}
+            amount={row.original.amount as string}
             startTimestamp={row.original.startTimestamp}
             totalStaked={totalStaked}
           />

@@ -3,7 +3,7 @@
 import { readContract } from "@wagmi/core";
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
 import { FAIR_LAUNCH_CONTRACT_ADDRESS } from "@utils/constants";
-import { fetchLeaderboard } from "@utils/queries";
+import { fetchLeaderboard, fetchUserStakes } from "@utils/queries";
 import { config } from "@utils/wagmi.server";
 import { unstable_cacheLife as cacheLife } from 'next/cache';
 
@@ -24,29 +24,31 @@ export const calculateLeaderboardPoints = async (limit = 10000) => {
   })
 
   const results = [];
-  // change this to fetch all?
   const leaderboard = await fetchLeaderboard(limit);
 
   for (const wallet of leaderboard.wallets || []) {
     try {
-      // const userStakes = await readContract(config, {
-      //   args: [wallet.id],
-      //   abi: klimaFairLaunchAbi,
-      //   address: FAIR_LAUNCH_CONTRACT_ADDRESS,
-      //   functionName: "userStakes",
-      // });
+      const userStakes = await fetchUserStakes(wallet.id);
+      const userStakesInfo = await Promise.all(
+        (userStakes?.stakes || []).map(async (stake, index) => {
+          const [amount] = await readContract(config, {
+            abi: klimaFairLaunchAbi,
+            address: FAIR_LAUNCH_CONTRACT_ADDRESS,
+            functionName: "userStakes",
+            args: [wallet.id, index],
+          }) as bigint[];
+          return amount;
+        }));
 
+      const totalStaked = userStakesInfo.reduce((acc, curr) => acc + Number(curr), 0);
 
-      // console.log('userStakes', userStakes?.map((userStake: any) => {
-      //   console.log('userStake', userStake);
-      // }));
       const points = await readContract(config, {
         args: [wallet.id],
         abi: klimaFairLaunchAbi,
         address: FAIR_LAUNCH_CONTRACT_ADDRESS,
         functionName: "previewUserPoints",
       });
-      results.push({ ...wallet, totalPoints: points });
+      results.push({ ...wallet, totalStaked, totalPoints: points });
     } catch (error) {
       console.error(`Error fetching points for ${wallet.id}:`, error);
       results.push({ ...wallet, totalPoints: null }); // Handle error gracefully

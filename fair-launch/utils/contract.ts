@@ -37,7 +37,9 @@ export const calculateUnstakePenalty = async (
   const burnAmount = formatTokenToValue(
     await calculateBurnFn(BigInt(stakeAmount), stakeTimestamp)
   );
+  console.log('burnAmount', burnAmount);
   const stakeAmountFormatted = formatTokenToValue(stakeAmount);
+  console.log('stakeAmountFormatted', stakeAmountFormatted);
   const penaltyPercentage = calculatePenaltyPercentage(
     Number(burnAmount),
     Number(stakeAmountFormatted)
@@ -61,8 +63,8 @@ export const calculateUserPoints = (
   );
 };
 
-export const totalUserStakes = (stakes: { amount: string }[]): number =>
-  stakes.reduce((total, stake) => total + parseFloat(stake.amount), 0);
+export const totalUserStakes = (stakes: { amount: bigint }[]): bigint =>
+  stakes.reduce((total, stake) => BigInt(total) + BigInt(stake.amount), BigInt(0));
 
 export const calculateTokenPercentage = (tokens: number, totalSupply: number) =>
   (tokens / totalSupply) * 100;
