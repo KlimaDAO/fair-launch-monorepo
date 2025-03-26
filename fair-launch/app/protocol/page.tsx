@@ -96,9 +96,9 @@ const Page: FC = async () => {
           </div>
         </div>
       </div>
-      {/* <Card> */}
-        {/* <LeaderboardsTable showPagination data={(leaderboardData as any[]) || []} /> */}
-      {/* </Card> */}
+      <Card>
+        <LeaderboardsTable showPagination data={(leaderboardData as any[]) || []} />
+      </Card>
     </>
   );
 };

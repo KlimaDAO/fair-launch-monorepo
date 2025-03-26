@@ -131,6 +131,9 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
           const value = getValue() as string;
           const userWallet = isUserWallet(row.original.id, address as string);
           console.log('totalPoints', value);
+          if (value === null) {
+            return;
+          }
           return (
             <div
               className={clsx({
