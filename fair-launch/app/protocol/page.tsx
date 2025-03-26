@@ -69,7 +69,7 @@ const Page: FC = async () => {
             <div className={styles.secondaryText}>
               <strong>{tokenPercentage.toFixed(2)}%</strong> of{" "}
               <strong>
-                {formatLargeNumber(Number(formatGwei(totalSupply as bigint)))}
+                {formatLargeNumber(Number(formatUnits(totalSupply, 9)))}
               </strong>{" "}
             </div>
           </div>
@@ -97,7 +97,7 @@ const Page: FC = async () => {
         </div>
       </div>
       <Card>
-        <LeaderboardsTable showPagination data={(leaderboardData as any[]) || []} />
+        {/* <LeaderboardsTable showPagination data={(leaderboardData as any[]) || []} /> */}
       </Card>
     </>
   );

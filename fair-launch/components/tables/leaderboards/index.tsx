@@ -110,13 +110,15 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
         cell: ({ row, getValue }) => {
           const value = getValue();
           const userWallet = isUserWallet(row.original.id, address as string);
+          console.log('totalStaked', value);
+
           return (
             <div
               className={clsx({
                 [styles.userWalletText]: userWallet,
               })}
             >
-              {formatNumber(formatUnits(BigInt(value as string), 9), 2)}
+              {formatNumber(formatUnits(value as bigint, 9), 2)}
             </div>
           );
         },
@@ -128,6 +130,7 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
         cell: ({ row, getValue }) => {
           const value = getValue() as string;
           const userWallet = isUserWallet(row.original.id, address as string);
+          console.log('totalPoints', value);
           return (
             <div
               className={clsx({
