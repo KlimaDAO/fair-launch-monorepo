@@ -56,25 +56,24 @@ export const truncateAddress = (address: string): string => {
   return `${address.slice(0, 5)}...${address.slice(-3)}`;
 };
 
+/**
+ * Formats a large number to a human readable format
+ * @param value - The number to format
+ * @returns The formatted number
+ */
 export const formatLargeNumber = (value: number) => {
-  if (value >= 1e27) {
-    return `${(value / 1e27).toFixed(2)}O`; // Format to octillions
-  } else if (value >= 1e24) {
-    return `${(value / 1e24).toFixed(2)}St`; // Format to septillions
-  } else if (value >= 1e21) {
-    return `${(value / 1e21).toFixed(2)}S`; // Format to sextillions
-  } else if (value >= 1e18) {
-    return `${(value / 1e18).toFixed(2)}Q`; // Format to quintillions
-  } else if (value >= 1e15) {
-    return `${(value / 1e15).toFixed(2)}Q`; // Format to quadrillions
-  } else if (value >= 1e12) {
-    return `${(value / 1e12).toFixed(2)}T`; // Format to trillions
-  } else if (value >= 1e9) {
-    return `${(value / 1e9).toFixed(2)}B`; // Format to billions
-  } else if (value >= 1e6) {
-    return `${(value / 1e6).toFixed(2)}M`; // Format to millions
-  } else if (value >= 1e3) {
-    return `${(value / 1e3).toFixed(2)}k`; // Format to thousands
+  const thresholds = [
+    { limit: 1e15, suffix: 'Q' }, // Quadrillions
+    { limit: 1e12, suffix: 'T' }, // Trillions
+    { limit: 1e9, suffix: 'B' },   // Billions
+    { limit: 1e6, suffix: 'M' },   // Millions
+    { limit: 1e3, suffix: 'k' },   // Thousands
+  ];
+
+  for (const { limit, suffix } of thresholds) {
+    if (value >= limit) {
+      return `${(value / limit).toFixed(2)}${suffix}`;
+    }
   }
-  return value.toString();
+  return value.toFixed(2);
 };

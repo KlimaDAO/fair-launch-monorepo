@@ -78,12 +78,14 @@ export const StakeDialog: FC = () => {
   const isApproved = receipt?.status === "success";
   const isApprovalSuccess = isApprovePending || (approveData && !isApproved);
 
-  const { data: submitReceipt } = useWaitForTransactionReceipt({
+  const { data: submitReceipt, isError } = useWaitForTransactionReceipt({
     confirmations: 3,
     hash: stakeData,
   });
   const isSubmitSuccess = receipt?.status === "success";
   const isTransactionSuccess = isStakePending || (stakeData && !isSubmitSuccess)
+
+
 
   const handleDialogState = () => {
     setOpen(!open);
@@ -99,7 +101,12 @@ export const StakeDialog: FC = () => {
   };
 
   const handleStake = () => {
-    setDialogState(!allowanceData ? DialogState.APPROVE : DialogState.CONFIRM);
+    const stakeAmount = form.state.values["stake-amount"];
+    if (Number(formatUnits(allowanceData as bigint, 9)) < Number(stakeAmount)) {
+      setDialogState(DialogState.APPROVE);
+    } else {
+      setDialogState(DialogState.CONFIRM);
+    }
   };
 
   const handleApprove = async () => {
@@ -287,15 +294,18 @@ export const StakeDialog: FC = () => {
           </div>
         </div>
       </div>
+      {isError && <Alert variant="default">
+        Transaction failed. Please try again.
+      </Alert>}
       <div className={styles.actions}>
         <button
           onClick={handleConfirm}
-          disabled={isTransactionSuccess}
+          disabled={isTransactionSuccess && !isError}
           className={clsx(styles.primaryButton, {
-            [styles.disabled]: isTransactionSuccess,
+            [styles.disabled]: isTransactionSuccess && !isError,
           })}
         >
-          {isTransactionSuccess ? "Submitting ..." : "Submit"}
+          {isTransactionSuccess && !isError ? "Submitting ..." : "Submit"}
         </button>
         <Dialog.Close asChild>
           <button className={styles.secondaryButton}>Cancel</button>

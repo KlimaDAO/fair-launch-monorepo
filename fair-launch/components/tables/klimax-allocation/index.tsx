@@ -20,9 +20,7 @@ export interface Data {
   projectedValue: string | number;
 }
 
-export const KlimaXAllocationTable = <T extends Data>({
-  data,
-}: Props<T>) => {
+export const KlimaXAllocationTable = <T extends Data>({ data }: Props<T>) => {
   const columns: ColumnDef<T>[] = useMemo(
     () => [
       {

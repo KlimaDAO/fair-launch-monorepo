@@ -30,6 +30,7 @@ import { formatGwei, formatUnits } from "viem";
 import { cookieToInitialState } from "wagmi";
 import * as styles from "./styles";
 import { KlimaXAllocationTable } from "@components/tables/klimax-allocation";
+import { Card } from "@components/card";
 
 const Page: FC = async () => {
   const cookie = (await headers()).get("cookie");
@@ -47,81 +48,83 @@ const Page: FC = async () => {
     abi: klimaFairLaunchAbi,
     address: FAIR_LAUNCH_CONTRACT_ADDRESS,
     functionName: "burnRatio",
-  });
+  }) as bigint;
 
   const totalSupply = await readContract(config, {
     abi: erc20Abi,
     address: KLIMA_V0_TOKEN_ADDRESS,
     functionName: "totalSupply",
-  });
+  }) as bigint;
 
   const getTotalPoints = await readContract(config, {
     abi: klimaFairLaunchAbi,
     address: FAIR_LAUNCH_CONTRACT_ADDRESS,
     functionName: "getTotalPoints",
-  });
+  }) as bigint;
 
   const growthRate = await readContract(config, {
     abi: klimaFairLaunchAbi,
     address: FAIR_LAUNCH_CONTRACT_ADDRESS,
     functionName: "GROWTH_RATE",
-  });
+  }) as bigint;
 
   const previewUserPoints = await readContract(config, {
     abi: klimaFairLaunchAbi,
     address: FAIR_LAUNCH_CONTRACT_ADDRESS,
     functionName: "previewUserPoints",
     args: [walletAddress],
-  });
+  }) as bigint;
 
+  // const firstValue = BigInt("250000000000000000000000000")
+  // const userKlimaXPercentage = (BigInt(previewUserPoints) / BigInt(getTotalPoints)) * BigInt(100);
 
-  // let totalUnstake = 0;
+  // const supply1 = formatUnits(BigInt(firstValue), 9);
+
+  // const userKlimaXPercentage1 = getTotalPoints > BigInt(0) 
+  // ? (BigInt(previewUserPoints) * BigInt(10000)) / (BigInt(getTotalPoints)) // Scale by 10000 for two decimal places
+  // : BigInt(0); // Handle division by zero case
+  // const res = Number(supply1) * Number(0.40) * (Number(userKlimaXPercentage1) / 100000);
+
+  // console.log('resresresresresresres', formatLargeNumber(res));
+  // console.log('previewUserPoints', previewUserPoints);
+  // console.log('getTotalPoints', getTotalPoints);
+  // console.log('userKlimaXPercentage', userKlimaXPercentage);
 
   // todo - move this function out...
   const userStakesInfo = await Promise.all(
     (userStakes?.stakes || []).map(async (stake, index) => {
-
-
       // for (let i = (userStakes?.stakes || []).length; i > 0 && totalUnstake < Number(stake.amount); i--) {
       //   console.log('i', i);
-
       //   // Skip stakes with zero amount
       //   if (Number(stake.amount) == 0) continue;
-
       //   let stakeUnstakeAmount = Number(stake.amount) - Number(totalUnstake);
       //   if (stakeUnstakeAmount > Number(stake.amount)) {
       //     stakeUnstakeAmount = Number(stake.amount);
       //   }
       //   totalUnstake += stakeUnstakeAmount;
       // }
-
       // console.log('totalUnstake', totalUnstake);
 
-
-      let userStakesInfo = await readContract(config, {
+      const userStakesInfo = await readContract(config, {
         abi: klimaFairLaunchAbi,
         address: FAIR_LAUNCH_CONTRACT_ADDRESS,
         functionName: "userStakes",
         args: [walletAddress, index],
-      });
+      }) as bigint[];
 
-      let [amount, stakeStartTime, , bonusMultiplier, organicPoints, burnRatioSnapshot, burnAccrued] = userStakesInfo as [string, string, string, string, string, string, string];
+      let [amount, stakeStartTime, , bonusMultiplier, organicPoints, burnRatioSnapshot, burnAccrued] = userStakesInfo;
       const currentTimestamp = Math.floor(Date.now() / 1000);
       const elapsedTime = BigInt(currentTimestamp) - BigInt(stakeStartTime);
       const newPoints = (BigInt(amount) * BigInt(bonusMultiplier) * BigInt(elapsedTime) * BigInt(growthRate as bigint)) / BigInt(100000);
-      organicPoints = (BigInt(organicPoints) + BigInt(newPoints)).toString();
+      organicPoints = (BigInt(organicPoints) + BigInt(newPoints));
 
-      const burnRatioDiff = BigInt(burnRatio as bigint) - BigInt(burnRatioSnapshot);
+      const burnRatioDiff = BigInt(burnRatio) - BigInt(burnRatioSnapshot);
       if (burnRatioDiff > 0) {
         const newBurnAccrual = (BigInt(organicPoints) * burnRatioDiff) / BigInt(100000);
-        burnAccrued = (BigInt(burnAccrued) + BigInt(newBurnAccrual)).toString();
+        burnAccrued = (BigInt(burnAccrued) + BigInt(newBurnAccrual));
       }
-
-      const klimaXSupply = await getKlimaXSupply();
-      // (points * KLIMAX_SUPPLY) / finalTotalPoints;
-      // convert klimaXSupply to 9 decimals first?
-      const supply = formatUnits(BigInt(klimaXSupply as bigint), 9);
-      const klimaxAllocation = BigInt(newPoints) * BigInt(supply) / BigInt(getTotalPoints as bigint);
+      const supply = formatUnits(BigInt(await getKlimaXSupply()), 9);
+      const klimaxAllocation = BigInt(newPoints) * BigInt(supply) / BigInt(getTotalPoints);
 
       return {
         id: stake.id,
@@ -130,33 +133,34 @@ const Page: FC = async () => {
         stakeCreationHash: stake.stakeCreationHash,
         multiplier: stake.multiplier,
         points: newPoints,
-        klimaxAllocation,
+        klimaxAllocation: klimaxAllocation,
       };
     }));
 
   const tokenPercentage = calculateTokenPercentage(
     Number(formatUnits(BigInt(totalUserStakes(userStakes.stakes || [])), 9)),
-    Number(formatGwei(totalSupply as bigint))
+    Number(formatUnits(totalSupply, 9))
   );
 
   const totalPointsPercentage = calculateTokenPercentage(
-    Number(formatUnits(BigInt((previewUserPoints as bigint) || 0), 9)),
-    Number(formatGwei(getTotalPoints as bigint))
+    Number(formatUnits(previewUserPoints, 9)),
+    Number(formatUnits(getTotalPoints, 9))
   );
+
+
+  // console.log('totalPointsPercentage', formatUnits(BigInt(previewUserPoints, 9)) / formatUnits(BigInt(getTotalPoints), 9));
 
   // calculate penalties to pass to the stakes table
   const userStakesData = await Promise.all(
-    (userStakesInfo || []).sort((a, b) => Number(b.startTimestamp) - Number(a.startTimestamp)).map(async (row) => {
-      const { burnValue, percentage } = await calculateUnstakePenalty(
-        row.amount,
-        row.startTimestamp
-      );
-      return {
-        ...row,
-        burnValue,
-        burnPercentage: percentage,
-      };
-    })
+    (userStakesInfo || [])
+      .sort((a, b) => Number(b.startTimestamp) - Number(a.startTimestamp))
+      .map(async (values) => {
+        const { burnValue, percentage: burnPercentage } = await calculateUnstakePenalty(
+          values.amount,
+          values.startTimestamp
+        );
+        return { ...values, burnValue, burnPercentage };
+      })
   );
 
   return (
@@ -164,7 +168,7 @@ const Page: FC = async () => {
       <div className={styles.twoCols}>
         <div className={styles.titleContainer}>
           <h1 className={styles.title}>My Rewards</h1>
-          <Tooltip content="Participate early, earn more points.">
+          <Tooltip content="Participate early to earn more points.">
             <Badge title="Phase 1" />
           </Tooltip>
         </div>
@@ -175,12 +179,13 @@ const Page: FC = async () => {
           <h5 className={styles.cardTitle}>My KLIMA(v0) Deposited</h5>
           <div className={styles.cardContents}>
             <div
+              id="step1"
               style={{
                 display: "flex",
                 alignItems: "center",
                 gap: "0.8rem",
               }}
-              id="step1"
+
             >
               <Image src={klimav1Logo} alt="Klima V1 Logo" />
               <div className={styles.mainText}>
@@ -225,44 +230,38 @@ const Page: FC = async () => {
           </div>
         </div>
       </div>
-      <div className={styles.card}>
-        <div className={styles.cardInner}>
-          <h5 className={styles.cardTitle}>Stake History</h5>
-          <div className={styles.cardContents}>
-            <StakesTable
-              data={(userStakesData as StakeData[]) || []}
-              totalStaked={totalUserStakes(userStakes.stakes || [])}
-            />
-          </div>
+      <Card>
+        <h5 className={styles.cardTitle}>Stake History</h5>
+        <div className={styles.cardContents}>
+          <StakesTable
+            data={(userStakesData as StakeData[]) || []}
+            totalStaked={totalUserStakes(userStakes.stakes || [])}
+          />
         </div>
-      </div>
+      </Card>
       <div className={styles.twoCols}>
-        <div className={styles.card}>
-          <div className={styles.cardInner}>
-            <LeaderboardsTable data={(leaderboardData as any[]) || []} />
-            <Link className={styles.leaderboardLink} href="/protocol">
-              View full leaderboard
-            </Link>
+        <Card>
+          <LeaderboardsTable data={(leaderboardData as any[]) || []} />
+          <Link className={styles.leaderboardLink} href="/protocol">
+            View full leaderboard
+          </Link>
+        </Card>
+        <Card>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              gap: "1rem",
+            }}
+          >
+            <Image src={gklimaLogo} alt="Klima Logo" />
+            <h5 className={styles.cardTitle}>KlimaX Allocation Value at:</h5>
           </div>
-        </div>
-        <div className={styles.card}>
-          <div className={styles.cardInner}>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "row",
-                alignItems: "center",
-                gap: "1rem",
-              }}
-            >
-              <Image src={gklimaLogo} alt="Klima Logo" />
-              <h5 className={styles.cardTitle}>KlimaX Allocation Value at:</h5>
-            </div>
-            <div className={styles.cardContents}>
-              <KlimaXAllocationTable data={[]} />
-            </div>
+          <div className={styles.cardContents}>
+            <KlimaXAllocationTable data={[]} />
           </div>
-        </div>
+        </Card>
       </div>
     </>
   );

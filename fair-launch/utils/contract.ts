@@ -20,7 +20,7 @@ export const getKlimaXSupply = async () => {
       abi: klimaFairLaunchAbi,
       address: FAIR_LAUNCH_CONTRACT_ADDRESS,
       functionName: "KLIMAX_SUPPLY",
-    });
+    }) as bigint;
   } catch (error) {
     console.error("Error getting KlimaX supply", error);
     return 0;
@@ -42,7 +42,7 @@ export const calculateUnstakePenalty = async (
     Number(burnAmount),
     Number(stakeAmountFormatted)
   );
-  return { burnValue: `${burnAmount}`, percentage: `${penaltyPercentage}%` };
+  return { burnValue: `${burnAmount}`, percentage: `${Math.round(penaltyPercentage)}%` };
 };
 
 // @note - this is currently incorrect, but it's a placeholder for now

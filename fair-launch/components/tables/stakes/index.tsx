@@ -50,7 +50,7 @@ export const StakesTable = <T extends StakeData>({
         header: "KLIMA(v0) Staked",
         cell: ({ getValue }) => {
           const value = getValue();
-          return <>{formatNumber(formatUnits(BigInt(value as string), 9))}</>;
+          return <>{formatNumber(formatUnits(BigInt(value as string), 9), 4)}</>;
         },
       },
       {
@@ -77,7 +77,7 @@ export const StakesTable = <T extends StakeData>({
                 },
               })}
             >
-              <div>-{row.original.burnValue} KLIMA</div>
+              <div>-{formatNumber(row.original.burnValue, 2)} KLIMA</div>
               <div className={styles.penaltyText}>
                 {row.original.burnPercentage}
               </div>
@@ -90,7 +90,6 @@ export const StakesTable = <T extends StakeData>({
         header: "KlimaX Allocation",
         cell: ({ row }) => {
           const klimaxAllocation = row.original.klimaxAllocation;
-          console.log('klimaxAllocation', klimaxAllocation);
           return <><strong>{formatLargeNumber(Number(formatUnits(BigInt(klimaxAllocation as string), 9)))}</strong> KlimaX</>;
         },
       },

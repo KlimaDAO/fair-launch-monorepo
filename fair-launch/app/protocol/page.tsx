@@ -1,6 +1,5 @@
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
 import { calculateLeaderboardPoints } from "@actions/leaderboards-action";
-import { Dropdown } from "@components/dropdown";
 import { LeaderboardsTable } from "@components/tables/leaderboards";
 import klimav1Logo from "@public/tokens/klima-v1.svg";
 import {
@@ -17,6 +16,7 @@ import { type FC } from "react";
 import { css } from "styled-system/css";
 import { erc20Abi, formatGwei, formatUnits } from "viem";
 import * as styles from "./styles";
+import { Card } from "@components/card";
 
 const Page: FC = async () => {
   const klimaPrice = await fetch(
@@ -45,8 +45,8 @@ const Page: FC = async () => {
   });
 
   const tokenPercentage = calculateTokenPercentage(
-    Number(formatUnits(BigInt(totalStaked), 9)),
-    Number(formatGwei(totalSupply as bigint))
+    Number(formatUnits(totalStaked, 9)),
+    Number(formatUnits(totalSupply, 9))
   );
 
   return (
@@ -96,11 +96,9 @@ const Page: FC = async () => {
           </div>
         </div>
       </div>
-      <div className={styles.card}>
-        <div className={styles.cardInner}>
-          <LeaderboardsTable showPagination data={(leaderboardData as any[]) || []} />
-        </div>
-      </div>
+      <Card>
+        <LeaderboardsTable showPagination data={(leaderboardData as any[]) || []} />
+      </Card>
     </>
   );
 };
