@@ -33,14 +33,14 @@ import { KlimaXAllocationTable } from "@components/tables/klimax-allocation";
 import { Card } from "@components/card";
 import { LeaderboardsTable } from "@components/tables/leaderboards";
 
-interface Props {
-  searchParams: {
-    stakeAmount?: string,
-    unstakeAmount?: string
-  }
-}
-
-const Page: FC<Props> = async ({ searchParams }) => {
+// interface Props {
+//   searchParams: {
+//     stakeAmount?: string,
+//     unstakeAmount?: string
+//   } | null
+// }
+// todo - fix types here...
+const Page = async ({ searchParams }: any) => {
   const cookie = (await headers()).get("cookie");
   const initialState = cookieToInitialState(config, cookie);
 
