@@ -569,55 +569,62 @@ contract KlimaFairLaunchStakingTest is Test {
         uint256 stakeAmount = 1000 * 1e9;
         
         // Arrays to store points at different days for each user
-        uint256[] memory user1Points = new uint256[](7); // [day1, day7, day14, day30, day60, day90, day180, day365]
+        uint256[] memory user1Points = new uint256[](8); // [day1, day3, day7, day14, day30, day60, day90, day180, day365]
         uint256[] memory user2Points = new uint256[](6); // [day7, day14, day30, day60, day90, day180, day365]
         uint256[] memory user3Points = new uint256[](5); // [day14, day30, day60, day90, day180, day365]
         
         // Create stake for user1
         createStake(user1, stakeAmount);
+        console.log("User 1 staked 1000 KLIMA V0 (9 decimals) on Start Timestamp (week 1 = 2x multiplier)");
 
         // Point accumulation phase - 1 day
         vm.warp(staking.startTimestamp() + 1 days);
         user1Points[0] = staking.previewUserPoints(user1);
 
+        // Point accumulation phase - 3 days
+        vm.warp(staking.startTimestamp() + 3 days);
+        user1Points[1] = staking.previewUserPoints(user1);
+
         // Point accumulation phase - 7 days
         vm.warp(staking.startTimestamp() + 7 days);
-        user1Points[1] = staking.previewUserPoints(user1);
+        user1Points[2] = staking.previewUserPoints(user1);
 
         // Create stake for user2 at day 7
         createStake(user2, stakeAmount);
+        console.log("User 2 staked 1000 KLIMA V0 (9 decimals) on day 7 (week 2 = 1.5x multiplier)");
         user2Points[0] = staking.previewUserPoints(user2);
 
         // Point accumulation phase - 14 days
         vm.warp(staking.startTimestamp() + 14 days);
-        user1Points[2] = staking.previewUserPoints(user1);
+        user1Points[3] = staking.previewUserPoints(user1);
         user2Points[1] = staking.previewUserPoints(user2);
 
         // Create stake for user3 at day 14
         createStake(user3, stakeAmount);
+        console.log("User 3 staked 1000 KLIMA V0 (9 decimals) on day 14 (week 3 and beyond= 1x or no multiplier)");
         user3Points[0] = staking.previewUserPoints(user3);
 
         // Point accumulation phase - 30 days
         vm.warp(staking.startTimestamp() + 30 days);
-        user1Points[3] = staking.previewUserPoints(user1);
+        user1Points[4] = staking.previewUserPoints(user1);
         user2Points[2] = staking.previewUserPoints(user2);
         user3Points[1] = staking.previewUserPoints(user3);
 
         // Point accumulation phase - 60 days
         vm.warp(staking.startTimestamp() + 60 days);
-        user1Points[4] = staking.previewUserPoints(user1);
+        user1Points[5] = staking.previewUserPoints(user1);
         user2Points[3] = staking.previewUserPoints(user2);
         user3Points[2] = staking.previewUserPoints(user3);
 
         // Point accumulation phase - 90 days
         vm.warp(staking.startTimestamp() + 90 days);
-        user1Points[5] = staking.previewUserPoints(user1);
+        user1Points[6] = staking.previewUserPoints(user1);
         user2Points[4] = staking.previewUserPoints(user2);
         user3Points[3] = staking.previewUserPoints(user3);
 
         // Point accumulation phase - 180 days
         vm.warp(staking.startTimestamp() + 180 days);
-        user1Points[6] = staking.previewUserPoints(user1);
+        user1Points[7] = staking.previewUserPoints(user1);
         user2Points[5] = staking.previewUserPoints(user2);
         user3Points[4] = staking.previewUserPoints(user3);
 
@@ -630,14 +637,15 @@ contract KlimaFairLaunchStakingTest is Test {
         // Print all points in a clean format
         console.log("User 1 Points:");
         console.log("  Day 1:   ", user1Points[0]);
-        console.log("  Day 7:   ", user1Points[1]);
-        console.log("  Day 14:  ", user1Points[2]);
-        console.log("  Day 30:  ", user1Points[3]);
-        console.log("  Day 60:  ", user1Points[4]);
-        console.log("  Day 90:  ", user1Points[5]);
-        console.log("  Day 180: ", user1Points[6]);
+        console.log("  Day 3:   ", user1Points[1]);
+        console.log("  Day 7:   ", user1Points[2]);
+        console.log("  Day 14:  ", user1Points[3]);
+        console.log("  Day 30:  ", user1Points[4]);
+        console.log("  Day 60:  ", user1Points[5]);
+        console.log("  Day 90:  ", user1Points[6]);
+        console.log("  Day 180: ", user1Points[7]);
         console.log("  Day 365: ", user1Day365Points);
-        
+
         console.log("User 2 Points (started on day 7):");
         console.log("  Day 7:   ", user2Points[0]);
         console.log("  Day 14:  ", user2Points[1]);
@@ -646,7 +654,7 @@ contract KlimaFairLaunchStakingTest is Test {
         console.log("  Day 90:  ", user2Points[4]);
         console.log("  Day 180: ", user2Points[5]);
         console.log("  Day 365: ", user2Day365Points);
-        
+
         console.log("User 3 Points (started on day 14):");
         console.log("  Day 14:  ", user3Points[0]);
         console.log("  Day 30:  ", user3Points[1]);
@@ -654,6 +662,35 @@ contract KlimaFairLaunchStakingTest is Test {
         console.log("  Day 90:  ", user3Points[3]);
         console.log("  Day 180: ", user3Points[4]);
         console.log("  Day 365: ", user3Day365Points);
+
+        // Print formatted points scaled down by 10^18
+        console.log("Formatted User 1 Points:");
+        console.log("  Day 1:   ", formatPoints(user1Points[0]));
+        console.log("  Day 3:   ", formatPoints(user1Points[1]));
+        console.log("  Day 7:   ", formatPoints(user1Points[2]));
+        console.log("  Day 14:  ", formatPoints(user1Points[3]));
+        console.log("  Day 30:  ", formatPoints(user1Points[4]));
+        console.log("  Day 60:  ", formatPoints(user1Points[5]));
+        console.log("  Day 90:  ", formatPoints(user1Points[6]));
+        console.log("  Day 180: ", formatPoints(user1Points[7]));
+        console.log("  Day 365: ", formatPoints(user1Day365Points));
+
+        console.log("Formatted User 2 Points (started on day 7):");
+        console.log("  Day 7:   ", formatPoints(user2Points[0]));
+        console.log("  Day 14:  ", formatPoints(user2Points[1]));
+        console.log("  Day 30:  ", formatPoints(user2Points[2]));
+        console.log("  Day 60:  ", formatPoints(user2Points[3]));
+        console.log("  Day 90:  ", formatPoints(user2Points[4]));
+        console.log("  Day 180: ", formatPoints(user2Points[5]));
+        console.log("  Day 365: ", formatPoints(user2Day365Points));
+
+        console.log("Formatted User 3 Points (started on day 14):");
+        console.log("  Day 14:  ", formatPoints(user3Points[0]));
+        console.log("  Day 30:  ", formatPoints(user3Points[1]));
+        console.log("  Day 60:  ", formatPoints(user3Points[2]));
+        console.log("  Day 90:  ", formatPoints(user3Points[3]));
+        console.log("  Day 180: ", formatPoints(user3Points[4]));
+        console.log("  Day 365: ", formatPoints(user3Day365Points));
 
         // Finalization phase
         finalizeStaking();
@@ -1233,5 +1270,35 @@ contract KlimaFairLaunchStakingTest is Test {
         //
         // For testing purposes, we use approximate equality with a tiny tolerance.
         assertApproxEqRel(totalAllocated, klimaxSupply, 0.000000000000000001e18, "Total KLIMA_X allocations should be relatively equal to KLIMA_X supply");
+    }
+
+    // Function to format points
+    function formatPoints(uint256 points) internal pure returns (string memory) {
+        uint256 integerPart = points / 1e18;
+        uint256 fractionalPart = points % 1e18;
+        return string(abi.encodePacked(
+            uintToString(integerPart), ".",
+            uintToString(fractionalPart)
+        ));
+    }
+
+    // Helper function to convert uint to string
+    function uintToString(uint256 value) internal pure returns (string memory) {
+        if (value == 0) {
+            return "0";
+        }
+        uint256 temp = value;
+        uint256 digits;
+        while (temp != 0) {
+            digits++;
+            temp /= 10;
+        }
+        bytes memory buffer = new bytes(digits);
+        while (value != 0) {
+            digits -= 1;
+            buffer[digits] = bytes1(uint8(48 + uint256(value % 10)));
+            value /= 10;
+        }
+        return string(buffer);
     }
 } 
