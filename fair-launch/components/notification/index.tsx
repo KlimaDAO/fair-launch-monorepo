@@ -18,7 +18,9 @@ export const Notification: FC<Props> = (props) => {
 
   const onDismiss = () => {
     setShow(false);
-    router.push(pathname);
+    setTimeout(() => {
+      router.push(pathname);
+    }, 100);
   }
 
   if (!show) return null;
