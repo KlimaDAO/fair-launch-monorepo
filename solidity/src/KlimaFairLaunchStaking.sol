@@ -7,6 +7,7 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { UD60x18, ud, mul, div, exp, sub } from "@prb/math/UD60x18.sol";
 
 interface IKlimaFairLaunchBurnVault {
     function addKlimaAmountToBurn(address _user, uint256 _amount) external;
@@ -50,6 +51,12 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     address constant KLIMA_V0 = 0xDCEFd8C8fCc492630B943ABcaB3429F12Ea9Fea2; // current klima address on Base
     
     uint256 public GROWTH_RATE;
+
+    // TODO     REPLACE THESE with real constants
+    UD60x18 SECONDS_PER_DAY = ud(86400);
+    UD60x18 EXP_GROWTH_RATE = ud(2740000000000000); // 0.00274 * 1e18, consistent with _updateOrganicPoints
+    UD60x18 PERCENTAGE_SCALE = ud(100); // Multiplier base (100 = 1x)
+    UD60x18 INPUT_SCALE_DENOMINATOR = ud(1000000000000000000000000000); // 10^27
 
     // token state
     address public KLIMA;
@@ -116,6 +123,12 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         KLIMA_SUPPLY = 17_500_000 * 1e18;
         KLIMAX_SUPPLY = 40_000_000 * 1e18;
         preStakingWindow = 3 days;
+
+        // Initialize UD60x18 constants
+        SECONDS_PER_DAY = ud(86400);
+        EXP_GROWTH_RATE = ud(2740000000000000); // 0.00274 * 1e18
+        PERCENTAGE_SCALE = ud(100); // Multiplier base (100 = 1x)
+        INPUT_SCALE_DENOMINATOR = ud(1000000000000000000000000000); // 10^27
 
         // Set default limits for DOS mitigation
         minStakeAmount = 1e9;
@@ -681,14 +694,11 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     /// @notice Previews a user's total points without updating state
     /// @param user Address of the user
     /// @return Total points including organic and burn points
-    /// @dev Simulates point updates up to current timestamp
+    /// @dev Simulates point updates up to current timestamp using exponential growth
     function previewUserPoints(address user) public view returns (uint256) {
         uint256 totalPoints;
-        
-        // Load stakes into memory once
         Stake[] memory stakes = userStakes[user];
 
-        // If finalization is complete, simply use the stored points
         if (finalizationComplete == 1) {
             for (uint256 i = 0; i < stakes.length; i++) {
                 Stake memory currentStake = stakes[i];
@@ -698,51 +708,50 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
             return totalPoints;
         }
 
-        // Determine the timestamp to calculate points up to
-        uint256 calculationTimestamp = block.timestamp;
-        if (freezeTimestamp < block.timestamp) {
-            calculationTimestamp = freezeTimestamp;
-        }
+        uint256 calculationTimestamp = block.timestamp < freezeTimestamp ? block.timestamp : freezeTimestamp;
 
-        // First simulate organic points update for all stakes
         Stake[] memory updatedStakes = new Stake[](stakes.length);
         for (uint256 i = 0; i < stakes.length; i++) {
             Stake memory currentStake = stakes[i];
-            if (currentStake.amount == 0) continue;
-            
-            // Skip if lastUpdateTime is already at or after freeze timestamp
-            if (currentStake.lastUpdateTime >= freezeTimestamp) {
+            if (currentStake.amount == 0 || currentStake.lastUpdateTime >= freezeTimestamp) {
                 updatedStakes[i] = currentStake;
                 continue;
             }
 
-            // Calculate time elapsed up to calculation timestamp
-            uint256 timeElapsed = 0;
-            if (calculationTimestamp > currentStake.lastUpdateTime) {
-                timeElapsed = calculationTimestamp - currentStake.lastUpdateTime;
-            }
+            uint256 timeElapsed = calculationTimestamp > currentStake.lastUpdateTime ? calculationTimestamp - currentStake.lastUpdateTime : 0;
             
-            // Update organic points
-            uint256 newPoints = (currentStake.amount * currentStake.bonusMultiplier * timeElapsed * GROWTH_RATE) / GROWTH_DENOMINATOR;
-            currentStake.organicPoints += newPoints;
-            currentStake.lastUpdateTime = calculationTimestamp;
+            if (timeElapsed > 0) {
+                UD60x18 timeElapsed_ud = ud(timeElapsed);
+                UD60x18 timeElapsed_days = div(timeElapsed_ud, SECONDS_PER_DAY);
+                
+                UD60x18 exponent = mul(EXP_GROWTH_RATE, timeElapsed_days);
+                UD60x18 e_exponent = exp(exponent);
+                UD60x18 e_exponent_minus_one = sub(e_exponent, ud(1e18));
+                
+                UD60x18 bonusMultiplier_ud = div(ud(currentStake.bonusMultiplier * 1e18), PERCENTAGE_SCALE);
+                UD60x18 amount_ud = ud(currentStake.amount * 1e9);
+                
+                UD60x18 basePoints_ud = div(mul(amount_ud, bonusMultiplier_ud), INPUT_SCALE_DENOMINATOR);
+                UD60x18 newPoints_ud = mul(basePoints_ud, e_exponent_minus_one);
+                uint256 newPoints = newPoints_ud.intoUint256();
+                
+                currentStake.organicPoints += newPoints;
+                currentStake.lastUpdateTime = calculationTimestamp;
+            }
             
             updatedStakes[i] = currentStake;
         }
-        
-        // Then simulate burn distribution for all stakes
+
         for (uint256 i = 0; i < updatedStakes.length; i++) {
             Stake memory currentStake = updatedStakes[i];
             if (currentStake.amount == 0) continue;
             
-            // Calculate burn points
             uint256 burnRatioDiff = burnRatio - currentStake.burnRatioSnapshot;
             if (burnRatioDiff > 0) {
                 uint256 newBurnAccrual = (currentStake.organicPoints * burnRatioDiff) / GROWTH_DENOMINATOR;
                 currentStake.burnAccrued += newBurnAccrual;
             }
             
-            // Add to total points
             totalPoints += currentStake.organicPoints + currentStake.burnAccrued;
         }
         

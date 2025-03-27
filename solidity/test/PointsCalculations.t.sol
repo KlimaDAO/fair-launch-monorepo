@@ -564,54 +564,112 @@ contract KlimaFairLaunchStakingTest is Test {
     function test_PrintPointsAtDifferentTimes() public {
         // Setup
         setupStaking();
+        vm.startPrank(owner);
+        staking.setFreezeTimestamp(staking.startTimestamp() + 366 days);
         uint256 stakeAmount = 1000 * 1e9;
         
+        // Arrays to store points at different days for each user
+        uint256[] memory user1Points = new uint256[](7); // [day1, day7, day14, day30, day60, day90, day180, day365]
+        uint256[] memory user2Points = new uint256[](6); // [day7, day14, day30, day60, day90, day180, day365]
+        uint256[] memory user3Points = new uint256[](5); // [day14, day30, day60, day90, day180, day365]
+        
+        // Create stake for user1
         createStake(user1, stakeAmount);
+
+        // Point accumulation phase - 1 day
+        vm.warp(staking.startTimestamp() + 1 days);
+        user1Points[0] = staking.previewUserPoints(user1);
 
         // Point accumulation phase - 7 days
         vm.warp(staking.startTimestamp() + 7 days);
-        
-        // print Points after 7 days
-        uint256 actualPoints = staking.previewUserPoints(user1);
-        console.log("Points after 7 days:", actualPoints);
+        user1Points[1] = staking.previewUserPoints(user1);
+
+        // Create stake for user2 at day 7
+        createStake(user2, stakeAmount);
+        user2Points[0] = staking.previewUserPoints(user2);
+
+        // Point accumulation phase - 14 days
+        vm.warp(staking.startTimestamp() + 14 days);
+        user1Points[2] = staking.previewUserPoints(user1);
+        user2Points[1] = staking.previewUserPoints(user2);
+
+        // Create stake for user3 at day 14
+        createStake(user3, stakeAmount);
+        user3Points[0] = staking.previewUserPoints(user3);
 
         // Point accumulation phase - 30 days
         vm.warp(staking.startTimestamp() + 30 days);
-        
-        // print Points after 30 days
-        actualPoints = staking.previewUserPoints(user1);
-        console.log("Points after 30 days:", actualPoints);
+        user1Points[3] = staking.previewUserPoints(user1);
+        user2Points[2] = staking.previewUserPoints(user2);
+        user3Points[1] = staking.previewUserPoints(user3);
 
         // Point accumulation phase - 60 days
         vm.warp(staking.startTimestamp() + 60 days);
-        
-        // print Points after 60 days
-        actualPoints = staking.previewUserPoints(user1);
-        console.log("Points after 60 days:", actualPoints);
+        user1Points[4] = staking.previewUserPoints(user1);
+        user2Points[3] = staking.previewUserPoints(user2);
+        user3Points[2] = staking.previewUserPoints(user3);
 
         // Point accumulation phase - 90 days
         vm.warp(staking.startTimestamp() + 90 days);
+        user1Points[5] = staking.previewUserPoints(user1);
+        user2Points[4] = staking.previewUserPoints(user2);
+        user3Points[3] = staking.previewUserPoints(user3);
+
+        // Point accumulation phase - 180 days
+        vm.warp(staking.startTimestamp() + 180 days);
+        user1Points[6] = staking.previewUserPoints(user1);
+        user2Points[5] = staking.previewUserPoints(user2);
+        user3Points[4] = staking.previewUserPoints(user3);
+
+        // Point accumulation phase - 365 days
+        vm.warp(staking.startTimestamp() + 365 days);
+        uint256 user1Day365Points = staking.previewUserPoints(user1);
+        uint256 user2Day365Points = staking.previewUserPoints(user2);
+        uint256 user3Day365Points = staking.previewUserPoints(user3);
+
+        // Print all points in a clean format
+        console.log("User 1 Points:");
+        console.log("  Day 1:   ", user1Points[0]);
+        console.log("  Day 7:   ", user1Points[1]);
+        console.log("  Day 14:  ", user1Points[2]);
+        console.log("  Day 30:  ", user1Points[3]);
+        console.log("  Day 60:  ", user1Points[4]);
+        console.log("  Day 90:  ", user1Points[5]);
+        console.log("  Day 180: ", user1Points[6]);
+        console.log("  Day 365: ", user1Day365Points);
         
-        // print Points after 90 days
-        actualPoints = staking.previewUserPoints(user1);
-        console.log("Points after 90 days:", actualPoints);
+        console.log("User 2 Points (started on day 7):");
+        console.log("  Day 7:   ", user2Points[0]);
+        console.log("  Day 14:  ", user2Points[1]);
+        console.log("  Day 30:  ", user2Points[2]);
+        console.log("  Day 60:  ", user2Points[3]);
+        console.log("  Day 90:  ", user2Points[4]);
+        console.log("  Day 180: ", user2Points[5]);
+        console.log("  Day 365: ", user2Day365Points);
+        
+        console.log("User 3 Points (started on day 14):");
+        console.log("  Day 14:  ", user3Points[0]);
+        console.log("  Day 30:  ", user3Points[1]);
+        console.log("  Day 60:  ", user3Points[2]);
+        console.log("  Day 90:  ", user3Points[3]);
+        console.log("  Day 180: ", user3Points[4]);
+        console.log("  Day 365: ", user3Day365Points);
 
         // Finalization phase
         finalizeStaking();
-        actualPoints = staking.previewUserPoints(user1);
+        uint256 actualPoints = staking.previewUserPoints(user1);
         
         // Calculate expected KLIMA and KLIMA_X allocations
         uint256 expectedKlimaAllocation = (stakeAmount * staking.KLIMA_SUPPLY()) / staking.totalStaked();
         
         // For KLIMA_X, we need to understand how the contract calculates it
-        // The contract is allocating 40e25 tokens, but our calculation expected 20e25
-        // Let's check the contract's calculation method
         uint256 klimaxSupply = staking.KLIMAX_SUPPLY();
         uint256 finalTotalPoints = staking.finalTotalPoints();
         
         // The correct calculation appears to be:
         uint256 expectedKlimaXAllocation = (actualPoints * klimaxSupply) / finalTotalPoints;
         
+        console.log("\nAllocation Information:");
         console.log("User points:", actualPoints);
         console.log("Total points:", finalTotalPoints);
         console.log("KLIMAX supply:", klimaxSupply);

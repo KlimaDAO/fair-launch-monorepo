@@ -10,4 +10,8 @@
 [submodule "solidity/lib/interchain-token-service"]
 	path = solidity/lib/interchain-token-service
 	url = https://github.com/axelarnetwork/interchain-token-service
-
+[submodule "solidity/lib/prb-math"]
+	path = solidity/lib/prb-math
+	url = https://github.com/PaulRBerg/prb-math
+[submodule "lib/prb-math"]
+	branch = release-v4
