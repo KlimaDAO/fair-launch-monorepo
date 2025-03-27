@@ -2,20 +2,23 @@ import { css } from '../../styled-system/css';
 
 export const footer = css({
   width: '100%',
-  height: '41.6rem',
-  minHeight: '41.6rem',
+  height: '27.6rem',
+  minHeight: '27.6rem',
   backgroundColor: 'void.80',
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
   justifyContent: 'center',
   color: 'white',
-  gap: '3.2rem',
+  gap: '4rem',
 
   lg: {
     gap: '4rem',
-    height: '21.6rem',
-    minHeight: '21.6rem',
+    height: '10rem',
+    minHeight: '10rem',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: '0 4rem',
   }
 });
 
@@ -24,7 +27,7 @@ export const navLinks = css({
   flexDirection: 'column',
   alignItems: 'center',
   justifyContent: 'center',
-  gap: '1.6rem',
+  gap: '4rem',
 
   '& a': {
     color: 'white',
@@ -42,13 +45,41 @@ export const navLinks = css({
   }
 });
 
+export const protocolLink = css({
+  fontSize: 'sm !important',
+  fontWeight: '700 !important',
+  color: 'green.40 !important',
+});
+
+export const links = css({
+  display: 'flex',
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: '4rem',
+
+  lg: {
+    flexDirection: 'row',
+  }
+});
+
+export const socialsContainer = css({
+  gap: '4rem',
+  display: 'flex',
+  alignItems: 'center',
+  flexDirection: 'column-reverse',
+
+  lg: {
+    flexDirection: 'row',
+  }
+});
+
 export const socials = css({
   display: 'flex',
   flexDirection: 'row',
   alignItems: 'center',
   justifyContent: 'center',
   gap: '1.6rem',
-
 
   '& svg': {
     fill: 'void.20',
