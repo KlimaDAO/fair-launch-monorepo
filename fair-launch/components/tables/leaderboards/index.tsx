@@ -110,8 +110,6 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
         cell: ({ row, getValue }) => {
           const value = getValue();
           const userWallet = isUserWallet(row.original.id, address as string);
-          console.log('totalStaked', value);
-
           return (
             <div
               className={clsx({
@@ -130,7 +128,6 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
         cell: ({ row, getValue }) => {
           const value = getValue() as string;
           const userWallet = isUserWallet(row.original.id, address as string);
-          console.log('totalPoints', value);
           if (value === null) {
             return;
           }

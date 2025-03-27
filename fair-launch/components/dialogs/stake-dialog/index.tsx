@@ -15,6 +15,7 @@ import { formatNumber, truncateAddress } from "@utils/formatting";
 import { Dialog } from "radix-ui";
 import { type FC, useEffect, useState } from "react";
 import { MdCelebration, MdLibraryAdd } from "react-icons/md";
+import { useRouter } from "next/navigation";
 import { formatUnits, parseUnits } from "viem";
 import {
   useAccount,
@@ -44,6 +45,7 @@ enum DialogState {
 }
 
 export const StakeDialog: FC = () => {
+  const router = useRouter();
   const { address } = useAccount();
   const { data: balance } = useBalance({
     address: address,
@@ -83,9 +85,7 @@ export const StakeDialog: FC = () => {
     hash: stakeData,
   });
   const isSubmitSuccess = receipt?.status === "success";
-  const isTransactionSuccess = isStakePending || (stakeData && !isSubmitSuccess)
-
-
+  const isTransactionSuccess = isStakePending || (stakeData && isSubmitSuccess);
 
   const handleDialogState = () => {
     setOpen(!open);
@@ -136,9 +136,9 @@ export const StakeDialog: FC = () => {
 
   useEffect(() => {
     setOpen(false);
-    // todo - show notification message...
     if (submitReceipt?.status === "success") {
-      window.location.reload();
+      router.push(`/my-rewards?stakeAmount=${form.state.values["stake-amount"]}`);
+      // window.location.reload();
     }
   }, [submitReceipt]);
 

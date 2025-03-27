@@ -3,14 +3,17 @@
 import { FC } from "react";
 import { Alert } from "@components/alert";
 import { MdCheckCircle } from "react-icons/md";
+import { useRouter } from "next/navigation";
 import * as styles from "./styles";
-
 interface Props {
   title: string;
   description: string;
 }
 
 export const Notification: FC<Props> = (props) => {
+  const router = useRouter();
+  const onDismiss = () => router.push('/my-rewards'); // fix path
+
   return (
     <div className={styles.container}>
       <Alert variant="success">
@@ -22,7 +25,7 @@ export const Notification: FC<Props> = (props) => {
           <div className={styles.description}>
             {props.description}
           </div>
-          <button className={styles.button}>
+          <button onClick={onDismiss} className={styles.button}>
             Dismiss
           </button>
         </div>

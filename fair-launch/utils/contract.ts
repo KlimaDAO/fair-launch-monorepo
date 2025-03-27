@@ -37,9 +37,7 @@ export const calculateUnstakePenalty = async (
   const burnAmount = formatTokenToValue(
     await calculateBurnFn(BigInt(stakeAmount), stakeTimestamp)
   );
-  console.log('burnAmount', burnAmount);
   const stakeAmountFormatted = formatTokenToValue(stakeAmount);
-  console.log('stakeAmountFormatted', stakeAmountFormatted);
   const penaltyPercentage = calculatePenaltyPercentage(
     Number(burnAmount),
     Number(stakeAmountFormatted)

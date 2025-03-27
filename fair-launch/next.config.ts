@@ -3,7 +3,7 @@ import type { NextConfig } from 'next'
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   experimental: {
-    useCache: true,
+    useCache: true
   },
   webpack: (config) => {
     config.externals.push('pino-pretty', 'lokijs', 'encoding');

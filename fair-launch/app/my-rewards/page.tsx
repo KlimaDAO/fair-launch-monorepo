@@ -3,7 +3,6 @@ import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
 import { calculateLeaderboardPoints } from "@actions/leaderboards-action";
 import { Badge } from "@components/badge";
 import { StakeDialog } from "@components/dialogs/stake-dialog";
-import { LeaderboardsTable } from "@components/tables/leaderboards";
 import { StakeData, StakesTable } from "@components/tables/stakes";
 import { Tooltip } from "@components/tooltip";
 import gklimaLogo from "@public/tokens/g-klima.svg";
@@ -18,7 +17,7 @@ import {
   getKlimaXSupply,
   totalUserStakes,
 } from "@utils/contract";
-import { formatLargeNumber, formatNumber, formatTokenToValue } from "@utils/formatting";
+import { formatLargeNumber, formatNumber } from "@utils/formatting";
 import { fetchUserStakes } from "@utils/queries";
 import { config } from "@utils/wagmi.server";
 import { readContract } from "@wagmi/core";
@@ -26,13 +25,22 @@ import { headers } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
 import { type FC } from "react";
+import { Notification } from "@components/notification";
 import { formatGwei, formatUnits } from "viem";
 import { cookieToInitialState } from "wagmi";
 import * as styles from "./styles";
 import { KlimaXAllocationTable } from "@components/tables/klimax-allocation";
 import { Card } from "@components/card";
+import { LeaderboardsTable } from "@components/tables/leaderboards";
 
-const Page: FC = async () => {
+interface Props {
+  searchParams: {
+    stakeAmount?: string,
+    unstakeAmount?: string
+  }
+}
+
+const Page: FC<Props> = async ({ searchParams }) => {
   const cookie = (await headers()).get("cookie");
   const initialState = cookieToInitialState(config, cookie);
 
@@ -42,6 +50,7 @@ const Page: FC = async () => {
 
   const userStakes = await fetchUserStakes(walletAddress ?? null);
   const leaderboardData = await calculateLeaderboardPoints(5);
+  const { stakeAmount, unstakeAmount } = await searchParams;
 
   // group these contract calls into readContracts
   const burnRatio = await readContract(config, {
@@ -135,6 +144,12 @@ const Page: FC = async () => {
 
   return (
     <>
+      {stakeAmount && (
+        <Notification
+          title="Stake Successful"
+          description={`You have successfully Staked ${stakeAmount} KLIMA. Check back regularly to watch your rewards grow!`}
+        />
+      )}
       <div className={styles.twoCols}>
         <div className={styles.titleContainer}>
           <h1 className={styles.title}>My Rewards</h1>
