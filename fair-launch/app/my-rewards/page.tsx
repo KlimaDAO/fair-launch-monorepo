@@ -56,6 +56,9 @@ const Page = async ({ searchParams }: PageProps) => {
   const leaderboardData = await calculateLeaderboardPoints(5);
   const { stakeAmount, unstakeAmount } = await searchParams;
 
+  console.log('stakeAmount', stakeAmount);
+  console.log('unstakeAmount', unstakeAmount);
+
   const currentTimestamp = Math.floor(Date.now() / 1000);
   const startTimestamp = (await readContract(config, {
     abi: klimaFairLaunchAbi,

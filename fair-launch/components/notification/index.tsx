@@ -12,15 +12,15 @@ interface Props {
 }
 
 export const Notification: FC<Props> = (props) => {
-  const router = useRouter();
-  const pathname = usePathname();
+  // const router = useRouter();
+  // const pathname = usePathname();
   const [show, setShow] = useState(true);
 
   const onDismiss = () => {
     setShow(false);
-    setTimeout(() => {
-      router.push(pathname);
-    }, 100);
+    // setTimeout(() => {
+      // router.push(pathname);
+    // }, 100);
   }
 
   if (!show) return null;
