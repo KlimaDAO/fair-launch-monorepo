@@ -19,12 +19,12 @@ import {
 import { formatLargeNumber, formatNumber } from "@utils/formatting";
 import { fetchUserStakes } from "@utils/queries";
 import { config } from "@utils/wagmi.server";
-import { readContract } from "@wagmi/core";
+import { readContract, readContracts } from "@wagmi/core";
 import { headers } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
 import { Notification } from "@components/notification";
-import { formatGwei, formatUnits } from "viem";
+import { AbiFunction, formatGwei, formatUnits } from "viem";
 import { cookieToInitialState } from "wagmi";
 import * as styles from "./styles";
 import { KlimaXAllocationTable } from "@components/tables/klimax-allocation";
@@ -65,37 +65,74 @@ const Page = async (props: { searchParams: SearchParams }) => {
     phaseLabel = '1.5x Points Boost ACTIVE';
   }
 
+  const [
+    burnRatio,
+    totalSupply,
+    getTotalPoints,
+    growthRate,
+    previewUserPoints
+  ] = await readContracts(config, {
+    contracts: [
+      {
+        abi: klimaFairLaunchAbi as AbiFunction[],
+        address: FAIR_LAUNCH_CONTRACT_ADDRESS,
+        functionName: "burnRatio",
+      },
+      {
+        abi: erc20Abi as AbiFunction[],
+        address: KLIMA_V0_TOKEN_ADDRESS,
+        functionName: "totalSupply",
+      },
+      {
+        abi: klimaFairLaunchAbi as AbiFunction[],
+        address: FAIR_LAUNCH_CONTRACT_ADDRESS,
+        functionName: "getTotalPoints",
+      },
+      {
+        abi: klimaFairLaunchAbi as AbiFunction[],
+        address: FAIR_LAUNCH_CONTRACT_ADDRESS,
+        functionName: "GROWTH_RATE",
+      },
+      {
+        abi: klimaFairLaunchAbi as AbiFunction[],
+        address: FAIR_LAUNCH_CONTRACT_ADDRESS,
+        functionName: "previewUserPoints",
+        args: [walletAddress],
+      },
+    ]
+  });
+
   // group these contract calls into readContracts
-  const burnRatio = await readContract(config, {
-    abi: klimaFairLaunchAbi,
-    address: FAIR_LAUNCH_CONTRACT_ADDRESS,
-    functionName: "burnRatio",
-  }) as bigint;
+  // const burnRatio = await readContract(config, {
+  //   abi: klimaFairLaunchAbi,
+  //   address: FAIR_LAUNCH_CONTRACT_ADDRESS,
+  //   functionName: "burnRatio",
+  // }) as bigint;
 
-  const totalSupply = await readContract(config, {
-    abi: erc20Abi,
-    address: KLIMA_V0_TOKEN_ADDRESS,
-    functionName: "totalSupply",
-  }) as bigint;
+  // const totalSupply = await readContract(config, {
+  //   abi: erc20Abi,
+  //   address: KLIMA_V0_TOKEN_ADDRESS,
+  //   functionName: "totalSupply",
+  // }) as bigint;
 
-  const getTotalPoints = await readContract(config, {
-    abi: klimaFairLaunchAbi,
-    address: FAIR_LAUNCH_CONTRACT_ADDRESS,
-    functionName: "getTotalPoints",
-  }) as bigint;
+  // const getTotalPoints = await readContract(config, {
+  //   abi: klimaFairLaunchAbi,
+  //   address: FAIR_LAUNCH_CONTRACT_ADDRESS,
+  //   functionName: "getTotalPoints",
+  // }) as bigint;
 
-  const growthRate = await readContract(config, {
-    abi: klimaFairLaunchAbi,
-    address: FAIR_LAUNCH_CONTRACT_ADDRESS,
-    functionName: "GROWTH_RATE",
-  }) as bigint;
+  // const growthRate = await readContract(config, {
+  //   abi: klimaFairLaunchAbi,
+  //   address: FAIR_LAUNCH_CONTRACT_ADDRESS,
+  //   functionName: "GROWTH_RATE",
+  // }) as bigint;
 
-  const previewUserPoints = await readContract(config, {
-    abi: klimaFairLaunchAbi,
-    address: FAIR_LAUNCH_CONTRACT_ADDRESS,
-    functionName: "previewUserPoints",
-    args: [walletAddress],
-  }) as bigint;
+  // const previewUserPoints = await readContract(config, {
+  //   abi: klimaFairLaunchAbi,
+  //   address: FAIR_LAUNCH_CONTRACT_ADDRESS,
+  //   functionName: "previewUserPoints",
+  //   args: [walletAddress],
+  // }) as bigint;
 
   // todo - move this function out...
   const userStakesPromise = await Promise.all(
@@ -110,16 +147,16 @@ const Page = async (props: { searchParams: SearchParams }) => {
       let [amount, stakeStartTime, , bonusMultiplier, organicPoints, burnRatioSnapshot, burnAccrued] = userStakesInfo;
       const currentTimestamp = Math.floor(Date.now() / 1000);
       const elapsedTime = BigInt(currentTimestamp) - BigInt(stakeStartTime);
-      const newPoints = (BigInt(amount) * BigInt(bonusMultiplier) * BigInt(elapsedTime) * BigInt(growthRate as bigint)) / BigInt(100000);
+      const newPoints = (BigInt(amount) * BigInt(bonusMultiplier) * BigInt(elapsedTime) * BigInt(growthRate.result as any)) / BigInt(100000);
       organicPoints = (BigInt(organicPoints) + BigInt(newPoints));
 
-      const burnRatioDiff = BigInt(burnRatio) - BigInt(burnRatioSnapshot);
+      const burnRatioDiff = BigInt(burnRatio.result as any) - BigInt(burnRatioSnapshot);
       if (burnRatioDiff > 0) {
         const newBurnAccrual = (BigInt(organicPoints) * burnRatioDiff) / BigInt(100000);
         burnAccrued = (BigInt(burnAccrued) + BigInt(newBurnAccrual));
       }
       const supply = formatUnits(BigInt(await getKlimaXSupply()), 9);
-      const klimaxAllocation = BigInt(newPoints) * BigInt(supply) / BigInt(getTotalPoints);
+      const klimaxAllocation = BigInt(newPoints) * BigInt(supply) / BigInt(getTotalPoints.result as any);
 
       return {
         id: stake.id,
@@ -137,12 +174,12 @@ const Page = async (props: { searchParams: SearchParams }) => {
 
   const tokenPercentage = calculateTokenPercentage(
     Number(formatUnits(BigInt(totalUserStakes(userStakesInfo || [])), 9)),
-    Number(formatUnits(totalSupply, 9))
+    Number(formatUnits(totalSupply.result as any, 9))
   );
 
   const totalPointsPercentage = calculateTokenPercentage(
-    Number(formatUnits(previewUserPoints, 9)),
-    Number(formatUnits(getTotalPoints, 9))
+    Number(formatUnits(previewUserPoints.result as any, 9)),
+    Number(formatUnits(getTotalPoints.result as any, 9))
   );
 
   // calculate penalties to pass to the stakes table
@@ -205,7 +242,7 @@ const Page = async (props: { searchParams: SearchParams }) => {
             <div className={styles.secondaryText}>
               <strong>&lt;{tokenPercentage.toFixed(2)}%</strong> of{" "}
               <strong >
-                {formatLargeNumber(Number(formatGwei(totalSupply as bigint)))}
+                {formatLargeNumber(Number(formatGwei(totalSupply.result as any)))}
               </strong>{" "}
             </div>
           </div>
@@ -217,7 +254,7 @@ const Page = async (props: { searchParams: SearchParams }) => {
             <div id="step2" className={styles.mainText}>
               {formatLargeNumber(
                 Number(
-                  formatUnits(BigInt((previewUserPoints as bigint) || 0), 9)
+                  formatUnits(BigInt((previewUserPoints.result as any) || 0), 9)
                 )
               )}
             </div>
@@ -226,7 +263,7 @@ const Page = async (props: { searchParams: SearchParams }) => {
               <strong>
                 {formatLargeNumber(
                   Number(
-                    formatUnits(BigInt((getTotalPoints as bigint) || 0), 9)
+                    formatUnits(BigInt((getTotalPoints.result as any) || 0), 9)
                   )
                 )}
               </strong>
