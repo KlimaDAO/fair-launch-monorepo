@@ -6,6 +6,7 @@ export const container = css({
   right: 0,
   zIndex: 100,
   left: '22.4rem', // sidebar width
+  boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.1), 0px 1px 2px -1px rgba(0, 0, 0, 0.1)'
 });
 
 export const titleContainer = css({

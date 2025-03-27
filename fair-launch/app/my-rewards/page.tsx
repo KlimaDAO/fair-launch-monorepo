@@ -144,7 +144,7 @@ const Page = async (props: { searchParams: SearchParams }) => {
       {stakeAmount && (
         <Notification
           title="Stake Successful"
-          description={`You have successfully Staked ${stakeAmount} KLIMA. Check back regularly to watch your rewards grow!`}
+          description={`You have successfully staked ${stakeAmount} KLIMA. Check back regularly to watch your rewards grow!`}
         />
       )}
       {unstakeAmount && (
