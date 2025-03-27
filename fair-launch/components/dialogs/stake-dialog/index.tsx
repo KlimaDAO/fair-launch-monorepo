@@ -173,7 +173,7 @@ export const StakeDialog: FC = () => {
             if (Number(value) > Number(klimaBalance)) {
               return "You don't have enough KLIMA";
             } else if (Number(klimaBalance) <= 0 || Number(value) <= 0) {
-              return "You can't stake 0 KLIMA";
+              return "Invalid unstake amount";
             } else {
               return undefined;
             }

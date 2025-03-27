@@ -96,6 +96,7 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({
   };
 
   const generateAllocationInfo = async (amount: string) => {
+    if (Number(amount) <= 0) return;
     // todo -> cleanup
     const penalty = await calculateUnstakePenalty(
       parseUnits(amount, 9),
@@ -148,33 +149,33 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({
   );
 
   const UnstakeView = () => (
-    <div className={styles.content}>
-      <div className={styles.icon}>
-        <MdAccountBalance />
-      </div>
-      <Dialog.Title className={styles.title}>Unstake</Dialog.Title>
-      <div className={styles.description}>
-        <div className={styles.inputContainer}>
-          <form.Field
-            name="unstake-amount"
-            listeners={{
-              onMount: async ({ value }) => await generateAllocationInfo(value),
-              onChange: async ({ value }) =>
-                await generateAllocationInfo(value),
-            }}
-            validators={{
-              onChange: ({ value }) => {
-                if (Number(value) > Number(stakedBalance)) {
-                  return "You don't have enough staked KLIMA";
-                } else if (Number(stakedBalance) <= 0 || Number(value) <= 0) {
-                  return "You can't unstake 0 KLIMA";
-                } else {
-                  return undefined;
-                }
-              }
-            }}
-          >
-            {(field) => (
+    <form.Field
+      name="unstake-amount"
+      listeners={{
+        onMount: async ({ value }) => await generateAllocationInfo(value),
+        onChange: async ({ value }) =>
+          await generateAllocationInfo(value),
+      }}
+      validators={{
+        onChange: ({ value }) => {
+          if (Number(value) > Number(stakedBalance)) {
+            return "You don't have enough staked KLIMA";
+          } else if (Number(stakedBalance) <= 0 || Number(value) <= 0) {
+            return "Invalid unstake amount";
+          } else {
+            return undefined;
+          }
+        }
+      }}
+    >
+      {(field) => (
+        <div className={styles.content}>
+          <div className={styles.icon}>
+            <MdAccountBalance />
+          </div>
+          <Dialog.Title className={styles.title}>Unstake</Dialog.Title>
+          <div className={styles.description}>
+            <div className={styles.inputContainer}>
               <>
                 <div className={styles.row}>
                   <label htmlFor={field.name}>Amount</label>
@@ -207,41 +208,47 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({
                   </div>
                 ) : null}
               </>
-            )}
-          </form.Field>
-        </div>
-        <div className={styles.infoRowContainer}>
-          <div className={styles.infoRow}>
-            <p>Burn Amount</p>
-            <form.Field name="burn-amount">
-              {(field) => (
-                <p>
-                  <strong>{field.state.value}</strong> KLIMA
-                </p>
-              )}
-            </form.Field>
+            </div>
+            <div className={styles.infoRowContainer}>
+              <div className={styles.infoRow}>
+                <p>Burn Amount</p>
+                <form.Field name="burn-amount">
+                  {(field) => (
+                    <p>
+                      <strong>{field.state.value}</strong> KLIMA
+                    </p>
+                  )}
+                </form.Field>
+              </div>
+              <div className={styles.infoRow}>
+                <p>Receive Amount</p>
+                <form.Field name="receive-amount">
+                  {(field) => (
+                    <p>
+                      <strong>{field.state.value}</strong> KLIMA
+                    </p>
+                  )}
+                </form.Field>
+              </div>
+            </div>
           </div>
-          <div className={styles.infoRow}>
-            <p>Receive Amount</p>
-            <form.Field name="receive-amount">
-              {(field) => (
-                <p>
-                  <strong>{field.state.value}</strong> KLIMA
-                </p>
-              )}
-            </form.Field>
+          <div className={styles.actions}>
+            <button
+              className={clsx(styles.primaryButton, {
+                [styles.disabled]: !!field.state.meta.errors.length,
+              })}
+              onClick={handleUnstake}
+              disabled={!!field.state.meta.errors.length}
+            >
+              Unstake
+            </button>
+            <Dialog.Close asChild>
+              <button className={styles.secondaryButton}>Cancel</button>
+            </Dialog.Close>
           </div>
         </div>
-      </div>
-      <div className={styles.actions}>
-        <button className={styles.primaryButton} onClick={handleUnstake}>
-          Unstake
-        </button>
-        <Dialog.Close asChild>
-          <button className={styles.secondaryButton}>Cancel</button>
-        </Dialog.Close>
-      </div>
-    </div>
+      )}
+    </form.Field>
   );
 
   const ConfirmUnstakeView = () => (
