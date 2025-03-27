@@ -24,9 +24,9 @@ export const tableHead = css({
     '&:first-child': {
       textAlign: 'left'
     },
-    '&[aria-label="leaderboard-table-head"]': { 
+    '&[aria-label="leaderboard-table-head"]': {
       '&:nth-child(2)': {
-      textAlign: 'left'
+        textAlign: 'left'
       }
     }
   },
@@ -81,31 +81,47 @@ export const pagination = css({
 });
 
 export const paginationButtons = css({
+  width: '100%',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
+
+  lg: {
+    width: 'unset',
+  }
 });
 
 export const paginationButton = css({
-  borderLeft: 'none',
   border: '0.1rem solid token(colors.void.40)',
-  borderRadius: '0',
-  padding: '0rem 0.6rem',
+  padding: '0 2.4rem',
   cursor: 'pointer',
-  height: '3.2rem',
-  minWidth: '3.4rem',
+  height: '4.8rem',
+  minWidth: '4.8rem',
+  borderRadius: '0.4rem',
+  fontWeight: 500,
+
   '&:disabled': {
     cursor: 'not-allowed',
     opacity: 0.5,
   },
-  '&:first-child': {
-    padding: '0.4rem 0.6rem',
-    borderLeft: '0.1rem solid token(colors.void.40)',
-    borderRadius: '0.4rem 0 0 0.4rem',
-  },
-  '&:last-child': {
-    padding: '0.4rem 0.6rem',
-    borderRadius: '0 0.4rem 0.4rem 0',
+
+  lg: {
+    height: '3.2rem',
+    minWidth: '3.4rem',
+    borderLeft: 'none',
+    borderRadius: '0',
+    padding: '0 0.6rem',
+    fontWeight: 400,
+
+    '&:first-child': {
+      padding: '0.4rem 0.6rem',
+      borderLeft: '0.1rem solid token(colors.void.40)',
+      borderRadius: '0.4rem 0 0 0.4rem',
+    },
+    '&:last-child': {
+      padding: '0.4rem 0.6rem',
+      borderRadius: '0 0.4rem 0.4rem 0',
+    },
   }
 });
 

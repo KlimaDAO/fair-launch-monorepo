@@ -325,7 +325,26 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
                   </div>
                 )
               })}
-            </>) : (
+              {props.showPagination && (
+                <div className={styles.paginationButtons}>
+                  <button
+                    className={styles.paginationButton}
+                    onClick={() => table.previousPage()}
+                    disabled={!table.getCanPreviousPage()}
+                  >
+                    Previous
+                  </button>
+                  <button
+                    className={styles.paginationButton}
+                    onClick={() => table.nextPage()}
+                    disabled={!table.getCanNextPage()}
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+            </>
+          ) : (
             <div className={styles.tableCell}>
               <i>No data to display yet</i>
             </div>
