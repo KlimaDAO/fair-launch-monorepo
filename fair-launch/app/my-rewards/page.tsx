@@ -184,19 +184,21 @@ const Page = async ({ searchParams }: PageProps) => {
     Number(formatUnits(previewUserPoints.result as any, 9)),
     Number(formatUnits(getTotalPoints.result as any, 9))
   );
-  
+
   return (
     <>
-      {(stakeAmount || unstakeAmount) && (
+      {stakeAmount &&
         <Notification
-          title={stakeAmount ? "Stake Successful" : "Unstake Successful"}
-          description={
-            stakeAmount
-              ? `You have successfully staked ${stakeAmount} KLIMA. Check back regularly to watch your rewards grow!`
-              : `You have successfully unstaked ${unstakeAmount} KLIMA.`
-          }
+          title="Stake Successful"
+          description={`You have successfully staked ${formatNumber(stakeAmount, 2)} KLIMA. Check back regularly to watch your rewards grow!`}
         />
-      )}
+      }
+      {unstakeAmount &&
+        <Notification
+          title="Unstake Successful"
+          description={`You have successfully unstaked ${formatNumber(unstakeAmount, 2)} KLIMA.`}
+        />
+      }
       <div className={styles.twoCols}>
         <div className={styles.titleContainer}>
           <h1 className={styles.title}>My Rewards</h1>

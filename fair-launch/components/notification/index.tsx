@@ -1,10 +1,11 @@
 'use client';
 
-import { FC } from "react";
+import { FC, useState } from "react";
 import { Alert } from "@components/alert";
 import { MdCheckCircle } from "react-icons/md";
-import { useRouter } from "next/navigation";
 import * as styles from "./styles";
+import { usePathname, useRouter } from "next/navigation";
+
 interface Props {
   title: string;
   description: string;
@@ -12,7 +13,15 @@ interface Props {
 
 export const Notification: FC<Props> = (props) => {
   const router = useRouter();
-  const onDismiss = () => router.push('/my-rewards'); // fix path
+  const pathname = usePathname();
+  const [show, setShow] = useState(true);
+
+  const onDismiss = () => {
+    setShow(false);
+    router.push(pathname);
+  }
+
+  if (!show) return null;
 
   return (
     <div className={styles.container}>
