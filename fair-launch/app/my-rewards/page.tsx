@@ -133,7 +133,7 @@ const Page = async ({ searchParams }: PageProps) => {
       ] = item.result as any;
       const currentTimestamp = Math.floor(Date.now() / 1000);
       const elapsedTime = BigInt(currentTimestamp) - BigInt(stakeStartTime);
-      const newPoints =
+      let newPoints =
         (BigInt(amount) *
           BigInt(bonusMultiplier) *
           BigInt(elapsedTime) *
@@ -147,6 +147,7 @@ const Page = async ({ searchParams }: PageProps) => {
           (BigInt(organicPoints) * burnRatioDiff) / BigInt(100000);
         burnAccrued = BigInt(burnAccrued) + BigInt(newBurnAccrual);
       }
+
       const supply = formatUnits(BigInt(klimaXSupply), 9);
       const klimaxAllocation =
         (BigInt(newPoints) * BigInt(supply)) /
@@ -160,7 +161,7 @@ const Page = async ({ searchParams }: PageProps) => {
         amount,
         stakeStartTime,
         bonusMultiplier,
-        points: newPoints,
+        points: newPoints + burnAccrued,
         burnRatioSnapshot,
         burnAccrued,
         klimaxAllocation,
