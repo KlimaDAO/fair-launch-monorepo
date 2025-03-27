@@ -29,6 +29,11 @@ export const content = css({
   display: 'flex',
   flexDirection: 'column',
   gap: '2rem',
+
+  lg: {
+    width: '69.2rem',
+    maxWidth: '69.2rem',
+  }
 });
 
 export const icon = css({
