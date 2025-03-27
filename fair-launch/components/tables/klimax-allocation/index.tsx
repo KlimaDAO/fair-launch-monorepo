@@ -6,13 +6,14 @@ import {
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+import { formatCurrency, formatLargeNumber } from "@utils/formatting";
 import clsx from "clsx";
 import { useMemo } from "react";
 import { css } from "styled-system/css";
 import * as styles from "../styles";
 
-interface Props<T> {
-  data: T[];
+interface Props {
+  userShare: number;
 }
 
 export interface Data {
@@ -20,29 +21,34 @@ export interface Data {
   projectedValue: string | number;
 }
 
-export const KlimaXAllocationTable = <T extends Data>({ data }: Props<T>) => {
+const marketCapList = [225_000_000, 625_000_000, 1_500_000_000, 3_750_000_000];
+
+export const KlimaXAllocationTable = <T extends Data>(props: Props) => {
   const columns: ColumnDef<T>[] = useMemo(
     () => [
       {
         id: "marketCap",
         header: "Market Cap",
         accessorKey: "marketCap",
-        cell: () => '-',
+        cell: ({ getValue }) => formatLargeNumber(Number(getValue())),
       },
       {
         id: "projectedValue",
         header: "Projected USD Value",
         accessorKey: "projectedValue",
-        cell: () => '-',
+        cell: ({ getValue }) => formatCurrency(Number(getValue()), 0),
       },
     ],
     []
   );
 
   const table = useReactTable({
-    data,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    data: marketCapList.map((marketCap) => ({
+      marketCap,
+      projectedValue: marketCap * 0.4 * (props.userShare / 100),
+    })) as T[],
   });
 
   return (
@@ -153,10 +159,9 @@ export const KlimaXAllocationTable = <T extends Data>({ data }: Props<T>) => {
                   <tr key={row.id}>
                     {row.getVisibleCells().map((cell) => (
                       <td
-                        className={clsx(
-                          styles.tableCell,
-                          styles.stakeTableCell
-                        )}
+                        className={
+                          styles.tableCell
+                        }
                         key={cell.id}
                       >
                         {flexRender(

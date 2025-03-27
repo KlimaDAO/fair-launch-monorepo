@@ -2,8 +2,13 @@ import { abi as erc20Abi } from "@abi/erc20";
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
 import { calculateLeaderboardPoints } from "@actions/leaderboards-action";
 import { Badge } from "@components/badge";
+import { Card } from "@components/card";
 import { StakeDialog } from "@components/dialogs/stake-dialog";
+import { Notification } from "@components/notification";
+import { KlimaXAllocationTable } from "@components/tables/klimax-allocation";
+import { LeaderboardsTable } from "@components/tables/leaderboards";
 import { StakeData, StakesTable } from "@components/tables/stakes";
+import { Tooltip } from "@components/tooltip";
 import gklimaLogo from "@public/tokens/g-klima.svg";
 import klimav1Logo from "@public/tokens/klima-v1.svg";
 import {
@@ -23,25 +28,22 @@ import { readContract, readContracts } from "@wagmi/core";
 import { headers } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
-import { Notification } from "@components/notification";
-import { AbiFunction, formatGwei, formatUnits } from "viem";
+import { MdHelpOutline } from "react-icons/md";
+import { AbiFunction, formatGwei, formatUnits, parseUnits } from "viem";
 import { cookieToInitialState } from "wagmi";
 import * as styles from "./styles";
-import { KlimaXAllocationTable } from "@components/tables/klimax-allocation";
-import { Card } from "@components/card";
-import { LeaderboardsTable } from "@components/tables/leaderboards";
-import { MdHelpOutline } from "react-icons/md";
-import { Tooltip } from "@components/tooltip";
 
 type SearchParams = Promise<{
-  stakeAmount?: string,
-  unstakeAmount?: string
+  stakeAmount?: string;
+  unstakeAmount?: string;
 }>;
+
+type PageProps = { searchParams: SearchParams };
 
 const oneWeekInSeconds = 604800;
 const twoWeeksInSeconds = 1209600;
 
-const Page = async (props: { searchParams: SearchParams }) => {
+const Page = async ({ searchParams }: PageProps) => {
   let phaseLabel = null;
   const cookie = (await headers()).get("cookie");
   const initialState = cookieToInitialState(config, cookie);
@@ -52,19 +54,22 @@ const Page = async (props: { searchParams: SearchParams }) => {
 
   const userStakes = await fetchUserStakes(walletAddress ?? null);
   const leaderboardData = await calculateLeaderboardPoints(5);
-  const { stakeAmount, unstakeAmount } = await props.searchParams;
+  const { stakeAmount, unstakeAmount } = await searchParams;
 
   const currentTimestamp = Math.floor(Date.now() / 1000);
-  const startTimestamp = await readContract(config, {
+  const startTimestamp = (await readContract(config, {
     abi: klimaFairLaunchAbi,
     address: FAIR_LAUNCH_CONTRACT_ADDRESS,
     functionName: "startTimestamp",
-  }) as bigint;
+  })) as bigint;
 
-  if (currentTimestamp < Number(startTimestamp) || (currentTimestamp - Number(startTimestamp)) < oneWeekInSeconds) {
-    phaseLabel = '2x Points Boost ACTIVE';
-  } else if ((currentTimestamp - Number(startTimestamp)) < twoWeeksInSeconds) {
-    phaseLabel = '1.5x Points Boost ACTIVE';
+  if (
+    currentTimestamp < Number(startTimestamp) ||
+    currentTimestamp - Number(startTimestamp) < oneWeekInSeconds
+  ) {
+    phaseLabel = "2x Points Boost ACTIVE";
+  } else if (currentTimestamp - Number(startTimestamp) < twoWeeksInSeconds) {
+    phaseLabel = "1.5x Points Boost ACTIVE";
   }
 
   const [
@@ -72,7 +77,7 @@ const Page = async (props: { searchParams: SearchParams }) => {
     totalSupply,
     getTotalPoints,
     growthRate,
-    previewUserPoints
+    previewUserPoints,
   ] = await readContracts(config, {
     contracts: [
       {
@@ -101,72 +106,54 @@ const Page = async (props: { searchParams: SearchParams }) => {
         functionName: "previewUserPoints", // frequently
         args: [walletAddress],
       },
-    ]
+    ],
   });
-
-  // group these contract calls into readContracts
-  // const burnRatio = await readContract(config, {
-  //   abi: klimaFairLaunchAbi,
-  //   address: FAIR_LAUNCH_CONTRACT_ADDRESS,
-  //   functionName: "burnRatio",
-  // }) as bigint;
-
-  // const totalSupply = await readContract(config, {
-  //   abi: erc20Abi,
-  //   address: KLIMA_V0_TOKEN_ADDRESS,
-  //   functionName: "totalSupply",
-  // }) as bigint;
-
-  // const getTotalPoints = await readContract(config, {
-  //   abi: klimaFairLaunchAbi,
-  //   address: FAIR_LAUNCH_CONTRACT_ADDRESS,
-  //   functionName: "getTotalPoints",
-  // }) as bigint;
-
-  // const growthRate = await readContract(config, {
-  //   abi: klimaFairLaunchAbi,
-  //   address: FAIR_LAUNCH_CONTRACT_ADDRESS,
-  //   functionName: "GROWTH_RATE",
-  // }) as bigint;
-
-  // const previewUserPoints = await readContract(config, {
-  //   abi: klimaFairLaunchAbi,
-  //   address: FAIR_LAUNCH_CONTRACT_ADDRESS,
-  //   functionName: "previewUserPoints",
-  //   args: [walletAddress],
-  // }) as bigint;
 
   // for calculating a users stakes? Can we just grab them from subgraph and the current amount?
 
   const klimaXSupply = await getKlimaXSupply();
 
-  const userStakesInfoPromise = await readContracts(
-    config,
-    {
-      contracts: (userStakes?.stakes || []).map((_, index) => ({
-        abi: klimaFairLaunchAbi as AbiFunction[],
-        address: FAIR_LAUNCH_CONTRACT_ADDRESS,
-        functionName: "userStakes",
-        args: [walletAddress, index],
-      }))
-    }).then(result => result.map(async (item, index) => {
-      let [amount, stakeStartTime, , bonusMultiplier, organicPoints, burnRatioSnapshot, burnAccrued] = item.result as any;
+  const userStakesInfoPromise = await readContracts(config, {
+    contracts: (userStakes?.stakes || []).map((_, index) => ({
+      abi: klimaFairLaunchAbi as AbiFunction[],
+      address: FAIR_LAUNCH_CONTRACT_ADDRESS,
+      functionName: "userStakes",
+      args: [walletAddress, index],
+    })),
+  }).then((result) =>
+    result.map(async (item, index) => {
+      let [
+        amount,
+        stakeStartTime,
+        ,
+        bonusMultiplier,
+        organicPoints,
+        burnRatioSnapshot,
+        burnAccrued,
+      ] = item.result as any;
       const currentTimestamp = Math.floor(Date.now() / 1000);
       const elapsedTime = BigInt(currentTimestamp) - BigInt(stakeStartTime);
-      const newPoints = (BigInt(amount) * BigInt(bonusMultiplier) * BigInt(elapsedTime) * BigInt(growthRate.result as any)) / BigInt(100000);
+      const newPoints =
+        (BigInt(amount) *
+          BigInt(bonusMultiplier) *
+          BigInt(elapsedTime) *
+          BigInt(growthRate.result as any)) /
+        BigInt(100000);
 
-      const burnRatioDiff = BigInt(burnRatio.result as any) - BigInt(burnRatioSnapshot);
+      const burnRatioDiff =
+        BigInt(burnRatio.result as any) - BigInt(burnRatioSnapshot);
       if (burnRatioDiff > 0) {
-        const newBurnAccrual = (BigInt(organicPoints) * burnRatioDiff) / BigInt(100000);
-        burnAccrued = (BigInt(burnAccrued) + BigInt(newBurnAccrual));
+        const newBurnAccrual =
+          (BigInt(organicPoints) * burnRatioDiff) / BigInt(100000);
+        burnAccrued = BigInt(burnAccrued) + BigInt(newBurnAccrual);
       }
       const supply = formatUnits(BigInt(klimaXSupply), 9);
-      const klimaxAllocation = BigInt(newPoints) * BigInt(supply) / BigInt(getTotalPoints.result as any);
+      const klimaxAllocation =
+        (BigInt(newPoints) * BigInt(supply)) /
+        BigInt(getTotalPoints.result as any);
 
-      const { burnValue, percentage: burnPercentage } = await calculateUnstakePenalty(
-        amount,
-        stakeStartTime
-      );
+      const { burnValue, percentage: burnPercentage } =
+        await calculateUnstakePenalty(amount, stakeStartTime);
 
       return {
         ...userStakes?.stakes?.[index],
@@ -178,77 +165,18 @@ const Page = async (props: { searchParams: SearchParams }) => {
         burnAccrued,
         klimaxAllocation,
         burnValue,
-        burnPercentage
-      }
-    }));
-
+        burnPercentage,
+      };
+    })
+  );
 
   const allUserStakesInfo = await Promise.all(userStakesInfoPromise);
   const userStakesInfo = allUserStakesInfo
     .filter((item) => item.amount !== BigInt(0))
     .sort((a, b) => Number(b.startTimestamp) - Number(a.startTimestamp));
 
-  // todo - move this function out...
-  // this is the heaviest and slowest function
-  // const userStakesPromise = await Promise.all(
-  //   (userStakes?.stakes || []).map(async (stake, index) => {
-  //     // const userStakesInfo = await readContracts(config, {
-  //     //   contracts: [
-  //     //     {
-  //     //       abi: klimaFairLaunchAbi as AbiFunction[],
-  //     //       address: FAIR_LAUNCH_CONTRACT_ADDRESS,
-  //     //       functionName: "userStakes",
-  //     //       args: [walletAddress, index],
-  //     //     }
-  //     //   ]
-  //     // });
-
-  //     // console.log('userStakesInfo', walletAddress, userStakesInfo);
-
-  //     // let [amount, stakeStartTime, , bonusMultiplier, organicPoints, burnRatioSnapshot, burnAccrued] = stake.result as any;
-  //     // const currentTimestamp = Math.floor(Date.now() / 1000);
-  //     // const elapsedTime = BigInt(currentTimestamp) - BigInt(stakeStartTime);
-  //     // const newPoints = (BigInt(amount) * BigInt(bonusMultiplier) * BigInt(elapsedTime) * BigInt(growthRate.result as any)) / BigInt(100000);
-  //     // organicPoints = (BigInt(organicPoints) + BigInt(newPoints));
-
-  //     // const burnRatioDiff = BigInt(burnRatio.result as any) - BigInt(burnRatioSnapshot);
-  //     // if (burnRatioDiff > 0) {
-  //     //   const newBurnAccrual = (BigInt(organicPoints) * burnRatioDiff) / BigInt(100000);
-  //     //   burnAccrued = (BigInt(burnAccrued) + BigInt(newBurnAccrual));
-  //     // }
-  //     // const supply = formatUnits(BigInt(await getKlimaXSupply()), 9);
-  //     // const klimaxAllocation = BigInt(newPoints) * BigInt(supply) / BigInt(getTotalPoints.result as any);
-
-  //     return {
-  //       id: stake.id,
-  //       amount: BigInt(0),
-  //       startTimestamp: stake.startTimestamp,
-  //       stakeCreationHash: stake.stakeCreationHash,
-  //       multiplier: stake.multiplier,
-  //       points: 100, //newPoints,
-  //       klimaxAllocation: 100, //klimaxAllocation,
-  //     };
-  //   }));
-
-  // const userStakesInfo = userStakesPromise
-  //   .filter((item) => item.amount !== BigInt(0));
-
-  // calculate penalties to pass to the stakes table
-  // const userStakesData = await Promise.all(
-  //   (userStakesInfo || [])
-  //     .sort((a, b) => Number(b.startTimestamp) - Number(a.startTimestamp))
-  //     .map(async (values) => {
-  //       const { burnValue, percentage: burnPercentage } = await calculateUnstakePenalty(
-  //         values.amount,
-  //         values?.startTimestamp ?? ''
-  //       );
-  //       return { ...values, burnValue, burnPercentage };
-  //     })
-  // );
-
-
   const tokenPercentage = calculateTokenPercentage(
-    Number(formatUnits(BigInt(totalUserStakes(userStakesInfo || [])), 9)),
+    Number(formatUnits(BigInt(totalUserStakes(userStakesInfo)), 9)),
     Number(formatUnits(totalSupply.result as any, 9))
   );
 
@@ -256,20 +184,17 @@ const Page = async (props: { searchParams: SearchParams }) => {
     Number(formatUnits(previewUserPoints.result as any, 9)),
     Number(formatUnits(getTotalPoints.result as any, 9))
   );
-
-
+  
   return (
     <>
-      {stakeAmount && (
+      {(stakeAmount || unstakeAmount) && (
         <Notification
-          title="Stake Successful"
-          description={`You have successfully staked ${stakeAmount} KLIMA. Check back regularly to watch your rewards grow!`}
-        />
-      )}
-      {unstakeAmount && (
-        <Notification
-          title="Unstake Successful"
-          description={`You have successfully unstaked ${unstakeAmount} KLIMA.`}
+          title={stakeAmount ? "Stake Successful" : "Unstake Successful"}
+          description={
+            stakeAmount
+              ? `You have successfully staked ${stakeAmount} KLIMA. Check back regularly to watch your rewards grow!`
+              : `You have successfully unstaked ${unstakeAmount} KLIMA.`
+          }
         />
       )}
       <div className={styles.twoCols}>
@@ -294,18 +219,17 @@ const Page = async (props: { searchParams: SearchParams }) => {
               <Image src={klimav1Logo} alt="Klima V1 Logo" />
               <div className={styles.mainText}>
                 {formatNumber(
-                  formatUnits(
-                    BigInt(totalUserStakes(userStakesInfo || [])),
-                    9
-                  ),
+                  formatUnits(BigInt(totalUserStakes(userStakesInfo || [])), 9),
                   2
                 )}
               </div>
             </div>
             <div className={styles.secondaryText}>
               <strong>&lt;{tokenPercentage.toFixed(2)}%</strong> of{" "}
-              <strong >
-                {formatLargeNumber(Number(formatGwei(totalSupply.result as any)))}
+              <strong>
+                {formatLargeNumber(
+                  Number(formatGwei(totalSupply.result as any))
+                )}
               </strong>{" "}
             </div>
           </div>
@@ -362,14 +286,16 @@ const Page = async (props: { searchParams: SearchParams }) => {
           >
             <div className={styles.klimaXTitle}>
               <Image src={gklimaLogo} alt="Klima Logo" />
-              <div className={styles.cardTitle}>KlimaX Allocation Value at:</div>
+              <div className={styles.cardTitle}>
+                KlimaX Allocation Value at:
+              </div>
             </div>
-            <Tooltip content={<div>As the value of KLIMA increases, so does your projected allocation. However, as the number of stakes increases, your overall share of KLIMA will naturally decrease.</div>}>
+            <Tooltip content="As the value of KLIMA increases, so does your projected allocation. However, as the number of stakes increases, your overall share of KLIMA will naturally decrease.">
               <MdHelpOutline className={styles.klimaXHelp} />
             </Tooltip>
           </div>
           <div className={styles.cardContents}>
-            <KlimaXAllocationTable data={[]} />
+            <KlimaXAllocationTable userShare={totalPointsPercentage} />
           </div>
         </Card>
       </div>

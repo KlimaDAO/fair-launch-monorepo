@@ -77,3 +77,10 @@ export const formatLargeNumber = (value: number) => {
   }
   return value.toFixed(2);
 };
+
+export const formatCurrency = (amount: number, maxDecimals: number = 2) =>
+  new Intl.NumberFormat('en', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: maxDecimals,
+  }).format(amount);
