@@ -162,6 +162,17 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({
               onChange: async ({ value }) =>
                 await generateAllocationInfo(value),
             }}
+            validators={{
+              onChange: ({ value }) => {
+                if (Number(value) > Number(stakedBalance)) {
+                  return "You don't have enough staked KLIMA";
+                } else if (Number(stakedBalance) <= 0 || Number(value) <= 0) {
+                  return "You can't unstake 0 KLIMA";
+                } else {
+                  return undefined;
+                }
+              }
+            }}
           >
             {(field) => (
               <>
