@@ -15,7 +15,7 @@ interface Props {
 export const Tooltip: FC<Props> = (props) => {
   const { open, defaultOpen, onOpenChange, children, content, ...rest } = props;
   return (
-    <TooltipPrimitive.Provider delayDuration={10}>
+    <TooltipPrimitive.Provider delayDuration={10} >
       <TooltipPrimitive.Root
         open={open}
         defaultOpen={defaultOpen}
@@ -27,7 +27,8 @@ export const Tooltip: FC<Props> = (props) => {
         <TooltipPrimitive.Portal>
           <TooltipPrimitive.Content
             className={styles.tooltipContent}
-            align="center"
+            side="top"
+            align="end"
             {...rest}
           >
             {content}

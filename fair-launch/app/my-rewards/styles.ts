@@ -147,3 +147,16 @@ export const penaltyText = css({
   fontWeight: 400,
   color: 'red.600',
 });
+
+export const klimaXTitle = css({
+  gap: '0.8rem',
+  display: 'flex',
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+});
+
+export const klimaXHelp = css({
+  cursor: 'pointer',
+  fontSize: '2rem',
+});

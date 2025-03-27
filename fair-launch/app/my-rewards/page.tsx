@@ -30,6 +30,8 @@ import * as styles from "./styles";
 import { KlimaXAllocationTable } from "@components/tables/klimax-allocation";
 import { Card } from "@components/card";
 import { LeaderboardsTable } from "@components/tables/leaderboards";
+import { MdHelpOutline } from "react-icons/md";
+import { Tooltip } from "@components/tooltip";
 
 type SearchParams = Promise<{
   stakeAmount?: string,
@@ -293,11 +295,17 @@ const Page = async (props: { searchParams: SearchParams }) => {
               display: "flex",
               flexDirection: "row",
               alignItems: "center",
+              justifyContent: "space-between",
               gap: "1rem",
             }}
           >
-            <Image src={gklimaLogo} alt="Klima Logo" />
-            <h5 className={styles.cardTitle}>KlimaX Allocation Value at:</h5>
+            <div className={styles.klimaXTitle}>
+              <Image src={gklimaLogo} alt="Klima Logo" />
+              <div className={styles.cardTitle}>KlimaX Allocation Value at:</div>
+            </div>
+            <Tooltip content={<div>As the value of KLIMA increases, so does your projected allocation. However, as the number of stakes increases, your overall share of KLIMA will naturally decrease.</div>}>
+              <MdHelpOutline className={styles.klimaXHelp} />
+            </Tooltip>
           </div>
           <div className={styles.cardContents}>
             <KlimaXAllocationTable data={[]} />
