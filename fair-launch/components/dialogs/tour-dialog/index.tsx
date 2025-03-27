@@ -23,12 +23,13 @@ export const TourDialog: FC<Props> = ({ onClose }) => {
     onClose();
   }
 
+  if (!pathname.includes('my-rewards')) {
+    return null;
+  }
+
   return (
-    <Dialog.Root open={open} onOpenChange={setOpen}>
-      <Dialog.Trigger
-        className={styles.tourButton}
-        disabled={!pathname.includes('my-rewards')}
-      >
+    <Dialog.Root c open={open} onOpenChange={setOpen}>
+      <Dialog.Trigger className={styles.tourButton}>
         <MdHelpOutline />
         Show me around
       </Dialog.Trigger>
