@@ -43,7 +43,7 @@ type PageProps = { searchParams: SearchParams };
 const oneWeekInSeconds = 604800;
 const twoWeeksInSeconds = 1209600;
 
-const Page = async ({ searchParams }: PageProps) => {
+const Page = async () => {
   let phaseLabel = null;
   const cookie = (await headers()).get("cookie");
   const initialState = cookieToInitialState(config, cookie);
