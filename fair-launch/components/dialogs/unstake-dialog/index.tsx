@@ -19,6 +19,7 @@ import { useEffect, useState } from "react";
 import { MdAccountBalance, MdWarningAmber } from "react-icons/md";
 import { formatUnits, parseUnits } from "viem";
 import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import { useRouter } from "next/navigation";
 import * as styles from "./styles";
 
 type FocusOutsideEvent = CustomEvent<{ originalEvent: FocusEvent }>;
@@ -42,6 +43,7 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({
   startTimestamp,
   totalStaked,
 }) => {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const stakedBalance = formatUnits(BigInt(totalStaked) ?? BigInt(0), 9);
   const [dialogState, setDialogState] = useState(DialogState.INITIAL);
@@ -108,9 +110,9 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({
 
   useEffect(() => {
     setOpen(false);
-    // todo - show notification message...
     if (submitReceipt?.status === "success") {
-      window.location.reload();
+      // window.location.reload();
+      router.push(`/my-rewards?unstakeAmount=${form.state.values["unstake-amount"]}`);
     }
   }, [submitReceipt]);
 

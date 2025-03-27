@@ -24,7 +24,6 @@ import { readContract } from "@wagmi/core";
 import { headers } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
-import { type FC } from "react";
 import { Notification } from "@components/notification";
 import { formatGwei, formatUnits } from "viem";
 import { cookieToInitialState } from "wagmi";
@@ -33,14 +32,12 @@ import { KlimaXAllocationTable } from "@components/tables/klimax-allocation";
 import { Card } from "@components/card";
 import { LeaderboardsTable } from "@components/tables/leaderboards";
 
-// interface Props {
-//   searchParams: {
-//     stakeAmount?: string,
-//     unstakeAmount?: string
-//   } | null
-// }
-// todo - fix types here...
-const Page = async ({ searchParams }: any) => {
+type SearchParams = Promise<{
+  stakeAmount?: string,
+  unstakeAmount?: string
+}>;
+
+const Page = async (props: { searchParams: SearchParams }) => {
   const cookie = (await headers()).get("cookie");
   const initialState = cookieToInitialState(config, cookie);
 
@@ -50,7 +47,7 @@ const Page = async ({ searchParams }: any) => {
 
   const userStakes = await fetchUserStakes(walletAddress ?? null);
   const leaderboardData = await calculateLeaderboardPoints(5);
-  const { stakeAmount, unstakeAmount } = await searchParams;
+  const { stakeAmount, unstakeAmount } = await props.searchParams;
 
   // group these contract calls into readContracts
   const burnRatio = await readContract(config, {
@@ -148,6 +145,12 @@ const Page = async ({ searchParams }: any) => {
         <Notification
           title="Stake Successful"
           description={`You have successfully Staked ${stakeAmount} KLIMA. Check back regularly to watch your rewards grow!`}
+        />
+      )}
+      {unstakeAmount && (
+        <Notification
+          title="Unstake Successful"
+          description={`You have successfully unstaked ${unstakeAmount} KLIMA.`}
         />
       )}
       <div className={styles.twoCols}>
