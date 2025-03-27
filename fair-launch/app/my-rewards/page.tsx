@@ -37,7 +37,11 @@ type SearchParams = Promise<{
   unstakeAmount?: string
 }>;
 
+const oneWeekInSeconds = 604800;
+const twoWeeksInSeconds = 1209600;
+
 const Page = async (props: { searchParams: SearchParams }) => {
+  let phaseLabel = null;
   const cookie = (await headers()).get("cookie");
   const initialState = cookieToInitialState(config, cookie);
 
@@ -48,6 +52,19 @@ const Page = async (props: { searchParams: SearchParams }) => {
   const userStakes = await fetchUserStakes(walletAddress ?? null);
   const leaderboardData = await calculateLeaderboardPoints(5);
   const { stakeAmount, unstakeAmount } = await props.searchParams;
+
+  const currentTimestamp = Math.floor(Date.now() / 1000);
+  const startTimestamp = await readContract(config, {
+    abi: klimaFairLaunchAbi,
+    address: FAIR_LAUNCH_CONTRACT_ADDRESS,
+    functionName: "startTimestamp",
+  }) as bigint;
+
+  if (currentTimestamp < Number(startTimestamp) || (currentTimestamp - Number(startTimestamp)) < oneWeekInSeconds) {
+    phaseLabel = '2x Points Boost ACTIVE';
+  } else if ((currentTimestamp - Number(startTimestamp)) < twoWeeksInSeconds) {
+    phaseLabel = '1.5x Points Boost ACTIVE';
+  }
 
   // group these contract calls into readContracts
   const burnRatio = await readContract(config, {
@@ -159,9 +176,7 @@ const Page = async (props: { searchParams: SearchParams }) => {
       <div className={styles.twoCols}>
         <div className={styles.titleContainer}>
           <h1 className={styles.title}>My Rewards</h1>
-          <Tooltip content="Participate early to earn more points.">
-            <Badge title="Phase 1" />
-          </Tooltip>
+          {phaseLabel && <Badge title={phaseLabel} />}
         </div>
         <StakeDialog />
       </div>
@@ -176,7 +191,6 @@ const Page = async (props: { searchParams: SearchParams }) => {
                 alignItems: "center",
                 gap: "0.8rem",
               }}
-
             >
               <Image src={klimav1Logo} alt="Klima V1 Logo" />
               <div className={styles.mainText}>

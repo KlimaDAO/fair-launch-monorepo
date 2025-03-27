@@ -23,7 +23,8 @@ export const badgeVariants = cva({
       default: {
         padding: '0.4rem 1.2rem',
         backgroundColor: 'green.30',
-        color: 'green.100'
+        color: 'green.100',
+        letterSpacing: '0.02rem'
       },
       table: {
         padding: '0.4rem 1.2rem',
