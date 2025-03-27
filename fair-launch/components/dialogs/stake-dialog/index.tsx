@@ -189,14 +189,22 @@ export const StakeDialog: FC = () => {
             <div className={styles.description}>
               <div className={styles.inputContainer}>
                 <>
-                  <label htmlFor={field.name}>Amount</label>
+                  <div className={styles.row}>
+                    <label htmlFor={field.name}>Amount</label>
+                    <div className={styles.availableBalance}>
+                      Available: {formatNumber(Number(klimaBalance), 3)}
+                    </div>
+                  </div>
                   <div className={
                     clsx(styles.inputRow(!!field.state.meta.errors.length))
                   }>
+                    <Image className={styles.klimaLogo} src={klimav1Logo} alt="Klima V1 Logo" />
                     <input
                       type="number"
                       id={field.name}
                       name={field.name}
+                      min="0"
+                      max={klimaBalance}
                       value={field.state.value}
                       className={styles.input}
                       onChange={(e) => field.handleChange(e.target.value)}

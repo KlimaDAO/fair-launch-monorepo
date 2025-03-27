@@ -128,7 +128,7 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({
         <div>
           The longer you leave your KLIMA staked, the better your rewards! If
           you unstake now, you’ll not only lose out on some KLIMA through{" "}
-          <Link href="/">the burn mechanism</Link>, but you’ll also miss out on
+          <Link target="_blank" href="https://github.com/KlimaDAO/klimadao-docs/blob/main/klima%202.0/KlimaDAO%20-%20Klima%202.0%20-%20Fair%20Launch%20FAQ%20-%20February%2021%2C%202025.md#burn-calculation">the burn mechanism</Link>, but you’ll also miss out on
           KlimaX!
         </div>
         <div>
@@ -165,11 +165,19 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({
           >
             {(field) => (
               <>
-                <label htmlFor={field.name}>Amount</label>
-                <div className={styles.inputRow}>
+                <div className={styles.row}>
+                  <label htmlFor={field.name}>Amount</label>
+                  <div className={styles.availableBalance}>
+                    Available: {formatNumber(Number(stakedBalance), 3)}
+                  </div>
+                </div>
+                <div className={styles.inputRow(!!field.state.meta.errors.length)}>
+                  <Image className={styles.klimaLogo} src={klimav1Logo} alt="Klima V1 Logo" />
                   <input
                     type="number"
                     id={field.name}
+                    min="0"
+                    max={stakedBalance}
                     name={field.name}
                     className={styles.input}
                     value={field.state.value}
@@ -182,6 +190,11 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({
                     Max
                   </button>
                 </div>
+                {field.state.meta.errors ? (
+                  <div className={styles.errorText} role="alert">
+                    {field.state.meta.errors.join(', ')}
+                  </div>
+                ) : null}
               </>
             )}
           </form.Field>

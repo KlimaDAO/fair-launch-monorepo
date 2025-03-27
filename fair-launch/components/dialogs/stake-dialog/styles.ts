@@ -163,17 +163,25 @@ export const input = css({
   borderRadius: 'sm',
   border: 'none',
   background: 'void.10',
-  padding: '1rem 1.2rem',
+  padding: '1rem 0.8rem',
   fontSize: 'base',
+
+  '&:focus': {
+    outline: 'none',
+  }
+});
+
+export const klimaLogo = css({
+  fontSize: '2rem',
 });
 
 export const inputRow = (error: boolean) => css({
   gap: '0',
+  paddingLeft: '1.2rem',
   display: 'flex',
   borderRadius: 'sm',
   flexDirection: 'row',
   justifyContent: 'space-between',
-  // border: '0.1rem solid token(colors.void.50)',
   ...(error ? { border: '0.1rem solid token(colors.red.600)' } : {
     border: '0.1rem solid token(colors.void.50)',
   }),
@@ -224,4 +232,18 @@ export const errorText = css({
 
 export const errorField = css({
   border: '0.1rem solid token(colors.red.600)',
+});
+
+export const row = css({
+  display: 'flex',
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+});
+
+export const availableBalance = css({
+  fontSize: 'sm',
+  lineHeight: 'sm',
+  fontWeight: 400,
+  color: 'void.50',
 });

@@ -4,7 +4,6 @@ import { calculateLeaderboardPoints } from "@actions/leaderboards-action";
 import { Badge } from "@components/badge";
 import { StakeDialog } from "@components/dialogs/stake-dialog";
 import { StakeData, StakesTable } from "@components/tables/stakes";
-import { Tooltip } from "@components/tooltip";
 import gklimaLogo from "@public/tokens/g-klima.svg";
 import klimav1Logo from "@public/tokens/klima-v1.svg";
 import {
