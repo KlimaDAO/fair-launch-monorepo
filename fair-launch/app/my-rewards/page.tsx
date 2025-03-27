@@ -54,10 +54,10 @@ const Page = async ({ searchParams }: PageProps) => {
 
   const userStakes = await fetchUserStakes(walletAddress ?? null);
   const leaderboardData = await calculateLeaderboardPoints(5);
-  const { stakeAmount, unstakeAmount } = await searchParams;
+  // const { stakeAmount, unstakeAmount } = await searchParams;
 
-  console.log('stakeAmount', stakeAmount);
-  console.log('unstakeAmount', unstakeAmount);
+  // console.log('stakeAmount', stakeAmount);
+  // console.log('unstakeAmount', unstakeAmount);
 
   const currentTimestamp = Math.floor(Date.now() / 1000);
   const startTimestamp = (await readContract(config, {
@@ -191,7 +191,7 @@ const Page = async ({ searchParams }: PageProps) => {
 
   return (
     <>
-      {stakeAmount &&
+      {/* {stakeAmount &&
         <Notification
           title="Stake Successful"
           description={`You have successfully staked ${formatNumber(stakeAmount, 2)} KLIMA. Check back regularly to watch your rewards grow!`}
@@ -202,7 +202,7 @@ const Page = async ({ searchParams }: PageProps) => {
           title="Unstake Successful"
           description={`You have successfully unstaked ${formatNumber(unstakeAmount, 2)} KLIMA.`}
         />
-      }
+      } */}
       <div className={styles.twoCols}>
         <div className={styles.titleContainer}>
           <h1 className={styles.title}>My Rewards</h1>
