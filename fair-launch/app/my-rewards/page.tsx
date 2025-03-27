@@ -82,7 +82,7 @@ const Page = async (props: { searchParams: SearchParams }) => {
   }) as bigint;
 
   // todo - move this function out...
-  const userStakesInfo = await Promise.all(
+  const userStakesPromise = await Promise.all(
     (userStakes?.stakes || []).map(async (stake, index) => {
       const userStakesInfo = await readContract(config, {
         abi: klimaFairLaunchAbi,
@@ -115,6 +115,9 @@ const Page = async (props: { searchParams: SearchParams }) => {
         klimaxAllocation: klimaxAllocation,
       };
     }));
+
+  const userStakesInfo = userStakesPromise
+    .filter((item) => item.amount !== BigInt(0));
 
   const tokenPercentage = calculateTokenPercentage(
     Number(formatUnits(BigInt(totalUserStakes(userStakesInfo || [])), 9)),
