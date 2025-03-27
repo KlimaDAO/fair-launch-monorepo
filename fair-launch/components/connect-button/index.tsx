@@ -59,16 +59,19 @@ export const ConnectButton = () => {
                 <div style={{ display: "flex", gap: 12 }}>
                   <button
                     type="button"
-                    onClick={openChainModal}
+                    disabled
                     className={clsx(styles.connectButton, css({
                       display: "flex",
                       justifyContent: 'center',
                       alignItems: "center",
                       textAlign: 'center',
+                      '&:disabled': {
+                        cursor: 'not-allowed',
+                        opacity: 0.85,
+                      }
                     }))}
                   >
-                    {account.displayName}
-                    {account.displayBalance ? ` (${account.displayBalance})` : ""}
+                    Connecting...
                   </button>
                 </div>
               );

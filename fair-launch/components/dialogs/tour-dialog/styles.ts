@@ -24,7 +24,7 @@ export const content = css({
   width: '38.2rem',
   maxWidth: '38.2rem',
   maxHeight: '85vh',
-  overflowY: 'scroll',
+  overflowY: 'auto',
   padding: '2rem',
   display: 'flex',
   flexDirection: 'column',

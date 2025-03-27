@@ -103,13 +103,13 @@ export const IntroWalkthrough: FC = () => {
             description: `
                 <div style="display:flex;flex-direction:column;gap:10px;color:#fff;font-family:var(--font-inter);">
                   <div style="font-size:12px;font-weight:400;">
-                    You can view leaderboards, DAO metrics, and other information on the Protocol Dashboard.
+                    You can view leaderboards, fair launch metrics, and other information on the Protocol Dashboard.
                   </div>
                   <div style="font-size:12px;font-weight:400;">
                     Remember: the earlier you stake, and the longer you leave your KLIMA staked, the higher your rewards.
                   </div>
                   <div style="font-size:12px;font-weight:400;">
-                    You can learn more about Klima 2.0 by <a href="https://klima.network/whitepaper" target="_blank" rel="noopener noreferrer">downloading our whitepaper</a>.
+                    You can learn more about Klima 2.0 by <a style="text-decoration:underline;" href="https://github.com/KlimaDAO/klimadao-docs/blob/main/klima%202.0/Klima%202.0%20-%20Whitepaper%20-%20March%2025%2C%202025.pdf" target="_blank" rel="noopener noreferrer">downloading our whitepaper</a>.
                   </div>
                 </div>
               `

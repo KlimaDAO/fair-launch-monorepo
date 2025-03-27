@@ -24,7 +24,7 @@ const Page: FC = () => (
         <Link
           target="_blank"
           className={styles.learnMore}
-          href="https://github.com/KlimaDAO/klimadao-docs/blob/main/klima%202.0/KlimaDAO%20-%20Klima%202.0%20-%20Fair%20Launch%20FAQ%20-%20February%2021%2C%202025.md"
+          href="https://www.klimaprotocol.com/faq"
         >
           Learn more about Klima Fair Launch
         </Link>
