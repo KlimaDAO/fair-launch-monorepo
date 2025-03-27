@@ -10,11 +10,9 @@ import { calculateTokenPercentage } from "@utils/contract";
 import { formatLargeNumber, formatNumber } from "@utils/formatting";
 import { config } from "@utils/wagmi.server";
 import { readContract } from "@wagmi/core";
-import clsx from "clsx";
 import Image from "next/image";
 import { type FC } from "react";
-import { css } from "styled-system/css";
-import { erc20Abi, formatGwei, formatUnits } from "viem";
+import { erc20Abi, formatUnits } from "viem";
 import * as styles from "./styles";
 import { Card } from "@components/card";
 

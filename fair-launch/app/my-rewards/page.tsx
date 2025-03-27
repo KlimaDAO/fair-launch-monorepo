@@ -78,27 +78,27 @@ const Page = async (props: { searchParams: SearchParams }) => {
       {
         abi: klimaFairLaunchAbi as AbiFunction[],
         address: FAIR_LAUNCH_CONTRACT_ADDRESS,
-        functionName: "burnRatio",
+        functionName: "burnRatio", // how often does this change?
       },
       {
         abi: erc20Abi as AbiFunction[],
         address: KLIMA_V0_TOKEN_ADDRESS,
-        functionName: "totalSupply",
+        functionName: "totalSupply", // shouldn't change
       },
       {
         abi: klimaFairLaunchAbi as AbiFunction[],
         address: FAIR_LAUNCH_CONTRACT_ADDRESS,
-        functionName: "getTotalPoints",
+        functionName: "getTotalPoints", // how often does this change?
       },
       {
         abi: klimaFairLaunchAbi as AbiFunction[],
         address: FAIR_LAUNCH_CONTRACT_ADDRESS,
-        functionName: "GROWTH_RATE",
+        functionName: "GROWTH_RATE", // shouldnt' change
       },
       {
         abi: klimaFairLaunchAbi as AbiFunction[],
         address: FAIR_LAUNCH_CONTRACT_ADDRESS,
-        functionName: "previewUserPoints",
+        functionName: "previewUserPoints", // frequently
         args: [walletAddress],
       },
     ]
@@ -136,43 +136,116 @@ const Page = async (props: { searchParams: SearchParams }) => {
   //   args: [walletAddress],
   // }) as bigint;
 
-  // todo - move this function out...
-  const userStakesPromise = await Promise.all(
-    (userStakes?.stakes || []).map(async (stake, index) => {
-      const userStakesInfo = await readContract(config, {
-        abi: klimaFairLaunchAbi,
+  // for calculating a users stakes? Can we just grab them from subgraph and the current amount?
+
+  const klimaXSupply = await getKlimaXSupply();
+
+  const userStakesInfoPromise = await readContracts(
+    config,
+    {
+      contracts: (userStakes?.stakes || []).map((_, index) => ({
+        abi: klimaFairLaunchAbi as AbiFunction[],
         address: FAIR_LAUNCH_CONTRACT_ADDRESS,
         functionName: "userStakes",
         args: [walletAddress, index],
-      }) as bigint[];
-
-      let [amount, stakeStartTime, , bonusMultiplier, organicPoints, burnRatioSnapshot, burnAccrued] = userStakesInfo;
+      }))
+    }).then(result => result.map(async (item, index) => {
+      let [amount, stakeStartTime, , bonusMultiplier, organicPoints, burnRatioSnapshot, burnAccrued] = item.result as any;
       const currentTimestamp = Math.floor(Date.now() / 1000);
       const elapsedTime = BigInt(currentTimestamp) - BigInt(stakeStartTime);
       const newPoints = (BigInt(amount) * BigInt(bonusMultiplier) * BigInt(elapsedTime) * BigInt(growthRate.result as any)) / BigInt(100000);
-      organicPoints = (BigInt(organicPoints) + BigInt(newPoints));
 
       const burnRatioDiff = BigInt(burnRatio.result as any) - BigInt(burnRatioSnapshot);
       if (burnRatioDiff > 0) {
         const newBurnAccrual = (BigInt(organicPoints) * burnRatioDiff) / BigInt(100000);
         burnAccrued = (BigInt(burnAccrued) + BigInt(newBurnAccrual));
       }
-      const supply = formatUnits(BigInt(await getKlimaXSupply()), 9);
+      const supply = formatUnits(BigInt(klimaXSupply), 9);
       const klimaxAllocation = BigInt(newPoints) * BigInt(supply) / BigInt(getTotalPoints.result as any);
 
+      const { burnValue, percentage: burnPercentage } = await calculateUnstakePenalty(
+        amount,
+        stakeStartTime
+      );
+
       return {
-        id: stake.id,
-        amount: BigInt(amount),
-        startTimestamp: stake.startTimestamp,
-        stakeCreationHash: stake.stakeCreationHash,
-        multiplier: stake.multiplier,
+        ...userStakes?.stakes?.[index],
+        amount,
+        stakeStartTime,
+        bonusMultiplier,
         points: newPoints,
-        klimaxAllocation: klimaxAllocation,
-      };
+        burnRatioSnapshot,
+        burnAccrued,
+        klimaxAllocation,
+        burnValue,
+        burnPercentage
+      }
     }));
 
-  const userStakesInfo = userStakesPromise
-    .filter((item) => item.amount !== BigInt(0));
+
+  const allUserStakesInfo = await Promise.all(userStakesInfoPromise);
+  const userStakesInfo = allUserStakesInfo
+    .filter((item) => item.amount !== BigInt(0))
+    .sort((a, b) => Number(b.startTimestamp) - Number(a.startTimestamp));
+
+  // todo - move this function out...
+  // this is the heaviest and slowest function
+  // const userStakesPromise = await Promise.all(
+  //   (userStakes?.stakes || []).map(async (stake, index) => {
+  //     // const userStakesInfo = await readContracts(config, {
+  //     //   contracts: [
+  //     //     {
+  //     //       abi: klimaFairLaunchAbi as AbiFunction[],
+  //     //       address: FAIR_LAUNCH_CONTRACT_ADDRESS,
+  //     //       functionName: "userStakes",
+  //     //       args: [walletAddress, index],
+  //     //     }
+  //     //   ]
+  //     // });
+
+  //     // console.log('userStakesInfo', walletAddress, userStakesInfo);
+
+  //     // let [amount, stakeStartTime, , bonusMultiplier, organicPoints, burnRatioSnapshot, burnAccrued] = stake.result as any;
+  //     // const currentTimestamp = Math.floor(Date.now() / 1000);
+  //     // const elapsedTime = BigInt(currentTimestamp) - BigInt(stakeStartTime);
+  //     // const newPoints = (BigInt(amount) * BigInt(bonusMultiplier) * BigInt(elapsedTime) * BigInt(growthRate.result as any)) / BigInt(100000);
+  //     // organicPoints = (BigInt(organicPoints) + BigInt(newPoints));
+
+  //     // const burnRatioDiff = BigInt(burnRatio.result as any) - BigInt(burnRatioSnapshot);
+  //     // if (burnRatioDiff > 0) {
+  //     //   const newBurnAccrual = (BigInt(organicPoints) * burnRatioDiff) / BigInt(100000);
+  //     //   burnAccrued = (BigInt(burnAccrued) + BigInt(newBurnAccrual));
+  //     // }
+  //     // const supply = formatUnits(BigInt(await getKlimaXSupply()), 9);
+  //     // const klimaxAllocation = BigInt(newPoints) * BigInt(supply) / BigInt(getTotalPoints.result as any);
+
+  //     return {
+  //       id: stake.id,
+  //       amount: BigInt(0),
+  //       startTimestamp: stake.startTimestamp,
+  //       stakeCreationHash: stake.stakeCreationHash,
+  //       multiplier: stake.multiplier,
+  //       points: 100, //newPoints,
+  //       klimaxAllocation: 100, //klimaxAllocation,
+  //     };
+  //   }));
+
+  // const userStakesInfo = userStakesPromise
+  //   .filter((item) => item.amount !== BigInt(0));
+
+  // calculate penalties to pass to the stakes table
+  // const userStakesData = await Promise.all(
+  //   (userStakesInfo || [])
+  //     .sort((a, b) => Number(b.startTimestamp) - Number(a.startTimestamp))
+  //     .map(async (values) => {
+  //       const { burnValue, percentage: burnPercentage } = await calculateUnstakePenalty(
+  //         values.amount,
+  //         values?.startTimestamp ?? ''
+  //       );
+  //       return { ...values, burnValue, burnPercentage };
+  //     })
+  // );
+
 
   const tokenPercentage = calculateTokenPercentage(
     Number(formatUnits(BigInt(totalUserStakes(userStakesInfo || [])), 9)),
@@ -184,18 +257,6 @@ const Page = async (props: { searchParams: SearchParams }) => {
     Number(formatUnits(getTotalPoints.result as any, 9))
   );
 
-  // calculate penalties to pass to the stakes table
-  const userStakesData = await Promise.all(
-    (userStakesInfo || [])
-      .sort((a, b) => Number(b.startTimestamp) - Number(a.startTimestamp))
-      .map(async (values) => {
-        const { burnValue, percentage: burnPercentage } = await calculateUnstakePenalty(
-          values.amount,
-          values.startTimestamp
-        );
-        return { ...values, burnValue, burnPercentage };
-      })
-  );
 
   return (
     <>
@@ -277,7 +338,7 @@ const Page = async (props: { searchParams: SearchParams }) => {
         <h5 className={styles.cardTitle}>Stake History</h5>
         <div className={styles.cardContents}>
           <StakesTable
-            data={(userStakesData as StakeData[]) || []}
+            data={(userStakesInfo as StakeData[]) || []}
             totalStaked={Number(totalUserStakes(userStakesInfo || []))}
           />
         </div>
@@ -315,4 +376,5 @@ const Page = async (props: { searchParams: SearchParams }) => {
     </>
   );
 };
+
 export default Page;
