@@ -167,13 +167,16 @@ export const input = css({
   fontSize: 'base',
 });
 
-export const inputRow = css({
+export const inputRow = (error: boolean) => css({
   gap: '0',
   display: 'flex',
   borderRadius: 'sm',
   flexDirection: 'row',
   justifyContent: 'space-between',
-  border: '0.1rem solid token(colors.void.50)',
+  // border: '0.1rem solid token(colors.void.50)',
+  ...(error ? { border: '0.1rem solid token(colors.red.600)' } : {
+    border: '0.1rem solid token(colors.void.50)',
+  }),
 });
 
 export const maxButton = css({
@@ -209,4 +212,16 @@ export const confirmContainer = css({
   display: 'flex',
   flexDirection: 'column',
   gap: '1.2rem',
+});
+
+export const errorText = css({
+  color: 'red.600',
+  fontSize: 'sm',
+  lineHeight: 'sm',
+  fontWeight: 500,
+  textAlign: 'left',
+});
+
+export const errorField = css({
+  border: '0.1rem solid token(colors.red.600)',
 });

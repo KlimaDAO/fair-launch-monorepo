@@ -76,7 +76,7 @@ export const StakeDialog: FC = () => {
     args: [address, FAIR_LAUNCH_CONTRACT_ADDRESS],
   });
 
-  const { data: receipt } = useWaitForTransactionReceipt({ hash: approveData });
+  const { data: receipt, isError: isApproveError } = useWaitForTransactionReceipt({ hash: approveData });
   const isApproved = receipt?.status === "success";
   const isApprovalSuccess = isApprovePending || (approveData && !isApproved);
 
@@ -166,7 +166,20 @@ export const StakeDialog: FC = () => {
 
   const StakeView = () => (
     <>
-      <form.Field name="stake-amount">
+      <form.Field
+        name="stake-amount"
+        validators={{
+          onChange: ({ value }) => {
+            if (Number(value) > Number(klimaBalance)) {
+              return "You don't have enough KLIMA";
+            } else if (Number(klimaBalance) <= 0 || Number(value) <= 0) {
+              return "You can't stake 0 KLIMA";
+            } else {
+              return undefined;
+            }
+          }
+        }}
+      >
         {(field) => (
           <>
             <div className={styles.icon}>
@@ -177,7 +190,9 @@ export const StakeDialog: FC = () => {
               <div className={styles.inputContainer}>
                 <>
                   <label htmlFor={field.name}>Amount</label>
-                  <div className={styles.inputRow}>
+                  <div className={
+                    clsx(styles.inputRow(!!field.state.meta.errors.length))
+                  }>
                     <input
                       type="number"
                       id={field.name}
@@ -194,6 +209,11 @@ export const StakeDialog: FC = () => {
                     </button>
                   </div>
                 </>
+                {field.state.meta.errors ? (
+                  <div className={styles.errorText} role="alert">
+                    {field.state.meta.errors.join(', ')}
+                  </div>
+                ) : null}
               </div>
             </div>
             <Alert variant="default">
@@ -204,9 +224,9 @@ export const StakeDialog: FC = () => {
             <div className={styles.actions}>
               <button
                 onClick={handleStake}
-                disabled={Number(klimaBalance) <= 0 || Number(field.state.value) <= 0}
+                disabled={!!field.state.meta.errors.length}
                 className={clsx(styles.primaryButton, {
-                  [styles.disabled]: Number(klimaBalance) <= 0 || Number(field.state.value) <= 0,
+                  [styles.disabled]: !!field.state.meta.errors.length,
                 })}
               >
                 Stake
@@ -249,6 +269,11 @@ export const StakeDialog: FC = () => {
           </div>
         </div>
       </div>
+      {isApproveError && (
+        <div className={styles.errorText} role="alert">
+          ❌ Error: something went wrong...
+        </div>
+      )}
       <div className={styles.actions}>
         <button
           onClick={handleApprove}
@@ -294,9 +319,11 @@ export const StakeDialog: FC = () => {
           </div>
         </div>
       </div>
-      {isError && <Alert variant="default">
-        Transaction failed. Please try again.
-      </Alert>}
+      {isError && (
+        <div className={styles.errorText} role="alert">
+          ❌ Error: something went wrong...
+        </div>
+      )}
       <div className={styles.actions}>
         <button
           onClick={handleConfirm}
