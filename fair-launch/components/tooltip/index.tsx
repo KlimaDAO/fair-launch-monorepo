@@ -2,6 +2,7 @@
 
 import type { FC } from 'react';
 import { Tooltip as TooltipPrimitive } from "radix-ui";
+import { useState } from 'react';
 import * as styles from './styles';
 
 interface Props {
@@ -14,15 +15,17 @@ interface Props {
 
 export const Tooltip: FC<Props> = (props) => {
   const { open, defaultOpen, onOpenChange, children, content, ...rest } = props;
+  const [isOpen, setIsOpen] = useState(false)
+
   return (
     <TooltipPrimitive.Provider delayDuration={10} >
       <TooltipPrimitive.Root
-        open={open}
+        open={isOpen}
         defaultOpen={defaultOpen}
-        onOpenChange={onOpenChange}
+        onOpenChange={setIsOpen}
       >
         <TooltipPrimitive.Trigger className={styles.tooltipTrigger} asChild>
-          <div>{children}</div>
+          <div onClick={() => setIsOpen(true)}>{children}</div>
         </TooltipPrimitive.Trigger>
         <TooltipPrimitive.Portal>
           <TooltipPrimitive.Content
