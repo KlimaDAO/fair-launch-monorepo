@@ -12,6 +12,7 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@bprogress/next": "^3.2.10",
     "@pandacss/dev": "^0.53.0",
     "@rainbow-me/rainbowkit": "^2.2.4",
     "@tanstack/react-form": "^1.0.5",

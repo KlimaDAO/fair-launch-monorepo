@@ -2,6 +2,7 @@ import { WalletProvider } from "@providers/wallet-provider";
 import "@rainbow-me/rainbowkit/styles.css";
 import "@styles/globals.css";
 import { firaCode, inter } from "@utils/fonts";
+import ProgressProvider from "@providers/progress-provider";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import type { FC, ReactNode } from "react";
@@ -21,9 +22,11 @@ const RootLayout: FC<Props> = async (props) => {
   return (
     <html lang="en">
       <body className={`${inter.variable} ${firaCode.variable}`}>
-        <WalletProvider cookie={cookie}>
-          {props.children}
-        </WalletProvider>
+        <ProgressProvider>
+          <WalletProvider cookie={cookie}>
+            {props.children}
+          </WalletProvider>
+        </ProgressProvider>
       </body>
     </html>
   );
