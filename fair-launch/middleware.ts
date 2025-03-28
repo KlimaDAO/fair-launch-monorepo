@@ -4,6 +4,11 @@ export function middleware(request: NextRequest) {
   const cookie = request.cookies.get('wagmi.store');
   const { pathname } = request.nextUrl;
 
+  // Allow OPTIONS requests to pass through
+  if (request.method === 'OPTIONS') {
+    return NextResponse.next();
+  }
+
   if (!cookie || cookie === undefined) {
     if (pathname === '/my-rewards' || pathname === '/protocol') {
       return NextResponse.redirect(new URL('/', request.url));
