@@ -28,7 +28,7 @@ export const TourDialog: FC<Props> = ({ onClose }) => {
   }
 
   return (
-    <Dialog.Root c open={open} onOpenChange={setOpen}>
+    <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger className={styles.tourButton}>
         <MdHelpOutline />
         Show me around
