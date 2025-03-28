@@ -1,27 +1,32 @@
 'use client';
 
-import { FC, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import { Alert } from "@components/alert";
 import { MdCheckCircle } from "react-icons/md";
 import * as styles from "./styles";
-import { usePathname, useRouter } from "next/navigation";
+import { formatNumber } from "@utils/formatting";
 
-interface Props {
-  title: string;
-  description: string;
-}
-
-export const Notification: FC<Props> = (props) => {
-  // const router = useRouter();
-  // const pathname = usePathname();
-  const [show, setShow] = useState(true);
+export const Notification: FC = () => {
+  const [show, setShow] = useState(false);
+  const [stakeAmount, setStakeAmount] = useState('');
+  const [unstakeAmount, setUnstakeAmount] = useState('');
 
   const onDismiss = () => {
     setShow(false);
-    // setTimeout(() => {
-      // router.push(pathname);
-    // }, 100);
+    window.localStorage.removeItem('stakeAmount');
+    window.localStorage.removeItem('unstakeAmount');
   }
+
+  useEffect(() => {
+    const stakeAmount = window.localStorage.getItem('stakeAmount') ?? '';
+    setStakeAmount(stakeAmount);
+    const unstakeAmount = window.localStorage.getItem('unstakeAmount') ?? '';
+    setUnstakeAmount(unstakeAmount);
+
+    if (stakeAmount || unstakeAmount) {
+      setShow(true);
+    }
+  }, []);
 
   if (!show) return null;
 
@@ -31,10 +36,14 @@ export const Notification: FC<Props> = (props) => {
         <div className={styles.content}>
           <div className={styles.titleContainer}>
             <MdCheckCircle className={styles.icon} />
-            <p className={styles.title}>{props.title}</p>
+            <p className={styles.title}>
+              {stakeAmount ? 'Stake Successful' : 'Unstake Successful'}
+            </p>
           </div>
           <div className={styles.description}>
-            {props.description}
+            {stakeAmount ?
+              `You have successfully staked ${formatNumber(stakeAmount, 2)} KLIMA. Check back regularly to watch your rewards grow!` :
+              `You have successfully unstaked ${formatNumber(unstakeAmount, 2)} KLIMA.`}
           </div>
           <button onClick={onDismiss} className={styles.button}>
             Dismiss

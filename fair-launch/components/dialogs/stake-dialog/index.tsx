@@ -137,8 +137,8 @@ export const StakeDialog: FC = () => {
   useEffect(() => {
     setOpen(false);
     if (submitReceipt?.status === "success") {
-      router.push(`/my-rewards?stakeAmount=${form.state.values["stake-amount"]}`);
-      // window.location.reload();
+      window.localStorage.setItem('stakeAmount', form.state.values["stake-amount"] as string);
+      window.location.reload();
     }
   }, [submitReceipt]);
 

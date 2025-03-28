@@ -1,4 +1,3 @@
-import { abi as erc20Abi } from "@abi/erc20";
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
 import { calculateLeaderboardPoints } from "@actions/leaderboards-action";
 import { Badge } from "@components/badge";
@@ -13,7 +12,6 @@ import gklimaLogo from "@public/tokens/g-klima.svg";
 import klimav1Logo from "@public/tokens/klima-v1.svg";
 import {
   FAIR_LAUNCH_CONTRACT_ADDRESS,
-  KLIMA_V0_TOKEN_ADDRESS,
 } from "@utils/constants";
 import {
   calculateTokenPercentage,
@@ -29,7 +27,8 @@ import { headers } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
 import { MdHelpOutline } from "react-icons/md";
-import { AbiFunction, formatGwei, formatUnits, parseUnits } from "viem";
+import { AbiFunction, formatGwei, formatUnits } from "viem";
+import { getContractConstants } from "@actions/contract-reads-action";
 import { cookieToInitialState } from "wagmi";
 import * as styles from "./styles";
 
@@ -38,7 +37,6 @@ type SearchParams = Promise<{
   unstakeAmount?: string;
 }>;
 
-type PageProps = { searchParams: SearchParams };
 
 const oneWeekInSeconds = 604800;
 const twoWeeksInSeconds = 1209600;
@@ -54,10 +52,6 @@ const Page = async () => {
 
   const userStakes = await fetchUserStakes(walletAddress ?? null);
   const leaderboardData = await calculateLeaderboardPoints(5);
-  // const { stakeAmount, unstakeAmount } = await searchParams;
-
-  // console.log('stakeAmount', stakeAmount);
-  // console.log('unstakeAmount', unstakeAmount);
 
   const currentTimestamp = Math.floor(Date.now() / 1000);
   const startTimestamp = (await readContract(config, {
@@ -75,42 +69,18 @@ const Page = async () => {
     phaseLabel = "1.5x Points Boost ACTIVE";
   }
 
+  const contractConstants = await getContractConstants(walletAddress as any);
+  if (!contractConstants || !Array.isArray(contractConstants)) {
+    throw new Error("Failed to fetch contract constants");
+  }
+
   const [
     burnRatio,
     totalSupply,
     getTotalPoints,
     growthRate,
-    previewUserPoints,
-  ] = await readContracts(config, {
-    contracts: [
-      {
-        abi: klimaFairLaunchAbi as AbiFunction[],
-        address: FAIR_LAUNCH_CONTRACT_ADDRESS,
-        functionName: "burnRatio", // how often does this change?
-      },
-      {
-        abi: erc20Abi as AbiFunction[],
-        address: KLIMA_V0_TOKEN_ADDRESS,
-        functionName: "totalSupply", // shouldn't change
-      },
-      {
-        abi: klimaFairLaunchAbi as AbiFunction[],
-        address: FAIR_LAUNCH_CONTRACT_ADDRESS,
-        functionName: "getTotalPoints", // how often does this change?
-      },
-      {
-        abi: klimaFairLaunchAbi as AbiFunction[],
-        address: FAIR_LAUNCH_CONTRACT_ADDRESS,
-        functionName: "GROWTH_RATE", // shouldnt' change
-      },
-      {
-        abi: klimaFairLaunchAbi as AbiFunction[],
-        address: FAIR_LAUNCH_CONTRACT_ADDRESS,
-        functionName: "previewUserPoints", // frequently
-        args: [walletAddress],
-      },
-    ],
-  });
+    previewUserPoints
+  ] = contractConstants;
 
   // for calculating a users stakes? Can we just grab them from subgraph and the current amount?
 
@@ -191,18 +161,7 @@ const Page = async () => {
 
   return (
     <>
-      {/* {stakeAmount &&
-        <Notification
-          title="Stake Successful"
-          description={`You have successfully staked ${formatNumber(stakeAmount, 2)} KLIMA. Check back regularly to watch your rewards grow!`}
-        />
-      }
-      {unstakeAmount &&
-        <Notification
-          title="Unstake Successful"
-          description={`You have successfully unstaked ${formatNumber(unstakeAmount, 2)} KLIMA.`}
-        />
-      } */}
+      <Notification />
       <div className={styles.twoCols}>
         <div className={styles.titleContainer}>
           <h1 className={styles.title}>My Rewards</h1>
