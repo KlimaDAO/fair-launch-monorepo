@@ -392,26 +392,23 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
             }
             
             if (timeElapsed > 0) {
-                // Convert time elapsed to days and calculate exponential growth
-                UD60x18 timeElapsed_ud = ud(timeElapsed);
-                // Convert time elapsed to days
-                UD60x18 timeElapsed_days = div(timeElapsed_ud, SECONDS_PER_DAY);
-                // Calculate exponential growth
-                UD60x18 exponent = mul(EXP_GROWTH_RATE, timeElapsed_days);
-                // Calculate e^exponent
-                UD60x18 e_exponent = exp(exponent);
-                // Calculate e^exponent - 1
-                UD60x18 e_exponent_minus_one = sub(e_exponent, ud(1e18));
-                // Calculate bonus multiplier
-                UD60x18 bonusMultiplier_ud = div(ud(currentStake.bonusMultiplier * 1e18), PERCENTAGE_SCALE);
-                // Convert amount to UD60x18
-                UD60x18 amount_ud = ud(currentStake.amount);
-                // Calculate base points
-                UD60x18 basePoints_ud = div(mul(amount_ud, bonusMultiplier_ud), INPUT_SCALE_DENOMINATOR);
-                // Calculate new points
-                UD60x18 newPoints_ud = mul(basePoints_ud, e_exponent_minus_one);
-                // Convert to uint256
-                uint256 newPoints = newPoints_ud.intoUint256();
+                // Optimization: Combined multiple UD60x18 operations to reduce conversions and operations
+                // Convert time elapsed to days (division by SECONDS_PER_DAY)
+                UD60x18 timeElapsed_days = div(ud(timeElapsed), SECONDS_PER_DAY);
+                
+                // Calculate e^(growthRate * timeElapsedDays) - 1
+                UD60x18 growthFactor = sub(exp(mul(EXP_GROWTH_RATE, timeElapsed_days)), ud(1e18));
+                
+                // Optimize: Combine bonus multiplier and amount calculations
+                // bonusMultiplier / 100 * amount / 1e27 = (bonusMultiplier * amount) / (100 * 1e27)
+                UD60x18 basePoints = div(
+                    mul(ud(currentStake.amount), ud(currentStake.bonusMultiplier * 1e18)), 
+                    mul(PERCENTAGE_SCALE, INPUT_SCALE_DENOMINATOR)
+                );
+                
+                // Calculate new points (basePoints * growthFactor)
+                uint256 newPoints = mul(basePoints, growthFactor).intoUint256();
+                
                 // Update total organic points
                 newTotalOrganicPoints += newPoints;
                 // Update stake organic points
@@ -710,19 +707,21 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
             uint256 timeElapsed = calculationTimestamp > currentStake.lastUpdateTime ? calculationTimestamp - currentStake.lastUpdateTime : 0;
             
             if (timeElapsed > 0) {
-                UD60x18 timeElapsed_ud = ud(timeElapsed);
-                UD60x18 timeElapsed_days = div(timeElapsed_ud, SECONDS_PER_DAY);
+                // Convert time elapsed to days (division by SECONDS_PER_DAY)
+                UD60x18 timeElapsed_days = div(ud(timeElapsed), SECONDS_PER_DAY);
                 
-                UD60x18 exponent = mul(EXP_GROWTH_RATE, timeElapsed_days);
-                UD60x18 e_exponent = exp(exponent);
-                UD60x18 e_exponent_minus_one = sub(e_exponent, ud(1e18));
+                // Calculate e^(growthRate * timeElapsedDays) - 1
+                UD60x18 growthFactor = sub(exp(mul(EXP_GROWTH_RATE, timeElapsed_days)), ud(1e18));
                 
-                UD60x18 bonusMultiplier_ud = div(ud(currentStake.bonusMultiplier * 1e18), PERCENTAGE_SCALE);
-                UD60x18 amount_ud = ud(currentStake.amount);
+                // Optimize: Combine bonus multiplier and amount calculations
+                // bonusMultiplier / 100 * amount / 1e27 = (bonusMultiplier * amount) / (100 * 1e27)
+                UD60x18 basePoints = div(
+                    mul(ud(currentStake.amount), ud(currentStake.bonusMultiplier * 1e18)), 
+                    mul(PERCENTAGE_SCALE, INPUT_SCALE_DENOMINATOR)
+                );
                 
-                UD60x18 basePoints_ud = div(mul(amount_ud, bonusMultiplier_ud), INPUT_SCALE_DENOMINATOR);
-                UD60x18 newPoints_ud = mul(basePoints_ud, e_exponent_minus_one);
-                uint256 newPoints = newPoints_ud.intoUint256();
+                // Calculate new points (basePoints * growthFactor)
+                uint256 newPoints = mul(basePoints, growthFactor).intoUint256();
                 
                 currentStake.organicPoints += newPoints;
                 currentStake.lastUpdateTime = calculationTimestamp;
