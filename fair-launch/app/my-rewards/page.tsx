@@ -49,7 +49,7 @@ const Page = async () => {
     initialState.connections.get(initialState?.current)?.accounts[0];
 
   const currentTimestamp = Math.floor(Date.now() / 1000);
-  const userStakes = await fetchUserStakes(walletAddress ?? null);
+  const { stakes, error } = await fetchUserStakes(walletAddress ?? null);
   const leaderboardData = await calculateLeaderboardPoints(5);
 
 
@@ -88,7 +88,7 @@ const Page = async () => {
   const klimaXSupply = await getKlimaXSupply();
 
   const userStakesInfoPromise = await readContracts(config, {
-    contracts: (userStakes?.stakes || []).map((_, index) => ({
+    contracts: (stakes || []).map((_, index) => ({
       abi: klimaFairLaunchAbi as AbiFunction[],
       address: FAIR_LAUNCH_CONTRACT_ADDRESS,
       functionName: "userStakes",
@@ -132,7 +132,7 @@ const Page = async () => {
 
       // handle formatting here
       return {
-        ...userStakes?.stakes?.[index],
+        ...stakes?.[index],
         amount,
         stakeStartTime,
         bonusMultiplier,
@@ -250,11 +250,13 @@ const Page = async () => {
         </div>
         <div className={styles.cardContents}>
           <Suspense fallback={<div>Loading...</div>}>
-
-            <StakesTable
+            {error ? (
+              <p style={{ color: 'red' }}>{error}</p>
+            ) : (<StakesTable
               data={(userStakesInfo as StakeData[]) || []}
               totalStaked={Number(totalUserStakes(userStakesInfo || []))}
             />
+            )}
           </Suspense>
         </div>
       </Card>
