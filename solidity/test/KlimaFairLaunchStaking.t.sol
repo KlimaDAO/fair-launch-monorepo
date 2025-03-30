@@ -417,7 +417,7 @@ contract KlimaFairLaunchStakingTest is Test {
     /// @notice Test setting zero growth rate fails
     function test_RevertWhen_SettingZeroGrowthRate() public {
         vm.prank(owner);
-        vm.expectRevert("Growth Rate must be greater than 0");
+        vm.expectRevert("Growth rate must be > 0");
         staking.setGrowthRate(0);
     }
 
