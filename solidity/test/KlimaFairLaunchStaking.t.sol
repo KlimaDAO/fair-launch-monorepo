@@ -87,8 +87,10 @@ contract KlimaFairLaunchStakingTest is Test {
         uint256 timeElapsedSeconds,
         uint256 growthRate
     ) public view returns (uint256) {
+        uint256 initialPoints = amount * 1e9 * bonusMultiplier/100;
+
         // Skip calculation if no time has elapsed
-        if (timeElapsedSeconds == 0) return 0;
+        if (timeElapsedSeconds == 0) return initialPoints;
         
         // Convert inputs to UD60x18 format
         UD60x18 timeElapsed_days = div(ud(timeElapsedSeconds), ud(86400)); // SECONDS_PER_DAY
@@ -105,9 +107,12 @@ contract KlimaFairLaunchStakingTest is Test {
         
         // Calculate points (basePoints * growthFactor)
         UD60x18 points_ud = mul(basePoints, growthFactor);
+
+        uint256 newPoints = points_ud.intoUint256() + initialPoints;
+        console.log("newPoints", newPoints);
         
         // Convert back to uint256
-        return points_ud.intoUint256();
+        return newPoints;
     }
 
     function setUp() public {
@@ -715,7 +720,7 @@ contract KlimaFairLaunchStakingTest is Test {
         emit StakeBurned(user1, burnAmount, block.timestamp);
         staking.unstake(stakeAmount);
         vm.stopPrank();
-        
+
         // Check user1's stake is cleared
         (uint256 remainingAmount,,,,,,,) = staking.userStakes(user1, 0);
         assertEq(remainingAmount, 0, "Stake amount should be 0");
@@ -1780,23 +1785,24 @@ contract KlimaFairLaunchStakingTest is Test {
         uint256 stakeAmount = 100 * 1e9;
         createStake(user1, stakeAmount);
 
-        // Check points - should be 0 during pre-staking
+        // Check points - should be initial points during pre-staking
+        uint256 initialPoints = stakeAmount * 1e9 * 2;
         uint256 pointsDuringPreStaking = staking.previewUserPoints(user1);
-        assertEq(pointsDuringPreStaking, 0, "No points should accrue during pre-staking");
+        assertEq(pointsDuringPreStaking, initialPoints, "No points should accrue during pre-staking");
         
         // Warp to exactly the start time
         vm.warp(startTime);
         
-        // Points should still be 0 at the exact start time
+        // Points should still be initial points at the exact start time
         uint256 pointsAtStart = staking.previewUserPoints(user1);
-        assertEq(pointsAtStart, 0, "No points should accrue at the exact start time");
+        assertEq(pointsAtStart, initialPoints, "No points should accrue at the exact start time");
         
         // Warp to after start time
         vm.warp(startTime + 1 days);
         
         // Check points - should be non-zero after start time
         uint256 pointsAfterStart = staking.previewUserPoints(user1);
-        assertGt(pointsAfterStart, 0, "Points should accrue after official start time");
+        assertGt(pointsAfterStart, initialPoints, "Points should accrue after official start time");
     }
 
     /// @notice Test pre-staking with multiple users
