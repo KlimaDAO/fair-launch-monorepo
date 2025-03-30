@@ -239,12 +239,14 @@ const Page = async () => {
           }}
         >
           <h5 className={styles.cardTitle}>Stake History</h5>
-          <Suspense fallback={<div>Loading...</div>}>
-            <UnstakeDialog
-              startTimestamp={String(startTimestamp)}
-              totalStaked={Number(totalUserStakes(userStakesInfo || []))}
-            />
-          </Suspense>
+          {userStakesInfo.length > 0 && (
+            <Suspense fallback={<div>Loading...</div>}>
+              <UnstakeDialog
+                startTimestamp={String(startTimestamp)}
+                totalStaked={Number(totalUserStakes(userStakesInfo || []))}
+              />
+            </Suspense>
+          )}
         </div>
         <div className={styles.cardContents}>
           <Suspense fallback={<div>Loading...</div>}>
