@@ -172,11 +172,13 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
             stakeStartTime: stakeStartTime,
             lastUpdateTime: stakeStartTime, // Points start accruing from stakeStartTime
             bonusMultiplier: multiplier,
-            organicPoints: 0,
+            organicPoints: amount * 1e9 * multiplier / 100, // scaled to 18 decimals
             burnRatioSnapshot: burnRatio,
             burnAccrued: 0,
             hasBeenClaimed: 0
         });
+
+        totalOrganicPoints += amount * 1e9 * multiplier / 100; // scaled to 18 decimals
 
         // Add stake to user's stakes
         userStakes[msg.sender].push(newStake);
@@ -546,13 +548,37 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     /// @notice Sets the growth rate for point accrual
     /// @param _newValue New growth rate value e.g., 274 -> 0.00274 * 1e18
     /// @dev Can only be called before staking starts
-    /// @dev Must be less than BURN_DISTRIBUTION_PRECISION to prevent excessive point accrual
+    /// @dev Ensures growth rate is safe for up to 395 days of staking
+    /// @dev PRBMath exp function has a maximum input of ~130.7, so we need to ensure
+    /// @dev growthRate * 395 days < 130.7
+    /// @dev The spec recommends a value of 0.00274 (274 as input)
     function setGrowthRate(uint256 _newValue) external onlyOwner beforeStartTimestamp {
-        require(_newValue > 0, "Growth rate must be > 0");
-        require(_newValue < BURN_DISTRIBUTION_PRECISION, "Growth rate must be < BURN_DISTRIBUTION_PRECISION");
-        EXP_GROWTH_RATE = ud(_newValue * 1e13); // e.g., 274 -> 0.00274 * 1e18
+        // Lower bound check - ensure growth rate is positive and meaningful
+        // 10 would equal 0.0001 which is very small but still valid
+        require(_newValue >= 10, "Growth rate too low, min 0.0001");
+        
+        // Convert to the actual value that will be used (e.g., 274 -> 0.00274 * 1e18)
+        uint256 actualRate = _newValue * 1e13;
+        
+        // The PRBMath exp function has a maximum safe input value of approximately 130.7 * 1e18
+        // For safety, we'll use a more conservative limit of 130 * 1e18
+        // Calculate the maximum rate that would be safe for 395 days:
+        // maxRate * 395 days < 130 * 1e18
+        // maxRate < (130 * 1e18) / 395
+        // ~0.329 * 1e18 = 329000000000000000 (safe value)
+        uint256 MAX_SAFE_RATE = 329000000000000000; // Hard-coded safe value for 395 days
+        
+        // Ensure the rate is safe
+        require(actualRate < MAX_SAFE_RATE, "Growth rate too high for long-term staking");
+        
+        // For reference, spec recommends 0.00274, which gives e^(0.00274 × 90) ≈ 1.284 after 90 days
+        // This is a 28.4% increase, reasonable for the intended staking period
+        
+        // Set the growth rate
+        EXP_GROWTH_RATE = ud(actualRate);
         emit GrowthRateSet(_newValue);
     }
+    
     /// @notice Sets the total KLIMA token supply for distribution
     /// @param _newValue New KLIMA supply value (raw value with 18 decimals)
     /// @dev Can only be called before finalization
@@ -704,7 +730,11 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
                 continue;
             }
 
-            uint256 timeElapsed = calculationTimestamp > currentStake.lastUpdateTime ? calculationTimestamp - currentStake.lastUpdateTime : 0;
+            // Start with existing stored organic points
+            uint256 existingOrganicPoints = currentStake.organicPoints;
+            
+            uint256 timeElapsed = calculationTimestamp > currentStake.lastUpdateTime ? 
+                calculationTimestamp - currentStake.lastUpdateTime : 0;
             
             if (timeElapsed > 0) {
                 // Convert time elapsed to days (division by SECONDS_PER_DAY)
@@ -713,17 +743,16 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
                 // Calculate e^(growthRate * timeElapsedDays) - 1
                 UD60x18 growthFactor = sub(exp(mul(EXP_GROWTH_RATE, timeElapsed_days)), ud(1e18));
                 
-                // Optimize: Combine bonus multiplier and amount calculations
-                // bonusMultiplier / 100 * amount / 1e27 = (bonusMultiplier * amount) / (100 * 1e27)
+                // Calculate additional points based on current stake amount
                 UD60x18 basePoints = div(
                     mul(ud(currentStake.amount), ud(currentStake.bonusMultiplier * 1e18)), 
                     mul(PERCENTAGE_SCALE, INPUT_SCALE_DENOMINATOR)
                 );
                 
-                // Calculate new points (basePoints * growthFactor)
+                // Add only the new points accrued since lastUpdateTime
                 uint256 newPoints = mul(basePoints, growthFactor).intoUint256();
                 
-                currentStake.organicPoints += newPoints;
+                currentStake.organicPoints = existingOrganicPoints + newPoints;
                 currentStake.lastUpdateTime = calculationTimestamp;
             }
             

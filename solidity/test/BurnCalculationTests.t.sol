@@ -19,7 +19,7 @@ contract MockKlimaV0 is ERC20 {
     }
 
     function decimals() public pure override returns (uint8) {
-        return 12;
+        return 9;
     }
 }
 
