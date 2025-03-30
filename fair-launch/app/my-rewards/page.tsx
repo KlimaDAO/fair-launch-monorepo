@@ -27,39 +27,40 @@ import { headers } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
 import { MdHelpOutline } from "react-icons/md";
-import { AbiFunction, formatGwei, formatUnits } from "viem";
+import { AbiFunction, formatUnits } from "viem";
 import { getContractConstants } from "@actions/contract-reads-action";
 import { cookieToInitialState } from "wagmi";
+import { UnstakeDialog } from "@components/dialogs/unstake-dialog";
 import * as styles from "./styles";
-
-type SearchParams = Promise<{
-  stakeAmount?: string;
-  unstakeAmount?: string;
-}>;
-
+import { Suspense } from "react";
 
 const oneWeekInSeconds = 604800;
 const twoWeeksInSeconds = 1209600;
 
 const Page = async () => {
   let phaseLabel = null;
-  const cookie = (await headers()).get("cookie");
+
+  const headersList = await headers();
+  const cookie = headersList.get("cookie");
   const initialState = cookieToInitialState(config, cookie);
 
   const walletAddress =
     initialState?.current &&
     initialState.connections.get(initialState?.current)?.accounts[0];
 
+  const currentTimestamp = Math.floor(Date.now() / 1000);
   const userStakes = await fetchUserStakes(walletAddress ?? null);
   const leaderboardData = await calculateLeaderboardPoints(5);
 
-  const currentTimestamp = Math.floor(Date.now() / 1000);
+
+  // move this and cache...
   const startTimestamp = (await readContract(config, {
     abi: klimaFairLaunchAbi,
     address: FAIR_LAUNCH_CONTRACT_ADDRESS,
     functionName: "startTimestamp",
   })) as bigint;
 
+  // move this...
   if (
     currentTimestamp < Number(startTimestamp) ||
     currentTimestamp - Number(startTimestamp) < oneWeekInSeconds
@@ -129,6 +130,7 @@ const Page = async () => {
       const { burnValue, percentage: burnPercentage } =
         await calculateUnstakePenalty(amount, stakeStartTime);
 
+      // handle formatting here
       return {
         ...userStakes?.stakes?.[index],
         amount,
@@ -167,7 +169,9 @@ const Page = async () => {
           <h1 className={styles.title}>My Rewards</h1>
           {phaseLabel && <Badge title={phaseLabel} />}
         </div>
-        <StakeDialog />
+        <Suspense fallback={<div>Loading...</div>}>
+          <StakeDialog />
+        </Suspense>
       </div>
       <div className={styles.card}>
         <div className={styles.cardInner}>
@@ -193,7 +197,7 @@ const Page = async () => {
               <strong>&lt;{tokenPercentage.toFixed(2)}%</strong> of{" "}
               <strong>
                 {formatLargeNumber(
-                  Number(formatGwei(totalSupply.result as any))
+                  Number(formatUnits(totalSupply.result as any, 9))
                 )}
               </strong>{" "}
             </div>
@@ -224,20 +228,42 @@ const Page = async () => {
         </div>
       </div>
       <Card>
-        <h5 className={styles.cardTitle}>Stake History</h5>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "1rem",
+            marginBottom: '1rem'
+          }}
+        >
+          <h5 className={styles.cardTitle}>Stake History</h5>
+          <Suspense fallback={<div>Loading...</div>}>
+            <UnstakeDialog
+              startTimestamp={String(startTimestamp)}
+              totalStaked={Number(totalUserStakes(userStakesInfo || []))}
+            />
+          </Suspense>
+        </div>
         <div className={styles.cardContents}>
-          <StakesTable
-            data={(userStakesInfo as StakeData[]) || []}
-            totalStaked={Number(totalUserStakes(userStakesInfo || []))}
-          />
+          <Suspense fallback={<div>Loading...</div>}>
+
+            <StakesTable
+              data={(userStakesInfo as StakeData[]) || []}
+              totalStaked={Number(totalUserStakes(userStakesInfo || []))}
+            />
+          </Suspense>
         </div>
       </Card>
       <div className={styles.twoCols}>
         <Card>
-          <LeaderboardsTable data={(leaderboardData as any[]) || []} />
-          <Link className={styles.leaderboardLink} href="/protocol">
-            View full leaderboard
-          </Link>
+          <Suspense fallback={<div>Loading...</div>}>
+            <LeaderboardsTable data={(leaderboardData as any[]) || []} />
+            <Link className={styles.leaderboardLink} href="/protocol">
+              View full leaderboard
+            </Link>
+          </Suspense>
         </Card>
         <Card>
           <div

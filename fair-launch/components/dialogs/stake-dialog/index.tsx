@@ -17,6 +17,7 @@ import { type FC, useEffect, useState } from "react";
 import { MdCelebration, MdLibraryAdd } from "react-icons/md";
 import { useRouter } from "next/navigation";
 import { formatUnits, parseUnits } from "viem";
+// import { revalidatePathAction } from "@actions/revalidate-path";
 import {
   useAccount,
   useBalance,
@@ -80,12 +81,15 @@ export const StakeDialog: FC = () => {
   const isApproved = receipt?.status === "success";
   const isApprovalSuccess = isApprovePending || (approveData && !isApproved);
 
-  const { data: submitReceipt, isError } = useWaitForTransactionReceipt({
+  const { data: submitReceipt, isError, isSuccess } = useWaitForTransactionReceipt({
     confirmations: 3,
     hash: stakeData,
   });
   const isSubmitSuccess = receipt?.status === "success";
   const isTransactionSuccess = isStakePending || (stakeData && isSubmitSuccess);
+
+  console.log('isSuccess', isSuccess);
+  console.log('isSubmitSuccess', isSubmitSuccess);
 
   const handleDialogState = () => {
     setOpen(!open);
@@ -137,8 +141,9 @@ export const StakeDialog: FC = () => {
   useEffect(() => {
     setOpen(false);
     if (submitReceipt?.status === "success") {
+      // revalidatePathAction('/my-rewards');
       window.localStorage.setItem('stakeAmount', form.state.values["stake-amount"] as string);
-      window.location.reload();
+      setTimeout(() => window.location.reload(), 1);
     }
   }, [submitReceipt]);
 

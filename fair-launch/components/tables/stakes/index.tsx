@@ -1,6 +1,5 @@
 "use client";
 
-import { UnstakeDialog } from "@components/dialogs/unstake-dialog";
 import {
   ColumnDef,
   flexRender,
@@ -92,18 +91,7 @@ export const StakesTable = <T extends StakeData>({
           const klimaxAllocation = row.original.klimaxAllocation;
           return <><strong>{formatLargeNumber(Number(formatUnits(BigInt(klimaxAllocation as string), 9)))}</strong> KlimaX</>;
         },
-      },
-      {
-        id: "actions",
-        header: "",
-        cell: ({ row }) => (
-          <UnstakeDialog
-            amount={row.original.amount as string}
-            startTimestamp={row.original.startTimestamp}
-            totalStaked={totalStaked}
-          />
-        ),
-      },
+      }
     ],
     [data, totalStaked]
   );

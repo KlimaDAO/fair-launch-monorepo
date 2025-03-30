@@ -159,27 +159,24 @@ export const secondaryButton = css({
 
 export const unstakeButton = css({
   backgroundColor: 'transparent',
-  color: 'void.50',
-  border: 'none',
+  color: 'void.80',
   fontSize: 'sm',
   lineHeight: 'sm',
-  fontWeight: 700,
+  height: '2.8rem',
+  fontWeight: 500,
   display: 'flex',
-  alignItems: 'flex-start',
-  justifyContent: 'flex-end',
+  alignItems: 'center',
+  justifyContent: 'center',
+  borderRadius: '0.4rem',
   gap: '0.8rem',
   cursor: 'pointer',
   width: '100%',
+  maxWidth: '8.1rem',
+  border: '0.1rem solid token(colors.void.80)',
 
   '&:hover': {
     color: 'void.80',
   },
-
-  lg: {
-    width: '100%',
-    maxWidth: '32rem',
-    height: '4rem',
-  }
 });
 
 export const klimaLogo = css({

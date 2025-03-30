@@ -17,6 +17,7 @@ import { Dialog } from "radix-ui";
 import type { FC } from "react";
 import { useEffect, useState } from "react";
 import { MdAccountBalance, MdWarningAmber } from "react-icons/md";
+// import { revalidatePathAction } from "@actions/revalidate-path";
 import { formatUnits, parseUnits } from "viem";
 import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import * as styles from "./styles";
@@ -25,7 +26,6 @@ type FocusOutsideEvent = CustomEvent<{ originalEvent: FocusEvent }>;
 type PointerDownOutsideEvent = CustomEvent<{ originalEvent: PointerEvent }>;
 
 interface UnstakeDialogProps {
-  amount: string;
   startTimestamp: string;
   totalStaked: number;
 }
@@ -38,7 +38,6 @@ enum DialogState {
 }
 
 export const UnstakeDialog: FC<UnstakeDialogProps> = ({
-  amount,
   startTimestamp,
   totalStaked,
 }) => {
@@ -52,7 +51,7 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({
     defaultValues: {
       "burn-amount": "0",
       "receive-amount": "0",
-      "unstake-amount": formatTokenToValue(amount),
+      "unstake-amount": '0',
     },
   });
 
@@ -111,6 +110,7 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({
     setOpen(false);
     if (submitReceipt?.status === "success") {
       window.localStorage.setItem('unstakeAmount', form.state.values["unstake-amount"] as string);
+      // revalidatePathAction('/my-rewards');
       window.location.reload();
     }
   }, [submitReceipt]);
