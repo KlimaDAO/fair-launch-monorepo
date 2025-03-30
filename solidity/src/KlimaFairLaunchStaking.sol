@@ -42,7 +42,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     uint256 public finalizeIndex; // index of the last staker addressthat has been processed
     uint256 public finalizationComplete; // 0 = not finalized, 1 = finalized
 
-    uint256 public constant GROWTH_DENOMINATOR = 1e18; // e18 for burn calc
+    uint256 public constant BURN_DISTRIBUTION_PRECISION = 1e18; // e18 for burn calc
     address public constant KLIMA_V0 = 0xDCEFd8C8fCc492630B943ABcaB3429F12Ea9Fea2;
 
     UD60x18 public  SECONDS_PER_DAY;
@@ -267,7 +267,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
 
         // Update burn ratio if applicable
         if (totalOrganicPoints > 0) {
-            burnRatio = burnRatio + ((freedOrganicPointsTotal * GROWTH_DENOMINATOR) / totalOrganicPoints);
+            burnRatio = burnRatio + ((freedOrganicPointsTotal * BURN_DISTRIBUTION_PRECISION) / totalOrganicPoints);
         }
 
         // Send tokens to burn vault for the burn portion
@@ -446,7 +446,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
             // Only update if there's a difference
             if (burnRatioDiff > 0) {
                 // Calculate new burn accrual
-                uint256 newBurnAccrual = (currentStake.organicPoints * burnRatioDiff) / GROWTH_DENOMINATOR;
+                uint256 newBurnAccrual = (currentStake.organicPoints * burnRatioDiff) / BURN_DISTRIBUTION_PRECISION;
                 // Update burn accrued amount
                 currentStake.burnAccrued += newBurnAccrual;
                 // Update snapshot for next comparison
@@ -549,10 +549,10 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     /// @notice Sets the growth rate for point accrual
     /// @param _newValue New growth rate value e.g., 274 -> 0.00274 * 1e18
     /// @dev Can only be called before staking starts
-    /// @dev Must be less than GROWTH_DENOMINATOR to prevent excessive point accrual
+    /// @dev Must be less than BURN_DISTRIBUTION_PRECISION to prevent excessive point accrual
     function setGrowthRate(uint256 _newValue) external onlyOwner beforeStartTimestamp {
         require(_newValue > 0, "Growth rate must be > 0");
-        require(_newValue < GROWTH_DENOMINATOR, "Growth rate must be < GROWTH_DENOMINATOR");
+        require(_newValue < BURN_DISTRIBUTION_PRECISION, "Growth rate must be < BURN_DISTRIBUTION_PRECISION");
         EXP_GROWTH_RATE = ud(_newValue * 1e13); // e.g., 274 -> 0.00274 * 1e18
         emit GrowthRateSet(_newValue);
     }
@@ -737,7 +737,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
             
             uint256 burnRatioDiff = burnRatio - currentStake.burnRatioSnapshot;
             if (burnRatioDiff > 0) {
-                uint256 newBurnAccrual = (currentStake.organicPoints * burnRatioDiff) / GROWTH_DENOMINATOR;
+                uint256 newBurnAccrual = (currentStake.organicPoints * burnRatioDiff) / BURN_DISTRIBUTION_PRECISION;
                 currentStake.burnAccrued += newBurnAccrual;
             }
             

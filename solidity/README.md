@@ -157,7 +157,7 @@ The contracts include test suites that cover:
 - `freezeTimestamp`: When the staking/unstaking functionality is disabled (default: 90 days after startTimestamp)
 - `preStakingWindow`: Period before startTimestamp when staking is allowed but points don't accrue (3-7 days)
 - `GROWTH_RATE`: Configurable rate at which points accrue daily (default 274, represents 0.00274)
-- `GROWTH_DENOMINATOR`: Constant (100000) used as the denominator for growth calculations
+- `BURN_DISTRIBUTION_PRECISION`: Constant (1e18) used in maintaining precision during the redistribution of points
 - `burnRatio`: Global ratio used to distribute burn points proportionately to organic points
 - `totalOrganicPoints`: Sum of all organically earned points across all stakes
 - `totalBurned`: Total amount of KLIMA V0 burned through the unstaking process

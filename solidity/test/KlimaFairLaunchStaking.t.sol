@@ -1515,7 +1515,7 @@ contract KlimaFairLaunchStakingTest is Test {
     /// @notice Test with very high growth rate
     function test_HighGrowthRate() public {
         // Set a very high growth rate (just below the denominator)
-        uint256 highRate = 99999; // Just below GROWTH_DENOMINATOR (100000)
+        uint256 highRate = 1e18-1; // Just below BURN_DISTRIBUTION_PRECISION
         
         vm.prank(owner);
         staking.setGrowthRate(highRate);
@@ -1540,12 +1540,13 @@ contract KlimaFairLaunchStakingTest is Test {
         assertGt(points, stakeAmount * 200, "Points should be very high with high growth rate");
     }
 
+    ///     todo fix
     /// @notice Test setting invalid growth rate
     function test_RevertWhen_SettingInvalidGrowthRate() public {
         // Try to set growth rate equal to denominator
         vm.prank(owner);
         vm.expectRevert("Growth Rate must be less than denominator");
-        staking.setGrowthRate(100000); // Equal to GROWTH_DENOMINATOR
+        staking.setGrowthRate(1e18); // Equal to BURN_DISTRIBUTION_PRECISION
     }
 
     /// @notice Test with many small stakes
