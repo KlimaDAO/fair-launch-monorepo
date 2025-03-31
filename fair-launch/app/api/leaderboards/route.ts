@@ -74,12 +74,13 @@
 // }
 
 import { NextResponse } from 'next/server';
-import { cache, CACHE_EXPIRATION_TIME } from '@utils/cache';
+import { cacheManager } from '@utils/cache'; // Import the cache manager
 // import { calculateLeaderboardPoints } from '@actions/leaderboards-action';
 
 export async function GET() {
   const cacheKey = 'leaderboards';
-  const cachedData = await getFromCache(cacheKey); // Function to get data from cache
+  // const cachedData = await getFromCache(cacheKey); // Function to get data from cache
+  const cachedData = cacheManager.get(cacheKey); // Use the cache manager to get data
 
   console.log('cachedData', cachedData);
   if (cachedData) {
@@ -96,17 +97,19 @@ export async function GET() {
 
 
 // Function to get data from cache
-async function getFromCache(key: string) {
-  const cachedEntry = cache.get(key); // Retrieve data from in-memory cache
-  if (cachedEntry) {
-    const { data, timestamp } = cachedEntry;
-    // Check if the cache is still valid
-    if (Date.now() - timestamp < CACHE_EXPIRATION_TIME) {
-      return { data }; // Return cached data if still valid
-    }
-  }
-  return null; // Cache is expired or doesn't exist
-}
+// async function getFromCache(key: string) {
+//   const cachedEntry = cacheManager.get(key); // Use the cache manager to get data
+
+//   // const cachedEntry = cache.get(key); // Retrieve data from in-memory cache
+//   if (cachedEntry) {
+//     const { data } = cachedEntry;
+//     // Check if the cache is still valid
+//     // if (Date.now() - timestamp < CACHE_EXPIRATION_TIME) {
+//     return { data }; // Return cached data if still valid
+//     // }
+//   }
+//   return null; // Cache is expired or doesn't exist
+// }
 
 
 

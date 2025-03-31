@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { calculateLeaderboardPoints } from '@actions/leaderboards-action';
-import { cache } from '@utils/cache';
+// import { cache } from '@utils/cache';
+import { cacheManager } from '@utils/cache'; // Import the cache manager
 
 export async function GET(req: NextRequest) {
   const cacheKey = 'leaderboards';
@@ -21,7 +22,7 @@ async function processDataAndCache(cacheKey: string) {
 
 // Function to update cache
 async function updateCache(key: string, data: any) {
-  cache.set(key, { data, timestamp: Date.now() }); // Update in-memory cache with timestamp
+  cacheManager.update(key, { data, timestamp: Date.now() }); // Update in-memory cache with timestamp
 }
 
 // Function to process data
