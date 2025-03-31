@@ -84,7 +84,7 @@ export async function GET() {
 
   console.log('cachedData', cachedData);
   if (cachedData) {
-    return NextResponse.json({ data: cachedData.data }); // Return cached data if available
+    return NextResponse.json({ ...cachedData.data }); // Return cached data if available
   }
 
   // If no cached data, return a message indicating that data is being processed
