@@ -1,5 +1,6 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { calculateLeaderboardPoints } from '@actions/leaderboards-action';
+import { waitUntil } from '@vercel/functions';
 // import { cache } from '@utils/cache';
 import { cacheManager } from '@utils/cache'; // Import the cache manager
 
@@ -10,7 +11,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ message: 'Unauthorized', status: 401 });
   }
 
-  await processDataAndCache(cacheKey); // Call the function to process data and update cache
+  waitUntil(processDataAndCache(cacheKey)); // Call the function to process data and update cache
   return NextResponse.json({ message: 'Data processing started.' });
 }
 
