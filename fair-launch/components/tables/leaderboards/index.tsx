@@ -67,29 +67,20 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('/api/leaderboards'); // Call the API route
+        const response = await fetch('/api/leaderboards');
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
         const result = await response.json();
-        setData(result.data || null); // Set data or message
+        setData(result.data || null);
       } catch (err: any) {
-        setError(err.message); // Set error message
+        setError(err.message);
       } finally {
-        setLoading(false); // Set loading to false
+        setLoading(false);
       }
     };
-
-    fetchData(); // Call the fetch function
+    fetchData();
   }, []);
-
-  // console.log('loading', loading);
-  // console.log('error', error);
-  // console.log('data', data);
-
-  // return <div>{data}</div>
-
-  // useQuery()
 
   const columns: ColumnDef<T>[] = useMemo(
     () => [

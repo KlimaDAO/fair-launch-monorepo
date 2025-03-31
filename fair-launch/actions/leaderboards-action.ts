@@ -16,13 +16,13 @@ import { AbiFunction } from "viem";
 // in a background process periodically, cache the results and
 // update every x minutes.
 export const calculateLeaderboardPoints = async (limit = 10000) => {
-  'use cache';
+  // 'use cache';
 
-  cacheLife({
-    stale: 120,
-    revalidate: 60,
-    expire: 900,
-  })
+  // cacheLife({
+  //   stale: 120,
+  //   revalidate: 60,
+  //   expire: 900,
+  // })
 
   // trigger.dev cron job here???
   // return from cache by default...

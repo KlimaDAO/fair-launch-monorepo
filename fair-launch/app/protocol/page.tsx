@@ -15,14 +15,21 @@ import { Suspense, type FC } from "react";
 import { erc20Abi, formatUnits } from "viem";
 import * as styles from "./styles";
 import { Card } from "@components/card";
+import { headers } from "next/headers";
 
 const Page: FC = async () => {
+
+  // const headersList = headers();
+  // console.log('headersList', headersList);
+  // const baseUrl = headers. // Get the base URL from headers
   const klimaPrice = await fetch(
     "https://base.klimadao.finance/api/prices?symbols=KLIMA"
   );
   const { data } = await klimaPrice.json();
   const price = data?.KLIMA?.[0]?.quote?.USD?.price;
-  // const leaderboardData = await calculateLeaderboardPoints(100);
+  // const leaderboards = await fetch(`${baseUrl}/api/leaderboards`);
+  // const leaderboardsData = await leaderboards.json();
+  // console.log('leaderboardsData', leaderboardsData);
 
   const totalBurned = (await readContract(config, {
     abi: klimaFairLaunchAbi,

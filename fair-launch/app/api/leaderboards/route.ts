@@ -75,53 +75,16 @@
 
 import { NextResponse } from 'next/server';
 import { cacheManager } from '@utils/cache'; // Import the cache manager
-// import { calculateLeaderboardPoints } from '@actions/leaderboards-action';
 
 export async function GET() {
   const cacheKey = 'leaderboards';
-  // const cachedData = await getFromCache(cacheKey); // Function to get data from cache
-  const cachedData = cacheManager.get(cacheKey); // Use the cache manager to get data
+  const cachedData = cacheManager.get(cacheKey);
 
-  console.log('cachedData', cachedData);
   if (cachedData) {
     return NextResponse.json({ ...cachedData.data }); // Return cached data if available
   }
 
-  // If no cached data, return a message indicating that data is being processed
   return NextResponse.json({
     message: 'No data available, please check back later.'
   }, { status: 404 }); // Inform user that no data is available
 }
-
-// Function to process data and update cache
-
-
-// Function to get data from cache
-// async function getFromCache(key: string) {
-//   const cachedEntry = cacheManager.get(key); // Use the cache manager to get data
-
-//   // const cachedEntry = cache.get(key); // Retrieve data from in-memory cache
-//   if (cachedEntry) {
-//     const { data } = cachedEntry;
-//     // Check if the cache is still valid
-//     // if (Date.now() - timestamp < CACHE_EXPIRATION_TIME) {
-//     return { data }; // Return cached data if still valid
-//     // }
-//   }
-//   return null; // Cache is expired or doesn't exist
-// }
-
-
-
-// Function to get data from cache
-// export async function getFromCache(key: string) {
-//   const cachedEntry = cache.get(key); // Retrieve data from in-memory cache
-//   if (cachedEntry) {
-//       const { data, timestamp } = cachedEntry;
-//       // Check if the cache is still valid
-//       if (Date.now() - timestamp < CACHE_EXPIRATION_TIME) {
-//           return { data }; // Return cached data if still valid
-//       }
-//   }
-//   return null; // Cache is expired or doesn't exist
-// }
