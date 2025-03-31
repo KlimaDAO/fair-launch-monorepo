@@ -40,10 +40,10 @@ contract KlimaFairLaunchBurnVault is Initializable, UUPSUpgradeable, OwnableUpgr
 
     // events
     event KlimaFairLaunchStakingSet(address indexed klimaFairLaunchStaking);
-    event FinalBurnInitiated(uint256 finalAmountBurned);
-    event AddedKlimaAmountToBurn(address indexed user, uint256 amount);
-    event EmergencyWithdrawalEnabled();
-    event EmergencyWithdrawal(address indexed user, uint256 amount);
+    event FinalBurnInitiated(uint256 indexed finalAmountBurned);
+    event AddedKlimaAmountToBurn(address indexed user, uint256 indexed amount);
+    event EmergencyWithdrawalEnabled(uint256 indexed timestamp);
+    event EmergencyWithdrawal(address indexed user, uint256 indexed amount);
     event HelperContractOnPolygonSet(address indexed helperContractOnPolygon);
     event InterchainTokenServiceSet(address indexed interchainTokenService);
 
@@ -133,7 +133,7 @@ contract KlimaFairLaunchBurnVault is Initializable, UUPSUpgradeable, OwnableUpgr
         require(klimaFairLaunchStaking != address(0), "Staking contract not set");
         require(IKlimaFairLaunchStaking(klimaFairLaunchStaking).finalizationComplete() == 0, "Staking contract already finalized");
         emergencyWithdrawalEnabled = true;
-        emit EmergencyWithdrawalEnabled();
+        emit EmergencyWithdrawalEnabled(block.timestamp);
     }
 
     function emergencyWithdraw() external {
