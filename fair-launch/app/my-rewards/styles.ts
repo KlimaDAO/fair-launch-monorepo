@@ -165,3 +165,21 @@ export const klimaXHelp = css({
   cursor: 'pointer',
   fontSize: '2rem',
 });
+
+export const walletAddress = css({
+  display: 'flex',
+  flexDirection: 'column',
+  fontSize: 'base',
+  fontWeight: 400,
+  borderTop: '0.1rem solid token(colors.void.20)',
+  borderBottom: '0.1rem solid token(colors.void.20)',
+  padding: '2rem 0',
+  color: 'void.80',
+  width: '100%',
+  alignItems: 'center',
+  hideFrom: 'md',
+
+  '& > span': {
+    color: 'void.40 !important',
+  }
+});

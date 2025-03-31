@@ -21,7 +21,7 @@ import {
   getKlimaXSupply,
   totalUserStakes,
 } from "@utils/contract";
-import { formatLargeNumber, formatNumber } from "@utils/formatting";
+import { formatLargeNumber, formatNumber, truncateAddress } from "@utils/formatting";
 import { fetchUserStakes } from "@utils/queries";
 import { config } from "@utils/wagmi.server";
 import { readContract, readContracts } from "@wagmi/core";
@@ -198,6 +198,12 @@ const Page = async () => {
           {phaseLabel && <Badge title={phaseLabel} />}
         </div>
         <StakeDialog />
+        {walletAddress &&
+          <div className={styles.walletAddress}>
+            Your Wallet Address:
+            <span>{truncateAddress(walletAddress as string)}</span>
+          </div>
+        }
       </div>
       <div className={styles.card}>
         <div className={styles.cardInner}>
