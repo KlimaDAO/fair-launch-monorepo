@@ -1,5 +1,6 @@
 import { request } from "graphql-request";
 import { SUBGRAPH_URL } from "./constants";
+import { unstable_cacheLife as cacheLife } from 'next/cache';
 
 export interface Stake {
   id: string;
@@ -24,6 +25,8 @@ export interface Wallet {
  */
 export const fetchUserStakes = async (address: string | null): Promise<{ stakes?: Stake[]; error?: string }> => {
   'use cache';
+
+  cacheLife({ stale: 120, revalidate: 60, expire: 900 });
 
   if (!address) return { stakes: [] };
 
@@ -63,6 +66,8 @@ export const fetchUserStakes = async (address: string | null): Promise<{ stakes?
  */
 export const fetchLeaderboard = async (limit: number = 100): Promise<{ wallets?: Wallet[]; error?: string }> => {
   'use cache';
+
+  cacheLife({ stale: 120, revalidate: 60, expire: 900 });
 
   try {
     const result = await request(
