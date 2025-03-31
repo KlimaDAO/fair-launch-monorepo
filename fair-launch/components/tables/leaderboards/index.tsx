@@ -27,6 +27,7 @@ import { Dropdown } from "@components/dropdown";
 
 interface Props<T> {
   // data: T[];
+  maxItems?: number;
   showPagination?: boolean;
 }
 
@@ -37,9 +38,7 @@ export interface LeaderboardData {
 }
 
 const isUserWallet = (walletAddress: string, address: string) => {
-
   if (!walletAddress || !address) { return false; }
-
   return walletAddress.toLowerCase() === address?.toLowerCase();
 };
 
@@ -60,7 +59,7 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
     pageIndex: 0,
     pageSize: 10,
   });
-  const [data, setData] = useState(null);
+  const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -178,7 +177,7 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
 
   const table = useReactTable({
     columns,
-    data: data || [],
+    data: props.maxItems ? data?.slice(0, props.maxItems) : data || [],
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),

@@ -32,6 +32,8 @@ import { MdHelpOutline } from "react-icons/md";
 import { AbiFunction, formatUnits } from "viem";
 import { cookieToInitialState } from "wagmi";
 import * as styles from "./styles";
+import { LeaderboardsTable } from "@components/tables/leaderboards";
+import { Suspense } from "react";
 
 const oneWeekInSeconds = 604800;
 const twoWeeksInSeconds = 1209600;
@@ -286,6 +288,9 @@ const Page = async () => {
       <div className={styles.twoCols}>
         <Card>
           {/* <LeaderboardsTable data={(leaderboardData as any[]) || []} /> */}
+          <Suspense fallback={<div>Loading...</div>}>
+            <LeaderboardsTable maxItems={5} />
+          </Suspense>
           <Link className={styles.leaderboardLink} href="/protocol">
             View full leaderboard
           </Link>
