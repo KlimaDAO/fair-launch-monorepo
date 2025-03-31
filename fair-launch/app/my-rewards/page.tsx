@@ -9,7 +9,7 @@ import { StakeDialog } from "@components/dialogs/stake-dialog";
 import { UnstakeDialog } from "@components/dialogs/unstake-dialog";
 import { Notification } from "@components/notification";
 import { KlimaXAllocationTable } from "@components/tables/klimax-allocation";
-import { LeaderboardsTable } from "@components/tables/leaderboards";
+// import { LeaderboardsTable } from "@components/tables/leaderboards";
 import { StakeData, StakesTable } from "@components/tables/stakes";
 import { Tooltip } from "@components/tooltip";
 import gklimaLogo from "@public/tokens/g-klima.svg";
@@ -51,7 +51,7 @@ const Page = async () => {
 
   const currentTimestamp = Math.floor(Date.now() / 1000);
   const { stakes, error } = await fetchUserStakes(walletAddress ?? null);
-  const leaderboardData = await calculateLeaderboardPoints(5);
+  // const leaderboardData = await calculateLeaderboardPoints(5);
 
   // move this and cache...
   const startTimestamp = (await readContract(config, {
