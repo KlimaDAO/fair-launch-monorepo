@@ -76,7 +76,7 @@
 import { NextResponse } from 'next/server';
 import { calculateLeaderboardPoints } from '@actions/leaderboards-action';
 
-const cache = new Map(); // Simple in-memory cache
+export const cache = new Map(); // Simple in-memory cache
 const CACHE_EXPIRATION_TIME = 2 * 60 * 1000; // 2 minutes in milliseconds
 
 export async function GET() {
@@ -95,11 +95,7 @@ export async function GET() {
 }
 
 // Function to process data and update cache
-export async function processDataAndCache(cacheKey: string) {
-  const processedData = await processData(); // Your data processing logic here
-  console.log('processedData', processedData);
-  await updateCache(cacheKey, processedData); // Function to update cache
-}
+
 
 // Function to get data from cache
 async function getFromCache(key: string) {
@@ -114,10 +110,7 @@ async function getFromCache(key: string) {
   return null; // Cache is expired or doesn't exist
 }
 
-// Function to update cache
-async function updateCache(key: string, data: any) {
-  cache.set(key, { data, timestamp: Date.now() }); // Update in-memory cache with timestamp
-}
+
 
 // Function to get data from cache
 // export async function getFromCache(key: string) {
@@ -131,18 +124,3 @@ async function updateCache(key: string, data: any) {
 //   }
 //   return null; // Cache is expired or doesn't exist
 // }
-
-// Function to process data
-async function processData() {
-  const leaderboardData = await calculateLeaderboardPoints(100);
-  const serializedData = leaderboardData.map(item => {
-    return {
-      ...item,
-      totalStaked: Number(item.totalStaked),
-      totalPoints: Number(item.totalPoints),
-    };
-  });
-  // Simulate a long-running process
-  console.log('serializedData', serializedData);
-  return serializedData;
-}
