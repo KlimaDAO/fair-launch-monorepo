@@ -1,7 +1,11 @@
 {
-  "functions": {
-    "api/leaderboards/cron.ts": {
+  "version": 2,
+  "routes": [
+    {
+      "src": "/api/leaderboards/cron",
+      "methods": ["GET"],
+      "dest": "/api/leaderboards/cron.ts",
       "cron": "*/5 * * * *"
     }
-  }
+  ]
 }
