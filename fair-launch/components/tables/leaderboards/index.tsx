@@ -57,7 +57,7 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
 
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
-    pageSize: 10,
+    pageSize: props.maxItems || 10,
   });
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -71,15 +71,7 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
           throw new Error('Network response was not ok');
         }
         const result = await response.json();
-
-        console.log('result', result);
-        console.log('result.data?.slice(0, props.maxItems) ', result.data?.slice(0, props.maxItems) );
-
-        // if (props.maxItems && result.data) {
-        //   setData(result.data?.slice(0, props.maxItems) || null);
-        // } else {
-          setData(result.data || null);
-        // }
+        setData(result.data || null);
       } catch (err: any) {
         setError(err.message);
       } finally {
