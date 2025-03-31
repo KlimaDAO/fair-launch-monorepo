@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { cache } from './route';
 import { calculateLeaderboardPoints } from '@actions/leaderboards-action';
+import { cache } from '@utils/cache';
 
 export async function GET(req: NextRequest) {
   const cacheKey = 'leaderboards';

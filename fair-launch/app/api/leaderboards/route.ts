@@ -74,10 +74,8 @@
 // }
 
 import { NextResponse } from 'next/server';
-import { calculateLeaderboardPoints } from '@actions/leaderboards-action';
-
-export const cache = new Map(); // Simple in-memory cache
-const CACHE_EXPIRATION_TIME = 2 * 60 * 1000; // 2 minutes in milliseconds
+import { cache, CACHE_EXPIRATION_TIME } from '@utils/cache';
+// import { calculateLeaderboardPoints } from '@actions/leaderboards-action';
 
 export async function GET() {
   const cacheKey = 'leaderboards';
