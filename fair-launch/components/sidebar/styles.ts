@@ -8,7 +8,7 @@ export const sidebar = css({
   backgroundColor: 'white',
   borderRight: '0.1rem solid token(colors.void.20)',
   flexDirection: 'column',
-  gap: '4rem',
+  gap: '2rem',
 
   lg: {
     display: 'flex',
@@ -19,11 +19,7 @@ export const title = css({
   fontSize: '1.8rem',
   fontWeight: 400,
   color: 'green.70',
-  textAlign: 'center',
   fontFamily: 'var(--font-fira-code)',
-  borderTop: '0.1rem solid token(colors.void.20)',
-  borderBottom: '0.1rem solid token(colors.void.20)',
-  padding: '2rem 0'
 });
 
 export const navLinks = css({
@@ -82,5 +78,26 @@ export const logoutButton = css({
   '& svg': {
     fontSize: '1.6rem',
     fill: 'void.80'
+  }
+});
+
+export const titleContainer = css({ 
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '2rem',
+});
+
+export const walletAddress = css({  
+  display: 'flex',
+  flexDirection: 'column',
+  fontSize: 'sm',
+  fontWeight: 400,
+  borderTop: '0.1rem solid token(colors.void.20)',
+  borderBottom: '0.1rem solid token(colors.void.20)',
+  padding: '2rem 0',
+  color: 'void.80',
+
+  '& > span': {
+    color: 'void.40 !important',
   }
 });

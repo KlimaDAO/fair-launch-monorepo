@@ -8,6 +8,7 @@ import klimaLogo from "@public/kp-logo.svg";
 import { usePathname, useRouter } from 'next/navigation';
 import { IoTrophySharp } from "react-icons/io5";
 import { IntroWalkthrough } from "@components/intro-walkthrough";
+import { truncateAddress } from '@utils/formatting';
 import { MdDashboard, MdLogout } from "react-icons/md";
 import { useAccount, useDisconnect } from "wagmi";
 import * as styles from './styles';
@@ -31,7 +32,13 @@ export const Sidebar: FC = () => {
   return (
     <div className={styles.sidebar}>
       <Image src={klimaLogo} alt="Klima Protocol Logo" />
-      <p className={styles.title}>Fair Launch 2025</p>
+      <div className={styles.titleContainer}>
+        <p className={styles.title}>Fair Launch 2025</p>
+        <div className={styles.walletAddress}>
+          Your Wallet Address:
+          <span>{truncateAddress(address as string)}</span>
+        </div>
+      </div>
       <div className={styles.navLinks}>
         {navLinks.map((link) => (
           <Link
