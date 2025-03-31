@@ -29,13 +29,14 @@ export const menuIcon = css({
   color: 'white',
 });
 
-export const fullScreenMenu = css({
+export const flyoutMenu = css({
   position: 'fixed',
-  top: 0,
+  top: '6.4rem',
   left: 0,
   width: '100%',
-  height: '100%',
+  height: 'auto',
   backgroundColor: 'rgba(255,255,255,0.98)',
+  boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1), 0px 2px 4px -2px rgba(0, 0, 0, 0.1)',
   color: 'black',
   display: 'flex',
   flexDirection: 'column',
@@ -56,22 +57,62 @@ export const closeButton = css({
   cursor: 'pointer',
 });
 
-export const nav = css({
-  listStyle: 'none',
-  padding: '0',
-  marginTop: '6.4rem',
+export const navLinks = css({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '0.4rem',
+});
 
-  '& li': {
-    margin: '1.2rem 0',
-
-    '& a': {
-      color: 'black',
-      textDecoration: 'none',
-      fontSize: '2.4rem',
-    }
-  },
-
-  '& div': {
-    fontSize: '2.4rem',
+export const navLink = css({
+  display: 'flex',
+  gap: '0.8rem',
+  color: 'void.80',
+  padding: '0.6rem 0.4rem',
+  borderRadius: '0.4rem',
+  
+  '& svg': {
+    fontSize: '2rem',
+    fill: 'void.50'
   }
+});
+
+
+export const activeLink = css({
+  color: 'void.80',
+  fontWeight: 700,
+  backgroundColor: 'void.10',
+  '& svg': {
+    fill: 'void.60'
+  }
+});
+
+export const logoutButton = css({
+  cursor: 'pointer',
+  backgroundColor: 'transparent',
+  color: 'void.80',
+  borderRadius: 'sm',
+  height: '4rem',
+  width: '100%',
+  fontSize: 'base',
+  lineHeight: 'base',
+  fontWeight: 500,
+  border: '0.1rem solid token(colors.void.80)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: '0.8rem',
+  fontFamily: 'var(--font-inter)',
+
+  '& svg': {
+    fontSize: '1.6rem',
+    fill: 'void.80'
+  }
+});
+
+export const buttonContainer = css({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '1.2rem',
+  width: '100%',
+  padding: '4rem 0 0.4rem 0',
 });

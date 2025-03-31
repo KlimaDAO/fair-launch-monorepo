@@ -4,7 +4,13 @@ import type { FC } from 'react';
 import { driver } from 'driver.js';
 import { TourDialog } from '@components/dialogs/tour-dialog';
 
-export const IntroWalkthrough: FC = () => {
+interface Props {
+  onOpen?: (open: boolean) => void;
+}
+
+export const IntroWalkthrough: FC<Props> = (props) => {
+
+
   const handleWalkthrough = () => {
     const driverObj = driver({
       showProgress: true,
@@ -122,6 +128,7 @@ export const IntroWalkthrough: FC = () => {
 
   return (
     <TourDialog
+      onOpen={(isOpen) => props.onOpen?.(isOpen)}
       onClose={() => {
         handleWalkthrough();
       }}

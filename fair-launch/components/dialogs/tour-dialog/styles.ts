@@ -100,6 +100,7 @@ export const tourButton = css({
   color: 'white',
   display: 'flex',
   alignItems: 'center',
+  justifyContent: 'center',
   gap: '0.8rem',
 
   '&:disabled': {

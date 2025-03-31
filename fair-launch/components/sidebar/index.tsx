@@ -34,10 +34,12 @@ export const Sidebar: FC = () => {
       <Image src={klimaLogo} alt="Klima Protocol Logo" />
       <div className={styles.titleContainer}>
         <p className={styles.title}>Fair Launch 2025</p>
-        <div className={styles.walletAddress}>
-          Your Wallet Address:
-          <span>{truncateAddress(address as string)}</span>
-        </div>
+        {address &&
+          <div className={styles.walletAddress}>
+            Your Wallet Address:
+            <span>{truncateAddress(address as string)}</span>
+          </div>
+        }
       </div>
       <div className={styles.navLinks}>
         {navLinks.map((link) => (

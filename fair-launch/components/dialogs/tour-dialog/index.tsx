@@ -2,7 +2,7 @@
 
 import { Dialog } from "radix-ui";
 import { MdHelpOutline, MdOutlineHelpCenter } from "react-icons/md";
-import { type FC, useState } from "react";
+import { type FC, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import * as styles from './styles';
 
@@ -11,12 +11,17 @@ type InteractOutsideEvent =
   | CustomEvent<{ originalEvent: PointerEvent }>;
 
 interface Props {
+  onOpen?: (open: boolean) => void;
   onClose: () => void;
 }
 
-export const TourDialog: FC<Props> = ({ onClose }) => {
+export const TourDialog: FC<Props> = ({ onClose, onOpen }) => {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    onOpen?.(open);
+  }, [open]);
 
   const handleGetStarted = () => {
     setOpen(false);

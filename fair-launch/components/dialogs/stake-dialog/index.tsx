@@ -46,7 +46,6 @@ enum DialogState {
 }
 
 export const StakeDialog: FC = () => {
-  const router = useRouter();
   const { address } = useAccount();
   const { data: balance } = useBalance({
     address: address,
@@ -88,8 +87,8 @@ export const StakeDialog: FC = () => {
   const isSubmitSuccess = receipt?.status === "success";
   const isTransactionSuccess = isStakePending || (stakeData && isSubmitSuccess);
 
-  console.log('isSuccess', isSuccess);
-  console.log('isSubmitSuccess', isSubmitSuccess);
+  // console.log('isSuccess', isSuccess);
+  // console.log('isSubmitSuccess', isSubmitSuccess);
 
   const handleDialogState = () => {
     setOpen(!open);
