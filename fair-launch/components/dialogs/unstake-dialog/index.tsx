@@ -99,10 +99,10 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({
       parseUnits(amount, 9),
       startTimestamp
     );
-    form.setFieldValue("burn-amount", formatNumber(penalty.burnValue, 2));
+    form.setFieldValue("burn-amount", formatNumber(penalty.burnValue, 8));
     form.setFieldValue(
       "receive-amount",
-      formatNumber(Number(amount) - Number(penalty.burnValue), 2)
+      formatNumber(Number(amount) - Number(penalty.burnValue), 8)
     );
   };
 
