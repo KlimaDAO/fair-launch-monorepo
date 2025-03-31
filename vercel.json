@@ -1,6 +1,6 @@
 {
   "crons": [{
-    "path": "api/leaderboards/cron",
-    "schedule": "5 * * * *"
+    "path": "/api/leaderboards/cron",
+    "schedule": "*/5 * * * *"
   }]
 }
