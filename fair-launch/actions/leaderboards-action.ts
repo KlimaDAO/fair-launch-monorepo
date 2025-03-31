@@ -1,11 +1,12 @@
 'use server';
 
-import { readContract } from "@wagmi/core";
+import { readContract, readContracts } from "@wagmi/core";
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
 import { FAIR_LAUNCH_CONTRACT_ADDRESS } from "@utils/constants";
 import { fetchLeaderboard, fetchUserStakes } from "@utils/queries";
 import { config } from "@utils/wagmi.server";
 import { unstable_cacheLife as cacheLife } from 'next/cache';
+import { AbiFunction } from "viem";
 
 // @todo - move to an action that can be called across the app
 // @note - this is only a temp solution, we don't have all the
@@ -23,14 +24,47 @@ export const calculateLeaderboardPoints = async (limit = 10000) => {
     expire: 900,
   })
 
+  // trigger.dev cron job here???
+  // return from cache by default...
+  // cache for 2 minutes??
+  // whenever trigger.dev updates cache, revalidate the route with the data...
+
   const results = [];
   const leaderboard = await fetchLeaderboard(limit);
 
   for (const wallet of leaderboard.wallets || []) {
     try {
-      const userStakes = await fetchUserStakes(wallet.id);
+      const { stakes } = await fetchUserStakes(wallet.id);
+
+      const stakesContracts = (stakes || []).map((_, index) => ({
+        abi: klimaFairLaunchAbi as AbiFunction[],
+        address: FAIR_LAUNCH_CONTRACT_ADDRESS as `0x${string}`,
+        functionName: "userStakes",
+        args: [wallet.id, index],
+      }));
+
+      // const userStakesInfoPromise = await readContracts(config, {
+      //   contracts: [
+      //     {
+      //       abi: klimaFairLaunchAbi as AbiFunction[],
+      //       address: FAIR_LAUNCH_CONTRACT_ADDRESS as `0x${string}`,
+      //       functionName: "previewUserPoints",
+      //       args: [wallet.id],
+      //     },
+      //     ...stakesContracts,
+      //   ],
+      // }).then((result) => {
+      //   // console.log('result', result);
+      //   // return result?.[0] || 0;
+      // });
+
+      // console.log('userStakesInfoPromise', await Promise.all(userStakesInfoPromise));
+
+
+      // cache this info also? This data will only change if
+      // the user stakes or unstakes, so it should be cached
       const userStakesInfo = await Promise.all(
-        (userStakes?.stakes || []).map(async (stake, index) => {
+        (stakes || []).map(async (stake, index) => {
           const [amount] = await readContract(config, {
             abi: klimaFairLaunchAbi,
             address: FAIR_LAUNCH_CONTRACT_ADDRESS,

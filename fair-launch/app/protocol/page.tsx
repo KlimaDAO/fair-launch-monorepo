@@ -11,7 +11,7 @@ import { formatLargeNumber, formatNumber } from "@utils/formatting";
 import { config } from "@utils/wagmi.server";
 import { readContract } from "@wagmi/core";
 import Image from "next/image";
-import { type FC } from "react";
+import { Suspense, type FC } from "react";
 import { erc20Abi, formatUnits } from "viem";
 import * as styles from "./styles";
 import { Card } from "@components/card";
@@ -22,7 +22,7 @@ const Page: FC = async () => {
   );
   const { data } = await klimaPrice.json();
   const price = data?.KLIMA?.[0]?.quote?.USD?.price;
-  const leaderboardData = await calculateLeaderboardPoints(100);
+  // const leaderboardData = await calculateLeaderboardPoints(100);
 
   const totalBurned = (await readContract(config, {
     abi: klimaFairLaunchAbi,
@@ -95,7 +95,9 @@ const Page: FC = async () => {
         </div>
       </div>
       <Card>
-        <LeaderboardsTable showPagination data={(leaderboardData as any[]) || []} />
+        <Suspense fallback={<div>Loading...</div>}>
+          <LeaderboardsTable showPagination />
+        </Suspense>
       </Card>
     </>
   );

@@ -17,7 +17,7 @@ import {
   truncateAddress,
 } from "@utils/formatting";
 import clsx from "clsx";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { css } from "styled-system/css";
 import { formatUnits } from "viem";
 import { useAccount } from "wagmi";
@@ -26,7 +26,7 @@ import { MdKeyboardArrowLeft, MdKeyboardArrowRight } from "react-icons/md";
 import { Dropdown } from "@components/dropdown";
 
 interface Props<T> {
-  data: T[];
+  // data: T[];
   showPagination?: boolean;
 }
 
@@ -37,6 +37,9 @@ export interface LeaderboardData {
 }
 
 const isUserWallet = (walletAddress: string, address: string) => {
+
+  if (!walletAddress || !address) { return false; }
+
   return walletAddress.toLowerCase() === address?.toLowerCase();
 };
 
@@ -45,6 +48,10 @@ const dropdownItems = [
   { value: "desc", label: "Points - low to high" },
 ];
 
+
+// this data needs to be fetching client side ideally not to block the UI..
+// it's extremely heavy and can take a long time to load...
+// @todo - need to implement heavy caching, and processing in a background job
 export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) => {
   const { address } = useAccount();
   const [sorting, setSorting] = useState<SortingState>([])
@@ -52,7 +59,37 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 10,
-  })
+  });
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch('/api/leaderboards'); // Call the API route
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const result = await response.json();
+        setData(result.data || null); // Set data or message
+      } catch (err: any) {
+        setError(err.message); // Set error message
+      } finally {
+        setLoading(false); // Set loading to false
+      }
+    };
+
+    fetchData(); // Call the fetch function
+  }, []);
+
+  // console.log('loading', loading);
+  // console.log('error', error);
+  // console.log('data', data);
+
+  // return <div>{data}</div>
+
+  // useQuery()
 
   const columns: ColumnDef<T>[] = useMemo(
     () => [
@@ -150,7 +187,7 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
 
   const table = useReactTable({
     columns,
-    data: props.data,
+    data: data || [],
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),

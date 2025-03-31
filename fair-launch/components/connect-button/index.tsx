@@ -1,29 +1,24 @@
 "use client";
 
-import clsx from "clsx";
-import { css } from "styled-system/css";
 import { useRouter } from "next/navigation";
-import { ConnectButton as ConnectButtonRainbow } from "@rainbow-me/rainbowkit";
+import { ConnectButton as RainbowConnectButton } from "@rainbow-me/rainbowkit";
 import * as styles from "./styles";
 
 export const ConnectButton = () => {
   const router = useRouter();
   return (
-    <ConnectButtonRainbow.Custom>
+    <RainbowConnectButton.Custom>
       {({ account, chain, openChainModal, openConnectModal, mounted }) => {
-        const ready = mounted;
-        const connected = ready && account && chain;
+        const connected = mounted && account && chain;
         // after successful connection, redirect to /my-rewards
         if (connected && !chain.unsupported) {
-          setTimeout(() => {
-            router.push('/my-rewards')
-          }, 1);
+          setTimeout(() => router.push('/my-rewards'), 1);
         }
 
         return (
           <div
             className={styles.connectButtonContainer}
-            {...(!ready && {
+            {...(!mounted && {
               "aria-hidden": true,
               style: {
                 opacity: 0,
@@ -47,8 +42,8 @@ export const ConnectButton = () => {
               if (chain.unsupported) {
                 return (
                   <button
-                    onClick={openChainModal}
                     type="button"
+                    onClick={openChainModal}
                     className={styles.wrongNetworkButton}
                   >
                     Wrong network
@@ -60,16 +55,7 @@ export const ConnectButton = () => {
                   <button
                     type="button"
                     disabled
-                    className={clsx(styles.connectButton, css({
-                      display: "flex",
-                      justifyContent: 'center',
-                      alignItems: "center",
-                      textAlign: 'center',
-                      '&:disabled': {
-                        cursor: 'not-allowed',
-                        opacity: 0.85,
-                      }
-                    }))}
+                    className={styles.connectButton}
                   >
                     Connecting...
                   </button>
@@ -79,6 +65,6 @@ export const ConnectButton = () => {
           </div>
         );
       }}
-    </ConnectButtonRainbow.Custom>
+    </RainbowConnectButton.Custom>
   )
 };

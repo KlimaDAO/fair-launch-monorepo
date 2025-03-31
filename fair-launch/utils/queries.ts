@@ -61,7 +61,7 @@ export const fetchUserStakes = async (address: string | null): Promise<{ stakes?
  * @returns The leaderboard
  */
 export const fetchLeaderboard = async (limit: number = 100): Promise<{ wallets?: Wallet[] }> => {
-  'use cache';
+  // 'use cache';
 
   const result = await request(
     SUBGRAPH_URL,
@@ -80,5 +80,9 @@ export const fetchLeaderboard = async (limit: number = 100): Promise<{ wallets?:
   //   amount
   //   startTimestamp
   // }
+
+  // after processing the leaderboard data, only ever return the top 100...
+  // this should be processed in the background job...
+  
   return result || { wallets: [] };
 };

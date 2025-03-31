@@ -285,7 +285,7 @@ const Page = async () => {
       </Card>
       <div className={styles.twoCols}>
         <Card>
-          <LeaderboardsTable data={(leaderboardData as any[]) || []} />
+          {/* <LeaderboardsTable data={(leaderboardData as any[]) || []} /> */}
           <Link className={styles.leaderboardLink} href="/protocol">
             View full leaderboard
           </Link>

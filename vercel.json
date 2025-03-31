@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/leaderboards/cron.ts": {
+      "cron": "*/5 * * * *"
+    }
+  }
+}

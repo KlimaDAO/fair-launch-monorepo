@@ -17,8 +17,15 @@ export const connectButton = css({
   lineHeight: 'base',
   fontWeight: 500,
   cursor: 'pointer',
-  textAlign: 'center',
   width: '100%',
+  display: "flex",
+  justifyContent: 'center',
+  alignItems: "center",
+  textAlign: 'center',
+  '&:disabled': {
+    cursor: 'not-allowed',
+    opacity: 0.85,
+  },
 
   lg: {
     padding: '0rem 2.4rem',
