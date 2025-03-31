@@ -106,7 +106,7 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
       {
         id: "totalStaked",
         accessorKey: "totalStaked",
-        header: "KLIMA(v0) Staked",
+        header: "KLIMA Staked",
         cell: ({ row, getValue }) => {
           const value = getValue();
           const userWallet = isUserWallet(row.original.id, address as string);

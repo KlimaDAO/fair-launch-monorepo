@@ -46,7 +46,7 @@ export const StakesTable = <T extends StakeData>({
       {
         id: "amount",
         accessorKey: "amount",
-        header: "KLIMA(v0) Staked",
+        header: "KLIMA Staked",
         cell: ({ getValue }) => {
           const value = getValue();
           return <>{formatNumber(formatUnits(BigInt(value as string), 9), 4)}</>;

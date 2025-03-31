@@ -207,7 +207,7 @@ const Page = async () => {
       </div>
       <div className={styles.card}>
         <div className={styles.cardInner}>
-          <h5 className={styles.cardTitle}>My KLIMA(v0) Deposited</h5>
+          <h5 className={styles.cardTitle}>My KLIMA Deposited</h5>
           <div className={styles.cardContents}>
             <div
               id="step1"

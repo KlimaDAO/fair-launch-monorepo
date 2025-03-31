@@ -56,7 +56,7 @@ const Page: FC = async () => {
       </div>
       <div className={styles.card}>
         <div className={styles.cardInner}>
-          <h5 className={styles.cardTitle}>Total KLIMA(v0) Deposited</h5>
+          <h5 className={styles.cardTitle}>Total KLIMA Deposited</h5>
           <div className={styles.cardContents}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <Image src={klimav1Logo} alt="Klima V1 Logo" />
