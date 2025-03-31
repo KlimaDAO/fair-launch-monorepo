@@ -165,7 +165,7 @@ The contracts include test suites that cover:
 - `EXP_GROWTH_RATE`: Configurable rate at which points accrue daily (default 274, represented as 0.00274 * 1e18)
 - `SECONDS_PER_DAY`: Constant (86400) representing seconds in a day
 - `PERCENTAGE_SCALE`: Constant (100) used for percentage calculations
-- `INPUT_SCALE_DENOMINATOR`: Constant (1e27) used to scale input values for calculations
+- `POINTS_SCALE_DENOMINATOR`: Constant (1e27) used to scale points values for calculations
 - `BURN_DISTRIBUTION_PRECISION`: Constant (1e18) used in maintaining precision during the redistribution of points
 - `burnRatio`: Global ratio used to distribute burn points proportionately to organic points
 - `totalOrganicPoints`: Sum of all organically earned points across all stakes

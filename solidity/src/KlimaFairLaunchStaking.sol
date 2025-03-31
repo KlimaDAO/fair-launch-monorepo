@@ -45,10 +45,10 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     uint256 public constant BURN_DISTRIBUTION_PRECISION = 1e18; // e18 for burn calc
     address public constant KLIMA_V0 = 0xDCEFd8C8fCc492630B943ABcaB3429F12Ea9Fea2;
 
-    UD60x18 public SECONDS_PER_DAY;
-    UD60x18 public EXP_GROWTH_RATE; 
-    UD60x18 public PERCENTAGE_SCALE;
-    UD60x18 public INPUT_SCALE_DENOMINATOR;
+    UD60x18 public SECONDS_PER_DAY; // constant set in initialize
+    UD60x18 public PERCENTAGE_SCALE; // constant set in initialize
+    UD60x18 public POINTS_SCALE_DENOMINATOR; // constant set in initialize
+    UD60x18 public EXP_GROWTH_RATE; // adjustable with setGrowthRate
 
     address public KLIMA; // address of the KLIMA token 
     address public KLIMA_X; // address of the KLIMA_X token
@@ -118,7 +118,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         SECONDS_PER_DAY = ud(86400);
         EXP_GROWTH_RATE = ud(2740000000000000); // 0.00274 * 1e18
         PERCENTAGE_SCALE = ud(100);
-        INPUT_SCALE_DENOMINATOR = ud(1e27); // 10^27
+        POINTS_SCALE_DENOMINATOR = ud(1e27); // 10^27
     }
 
     /// @notice Authorizes an upgrade to a new implementation
@@ -407,7 +407,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
                 // bonusMultiplier / 100 * amount / 1e27 = (bonusMultiplier * amount) / (100 * 1e27)
                 UD60x18 basePoints = div(
                     mul(ud(currentStake.amount), ud(currentStake.bonusMultiplier * 1e18)), 
-                    mul(PERCENTAGE_SCALE, INPUT_SCALE_DENOMINATOR)
+                    mul(PERCENTAGE_SCALE, POINTS_SCALE_DENOMINATOR)
                 );
                 
                 // Calculate new points (basePoints * growthFactor)
@@ -758,7 +758,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
                 // Calculate additional points based on current stake amount
                 UD60x18 basePoints = div(
                     mul(ud(currentStake.amount), ud(currentStake.bonusMultiplier * 1e18)), 
-                    mul(PERCENTAGE_SCALE, INPUT_SCALE_DENOMINATOR)
+                    mul(PERCENTAGE_SCALE, POINTS_SCALE_DENOMINATOR)
                 );
                 
                 // Add only the new points accrued since lastUpdateTime
