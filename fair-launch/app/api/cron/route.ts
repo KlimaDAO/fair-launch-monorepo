@@ -6,10 +6,10 @@ import { cacheManager } from '@utils/cache'; // Import the cache manager
 
 export async function GET(req: NextRequest) {
   const cacheKey = 'leaderboards';
-  // @todo - add CRON SECRET
-  if (req.headers.get('Authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ message: 'Unauthorized', status: 401 });
-  }
+  // // @todo - add CRON SECRET
+  // if (req.headers.get('Authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
+  //   return NextResponse.json({ message: 'Unauthorized', status: 401 });
+  // }
 
   waitUntil(processDataAndCache(cacheKey)); // Call the function to process data and update cache
   return NextResponse.json({ message: 'Data processing started.' });
