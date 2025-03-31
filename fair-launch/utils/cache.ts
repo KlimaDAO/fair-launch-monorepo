@@ -3,6 +3,7 @@ class CacheManager {
 
   get(key: string) {
     const cachedEntry = this.cache.get(key);
+    console.log('cachedEntry', cachedEntry);
     if (cachedEntry) {
       const { data } = cachedEntry;
       return { data }; // Return cached data if still valid

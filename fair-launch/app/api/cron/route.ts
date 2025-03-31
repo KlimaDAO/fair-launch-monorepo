@@ -11,7 +11,6 @@ export async function GET() {
 
 async function processDataAndCache(cacheKey: string) {
   const processedData = await processData();
-  console.log('processedData', processedData);
   await updateCache(cacheKey, processedData);
 }
 
@@ -20,7 +19,7 @@ async function updateCache(key: string, data: any) {
 }
 
 async function processData() {
-  const leaderboardData = await calculateLeaderboardPoints(100);
+  const leaderboardData = await calculateLeaderboardPoints(1000);
   const serializedData = leaderboardData.map(item => {
     return {
       ...item,

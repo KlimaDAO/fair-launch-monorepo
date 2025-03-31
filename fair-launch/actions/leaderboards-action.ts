@@ -5,8 +5,8 @@ import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
 import { FAIR_LAUNCH_CONTRACT_ADDRESS } from "@utils/constants";
 import { fetchLeaderboard, fetchUserStakes } from "@utils/queries";
 import { config } from "@utils/wagmi.server";
-import { unstable_cacheLife as cacheLife } from 'next/cache';
-import { AbiFunction } from "viem";
+// import { unstable_cacheLife as cacheLife } from 'next/cache';
+// import { AbiFunction } from "viem";
 
 // @todo - move to an action that can be called across the app
 // @note - this is only a temp solution, we don't have all the
@@ -30,18 +30,20 @@ export const calculateLeaderboardPoints = async (limit = 10000) => {
   // whenever trigger.dev updates cache, revalidate the route with the data...
 
   const results = [];
+
+  // move this...
   const leaderboard = await fetchLeaderboard(limit);
 
   for (const wallet of leaderboard.wallets || []) {
     try {
       const { stakes } = await fetchUserStakes(wallet.id);
 
-      const stakesContracts = (stakes || []).map((_, index) => ({
-        abi: klimaFairLaunchAbi as AbiFunction[],
-        address: FAIR_LAUNCH_CONTRACT_ADDRESS as `0x${string}`,
-        functionName: "userStakes",
-        args: [wallet.id, index],
-      }));
+      // const stakesContracts = (stakes || []).map((_, index) => ({
+      //   abi: klimaFairLaunchAbi as AbiFunction[],
+      //   address: FAIR_LAUNCH_CONTRACT_ADDRESS as `0x${string}`,
+      //   functionName: "userStakes",
+      //   args: [wallet.id, index],
+      // }));
 
       // const userStakesInfoPromise = await readContracts(config, {
       //   contracts: [
