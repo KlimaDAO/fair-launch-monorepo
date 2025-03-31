@@ -45,9 +45,9 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     uint256 public constant BURN_DISTRIBUTION_PRECISION = 1e18; // e18 for burn calc
     address public constant KLIMA_V0 = 0xDCEFd8C8fCc492630B943ABcaB3429F12Ea9Fea2;
 
-    UD60x18 public  SECONDS_PER_DAY;
+    UD60x18 public SECONDS_PER_DAY;
     UD60x18 public EXP_GROWTH_RATE; 
-    UD60x18 public  PERCENTAGE_SCALE;
+    UD60x18 public PERCENTAGE_SCALE;
     UD60x18 public INPUT_SCALE_DENOMINATOR;
 
     address public KLIMA; // address of the KLIMA token 
@@ -59,10 +59,12 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     uint256 public minStakeAmount; // e9 // minimum amount of KLIMA V0 that can be staked
     uint256 public maxTotalStakesPerUser; // maximum number of stakes per user
 
+    uint256 public claimDeadline; // timestamp after which KLIMA and KLIMA_X allocation claims can expire
+
     event StakeCreated(address indexed user, uint256 amount, uint256 multiplier, uint256 startTimestamp);
     event StakeBurned(address indexed user, uint256 burnAmount, uint256 timestamp);
     event StakeClaimed(address indexed user, uint256 totalUserStaked, uint256 klimaAllocation, uint256 klimaXAllocation, uint256 timestamp);
-    event FinalizationComplete();
+    event FinalizationComplete(uint256 finalizationTimestamp);
     event TokenAddressesSet(address indexed klima, address indexed klimax);
     event StakingEnabled(uint256 startTimestamp, uint256 freezeTimestamp);
     event StakingExtended(uint256 oldFreezeTimestamp, uint256 newFreezeTimestamp);
@@ -111,7 +113,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         KLIMAX_SUPPLY = 40_000_000 * 1e18;
         preStakingWindow = 3 days;
         minStakeAmount = 1e9;
-        maxTotalStakesPerUser = 200;
+        maxTotalStakesPerUser = 100;
 
         SECONDS_PER_DAY = ud(86400);
         EXP_GROWTH_RATE = ud(2740000000000000); // 0.00274 * 1e18
@@ -541,8 +543,18 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
             require(IERC20(KLIMA).balanceOf(address(this)) >= KLIMA_SUPPLY, "Insufficient KLIMA balance");
             require(IERC20(KLIMA_X).balanceOf(address(this)) >= KLIMAX_SUPPLY, "Insufficient KLIMA_X balance");
             finalizationComplete = 1;
-            emit FinalizationComplete();
+            claimDeadline = block.timestamp + 365 days;
+            emit FinalizationComplete(block.timestamp);
         }
+    }
+
+    /// @notice Owner can transfer all KLIMA and KLIMA_X remaining from expired claims after claimDeadline
+    /// @dev Can only be called after claimDeadline (which is 365 days after finalization)
+    /// @dev Can only be called by the owner
+    function transferExpiredClaims() external onlyOwner {
+        require(block.timestamp >= claimDeadline, "Claim deadline has not passed");
+        require(IERC20(KLIMA).transfer(msg.sender, IERC20(KLIMA).balanceOf(address(this))), "KLIMA transfer failed");
+        require(IERC20(KLIMA_X).transfer(msg.sender, IERC20(KLIMA_X).balanceOf(address(this))), "KLIMA_X transfer failed");
     }
 
     /// @notice Sets the growth rate for point accrual

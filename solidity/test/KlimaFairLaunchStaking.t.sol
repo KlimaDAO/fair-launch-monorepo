@@ -441,19 +441,37 @@ contract KlimaFairLaunchStakingTest is Test {
         staking.storeTotalPoints(1);
     }
 
-    // TODO FIX THIS
     // Growth Rate Setting Tests
     /// @notice Test setting valid growth rate
-    // function test_SetGrowthRate() public {
-    //     uint256 newRate = 100;
+    function test_SetGrowthRate() public {
+        uint256 newRate = 100;
         
-    //     vm.prank(owner);
-    //     vm.expectEmit(true, true, true, true);
-    //     emit GrowthRateSet(newRate);
-    //     staking.setGrowthRate(newRate);
+        vm.prank(owner);
+        vm.expectEmit(true, true, true, true);
+        emit GrowthRateSet(newRate);
+        staking.setGrowthRate(newRate);
 
-    //     assertEq(staking.GROWTH_RATE(), newRate);
-    // }
+        uint256 expectedGrowthRate = newRate * 1e13;
+        UD60x18 currentGrowthRate = staking.EXP_GROWTH_RATE();
+        uint256 currentGrowthRateUint = currentGrowthRate.intoUint256();
+
+        // assert that the growth rate is set correctly in a way that is compatible with the UD60x18 type
+        assertEq(currentGrowthRateUint, expectedGrowthRate);
+
+        newRate = 1000;
+        
+        vm.prank(owner);
+        vm.expectEmit(true, true, true, true);
+        emit GrowthRateSet(newRate);
+        staking.setGrowthRate(newRate);
+
+        expectedGrowthRate = newRate * 1e13;
+        currentGrowthRate = staking.EXP_GROWTH_RATE();
+        currentGrowthRateUint = currentGrowthRate.intoUint256();
+
+        // assert that the growth rate is set correctly in a way that is compatible with the UD60x18 type
+        assertEq(currentGrowthRateUint, expectedGrowthRate);
+    }
 
     /// @notice Test reverting when setting below minimum growth rate
     function test_RevertWhen_SettingBelowMinimumGrowthRate() public {
@@ -588,7 +606,7 @@ contract KlimaFairLaunchStakingTest is Test {
         vm.stopPrank();
 
         // Stake in week 2
-        vm.warp(startTime + 8 days); // After first week
+        vm.warp(startTime + 7 days + 1); // After first week
         uint256 stakeAmount = 100 * 1e9;
         
         vm.startPrank(user1);
@@ -623,7 +641,7 @@ contract KlimaFairLaunchStakingTest is Test {
         vm.stopPrank();
 
         // Stake in week 3
-        vm.warp(startTime + 15 days); // After second week
+        vm.warp(startTime + 14 days + 1); // After second week
         uint256 stakeAmount = 100 * 1e9;
         
         vm.startPrank(user1);
@@ -1513,6 +1531,7 @@ contract KlimaFairLaunchStakingTest is Test {
         
         // Create 10 small stakes
         for (uint256 i = 0; i < 15; i++) {
+            vm.warp(block.timestamp + 15 minutes);
             staking.stake(smallAmount);
         }
         vm.stopPrank();
@@ -1529,7 +1548,7 @@ contract KlimaFairLaunchStakingTest is Test {
         }
         assertEq(stakeCount, 15, "Should have 15 stakes");
         
-        // Unstake half the total amount
+        // Unstake part of the total amount
         vm.prank(user1);
         staking.unstake(smallAmount * 5);
         
@@ -1942,6 +1961,77 @@ contract KlimaFairLaunchStakingTest is Test {
             0.01e18, // Within 1%
             "User should receive stake amount minus burn amount"
         );
+    }
+
+    /// @notice Test expired claims can be transferred after claimDeadline
+    function test_ExpiredClaimsCanBeTransferredAfterClaimDeadline() public {
+        // Setup staking
+        setupStaking();
+        createStake(user1, 100 * 1e9);
+        createStake(user2, 100 * 1e9);
+        finalizeStaking();
+
+        // only user 1 claims their allocation before claimDeadline
+        vm.startPrank(user1);
+        staking.unstake(0);
+        vm.stopPrank();
+
+        vm.warp(staking.claimDeadline() + 1 days);
+        vm.startPrank(owner);
+        staking.transferExpiredClaims();
+        vm.stopPrank();
+
+        uint256 klimaSupply = staking.KLIMA_SUPPLY();
+        uint256 klimaXSupply = staking.KLIMAX_SUPPLY();
+
+        // user 1 should have received their allocation
+        assertEq(IERC20(staking.KLIMA()).balanceOf(user1), klimaSupply/2, "User 1 should have received their allocation");
+        assertEq(IERC20(staking.KLIMA_X()).balanceOf(user1), klimaXSupply/2, "User 1 should have received their allocation");
+
+        // remaining KLIMA should be transferred to owner
+        assertEq(IERC20(staking.KLIMA()).balanceOf(owner), klimaSupply/2, "remaining KLIMA should be transferred to owner");
+        // remaining KLIMA_X should be transferred to owner
+        assertEq(IERC20(staking.KLIMA_X()).balanceOf(owner), klimaXSupply/2, "remaining KLIMA_X should be transferred to owner");
+    }
+
+    /// @notice Test expired claims cannot be transferred before claimDeadline
+    function test_RevertWhen_ExpiredClaimsCannotBeTransferredBeforeClaimDeadline() public {
+                // Setup staking
+        setupStaking();
+        createStake(user1, 100 * 1e9);
+        createStake(user2, 100 * 1e9);
+        finalizeStaking();
+
+        // only user 1 claims their allocation before claimDeadline
+        vm.startPrank(user1);
+        staking.unstake(0);
+        vm.stopPrank();
+
+        vm.warp(staking.claimDeadline() - 1 days);
+        vm.startPrank(owner);
+        vm.expectRevert("Claim deadline has not passed");
+        staking.transferExpiredClaims();
+        vm.stopPrank();
+    }
+
+    /// @notice Test revert when non-owner calls transferExpiredClaims
+    function test_RevertWhen_NotOwnerCallsTransferExpiredClaims() public {
+                // Setup staking
+        setupStaking();
+        createStake(user1, 100 * 1e9);
+        createStake(user2, 100 * 1e9);
+        finalizeStaking();
+
+        // only user 1 claims their allocation before claimDeadline
+        vm.startPrank(user1);
+        staking.unstake(0);
+        vm.stopPrank();
+
+        vm.warp(staking.claimDeadline() - 1 days);
+        vm.startPrank(user1);
+        vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, user1));
+        staking.transferExpiredClaims();
+        vm.stopPrank();
     }
 
 } 

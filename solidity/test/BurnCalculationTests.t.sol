@@ -43,7 +43,7 @@ contract MockKlimaX is ERC20 {
     }
 }
 
-contract KlimaFairLaunchStakingTest is Test {
+contract BurnCalculationTests is Test {
     // =============================================================
     //                           SETUP
     // =============================================================
