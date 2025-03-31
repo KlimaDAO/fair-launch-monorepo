@@ -26,15 +26,17 @@ The Klima 2.0 Fair Launch consists of three main components:
 
 1. **KlimaFairLaunchStaking**: Allows users to stake KLIMA V0 tokens and earn points toward the new KLIMA and KLIMAX token allocations. Users can unstake during the staking period, which triggers a burn calculation.
 2. **KlimaFairLaunchBurnVault**: Collects KLIMA V0 tokens that will be burned as part of the transition. Handles the cross-chain burn process via Axelar's Interchain Token Service.
-3. **KlimaFairLaunchPolygonBurnHelper**: Deployed on Polygon to receive KLIMA V0 tokens via Axelar's Interchain Token Service and burn them on Polygon using the burn function the polygon KLIMA contract.
+3. **KlimaFairLaunchPolygonBurnHelper**: Deployed on Polygon to receive KLIMA V0 tokens via Axelar's Interchain Token Service and burn them on Polygon using the burn function of the polygon KLIMA contract.
 
 All contracts use the UUPS (Universal Upgradeable Proxy Standard) pattern for upgradeability.
 
 ## Key Features
 
 - **Time-based Staking Multipliers**: Earlier stakers receive higher point multipliers
+- **Exponential Point Growth**: Points grow exponentially over time using the formula e^(kt)
 - **Cross-chain Token Burning**: Tokens are collected on Base and burned on Polygon
-- **Proportional Token Distribution**: New tokens are distributed based on KLIMA VO staked and points earned
+- **Proportional Token Distribution**: New tokens are distributed based on KLIMA V0 staked and points earned
+- **Burn Point Redistribution**: Points from unstaked tokens are proportionally redistributed to remaining stakers
 
 ## Contract Interactions
 
@@ -84,12 +86,13 @@ The fair launch process follows a specific timeline with distinct phases:
 - Formula: `points = stakeAmount * multiplier * timeStaked * growthRate`
 - Users can continue to stake and unstake during this period
 - Unstaking applies a burn that increases over time:
-  - 25% base burn + (time-based burn that increases linearly up to 75% over 1 year) for a total of 100% burned
+  - 25% base burn + (time-based burn that increases linearly up to 75% over 1 year) for a total of 100% maximum burn
   - Calculated via `calculateBurn()` function
 - Burned tokens are sent to the `KlimaFairLaunchBurnVault`
+- When a user burns (partially or fully unstakes), their freed organic points are redistributed proportionally to all remaining stakers based on the organic points of each remaining stake
 
 ### 4. Freeze Period
-- Begins at `freezeTimestamp` (set during deployment)
+- Begins at `freezeTimestamp` (set during deployment, default: 90 days after startTimestamp)
 - No new stakes or unstakes are allowed
 - Points continue to accrue until finalization
 
@@ -101,6 +104,7 @@ The fair launch process follows a specific timeline with distinct phases:
 ### 5. Finalization Phase
 - After `freezeTimestamp`, the owner calls `storeTotalPoints()` to process all stakers
 - This can be done in batches to handle gas limits
+- During finalization, each user's points are updated to account for time-based growth and any burn redistribution
 - The contract verifies it has sufficient KLIMA and KLIMA-X tokens before completing finalization
 - Once complete, `finalizationComplete` is set to 1
 - Final points for each user and `finalTotalPoints` are stored
@@ -128,6 +132,8 @@ The fair launch process follows a specific timeline with distinct phases:
 
 Key areas to focus on:
 - **Staking Calculations**: Verify that point calculations and token allocations are correct
+- **Exponential Growth**: Ensure the PRBMath exponential calculations are properly bounded and secure
+- **Burn Redistribution**: Verify the burn ratio mechanism correctly redistributes points
 - **Cross-chain Messaging**: Ensure the Axelar integration is secure and handles edge cases
 - **Burn Mechanism**: Verify that tokens are properly accounted for and burned
 - **Upgradeability**: Check for proper implementation of the UUPS pattern
@@ -156,7 +162,10 @@ The contracts include test suites that cover:
 - `startTimestamp`: When points begin accruing for all stakes (set during enableStaking)
 - `freezeTimestamp`: When the staking/unstaking functionality is disabled (default: 90 days after startTimestamp)
 - `preStakingWindow`: Period before startTimestamp when staking is allowed but points don't accrue (3-7 days)
-- `GROWTH_RATE`: Configurable rate at which points accrue daily (default 274, represents 0.00274)
+- `EXP_GROWTH_RATE`: Configurable rate at which points accrue daily (default 274, represented as 0.00274 * 1e18)
+- `SECONDS_PER_DAY`: Constant (86400) representing seconds in a day
+- `PERCENTAGE_SCALE`: Constant (100) used for percentage calculations
+- `INPUT_SCALE_DENOMINATOR`: Constant (1e27) used to scale input values for calculations
 - `BURN_DISTRIBUTION_PRECISION`: Constant (1e18) used in maintaining precision during the redistribution of points
 - `burnRatio`: Global ratio used to distribute burn points proportionately to organic points
 - `totalOrganicPoints`: Sum of all organically earned points across all stakes
@@ -171,17 +180,19 @@ Each stake contains:
 - `stakeStartTime`: When the stake begins accruing points (often equals startTimestamp for pre-staking)
 - `lastUpdateTime`: When points were last calculated for this stake
 - `bonusMultiplier`: Multiplier applied to points (200 for week 1, 150 for week 2, 100 thereafter)
-- `organicPoints`: Points earned through staking time
+- `organicPoints`: Points earned through staking time, including exponential growth
 - `burnRatioSnapshot`: The burnRatio value when points were last updated
 - `burnAccrued`: Additional points received from other users' unstakes
 - `hasBeenClaimed`: Flag (0 or 1) indicating whether this stake has been claimed
 
 ### Burn Distribution Mechanism
 When a user unstakes, their organic points are freed and distributed proportionally to remaining stakers:
-1. The freed organic points increase the global `burnRatio`
-2. When other users' points are updated, the difference between current `burnRatio` and their stake's `burnRatioSnapshot` is used to calculate additional "burn points"
-3. These burn points are added to the stake's `burnAccrued` total
-4. Both organic and burn points count toward the final KLIMA-X allocation
+1. The `freedOrganicPointsTotal` is calculated as the difference between original organic points and new organic points
+2. The global `burnRatio` is increased by `(freedOrganicPointsTotal * BURN_DISTRIBUTION_PRECISION) / totalOrganicPoints`
+3. When other users' points are updated, the difference between current `burnRatio` and their stake's `burnRatioSnapshot` is used to calculate additional "burn points"
+4. For each stake: `newBurnAccrual = (stake.organicPoints * burnRatioDiff) / BURN_DISTRIBUTION_PRECISION`
+5. These burn points are added to the stake's `burnAccrued` total
+6. Both organic and burn points count toward the final KLIMA-X allocation
 
 ### Burn Vault Variables
 - `klimaFairLaunchStaking`: Address of the staking contract that can call addKlimaAmountToBurn
@@ -225,7 +236,7 @@ KLIMAX Allocation:
 For each wallet i, the KLIMAX allocation (Ki) is determined by:
 Ki = (Pi / PT) × 40,000,000
 Where:
-- Pi = Final points for wallet i
+- Pi = Final points for wallet i (organic + burn accrued)
 - PT = Total points across all wallets (finalTotalPoints)
 
 ### System Invariants
