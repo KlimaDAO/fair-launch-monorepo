@@ -71,7 +71,11 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
           throw new Error('Network response was not ok');
         }
         const result = await response.json();
-        setData(result.data || null);
+        if (props.maxItems && result.data) {
+          setData(result.data?.slice(0, props.maxItems) || null);
+        } else {
+          setData(result.data || null);
+        }
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -177,7 +181,7 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
 
   const table = useReactTable({
     columns,
-    data: props.maxItems ? data?.slice(0, props.maxItems) : data || [],
+    data: data || [],
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
