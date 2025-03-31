@@ -247,7 +247,7 @@ contract KlimaFairLaunchStakingPointsCalculationsTest is Test {
     }
 
     /// @notice Test burn distribution across multiple stakes
-    function test_BurnDistribution() public {
+    function test_BurnRedistributionWithTimeAccrual() public {
         // Setup staking
         setupStaking();
         uint256 startTime = staking.startTimestamp();
@@ -274,34 +274,60 @@ contract KlimaFairLaunchStakingPointsCalculationsTest is Test {
         assertApproxEqRel(user1InitialPoints, expectedOrganicPoints, 0.01e18, "User1 should have exact organic points");
         assertApproxEqRel(user2InitialPoints, expectedOrganicPoints, 0.01e18, "User2 should have exact organic points");
         
+        // Record the total organic points before burn for verification
+        uint256 totalOrganicBefore = user1InitialPoints + user2InitialPoints;
+        console.log("Total organic points before burn:", totalOrganicBefore);
+        console.log("User1 initial points:", user1InitialPoints);
+        console.log("User2 initial points:", user2InitialPoints);
+        
+        // Record initial burn ratio
+        uint256 burnRatioBefore = staking.burnRatio();
+        console.log("Initial burn ratio:", burnRatioBefore);
+        
         // User1 unstakes
         vm.prank(user1);
         staking.unstake(stakeAmount);
         
-        // Calculate expected burn ratio increase
-        // When user1 unstakes, their organic points are freed and added to burn ratio
-        uint256 burnRatioBefore = staking.burnRatio();
-        uint256 expectedBurnRatioIncrease = (expectedOrganicPoints * 100000) / expectedOrganicPoints;
-        uint256 expectedBurnRatio = burnRatioBefore + expectedBurnRatioIncrease;
+        // Get burn ratio after unstake
+        uint256 burnRatioAfter = staking.burnRatio();
+        console.log("Burn ratio after unstake:", burnRatioAfter);
+        
+        // Calculate the burn ratio difference
+        uint256 burnRatioDiff = burnRatioAfter - burnRatioBefore;
+        console.log("Burn ratio difference:", burnRatioDiff);
         
         // Let burn points distribute
         vm.warp(startTime + 3 days);
         
         // Check User2's points increased from burn distribution
         uint256 user2PointsAfterBurn = staking.previewUserPoints(user2);
+        console.log("User2 points after burn:", user2PointsAfterBurn);
         
-        // Calculate expected points after burn
-        // Organic points for 3 days + burn points
+        // Calculate expected points after burn using the correct formula:
+        // 1. Calculate organic points after 3 days
         uint256 expectedOrganicPointsAfter3Days = calculateExpectedPoints(
             stakeAmount,
             200, // 2x multiplier in week 1
             3 days, // 3 days of accrual
             274 // growth rate
         );
-        uint256 expectedBurnPoints = (expectedOrganicPointsAfter3Days * (staking.burnRatio() - burnRatioBefore)) / 100000;
-        uint256 expectedTotalPointsAfterBurn = expectedOrganicPointsAfter3Days + expectedBurnPoints;
+        console.log("Expected organic points after 3 days:", expectedOrganicPointsAfter3Days);
         
-        assertApproxEqRel(user2PointsAfterBurn, expectedTotalPointsAfterBurn, 0.01e18, "User2 should receive exact burn points");
+        // 2. Calculate expected burn points using the actual burn ratio difference
+        uint256 expectedBurnPoints = (expectedOrganicPointsAfter3Days * burnRatioDiff) / 1e18; // BURN_DISTRIBUTION_PRECISION
+        console.log("Expected burn points:", expectedBurnPoints);
+        
+        // 3. Total expected points = organic points + burn points
+        uint256 expectedTotalPointsAfterBurn = expectedOrganicPointsAfter3Days + expectedBurnPoints;
+        console.log("Expected total points after burn:", expectedTotalPointsAfterBurn);
+        
+        // Check if expected points match actual points with a reasonable tolerance
+        assertApproxEqRel(
+            user2PointsAfterBurn, 
+            expectedTotalPointsAfterBurn, 
+            0.01e18, // Allow 1% tolerance 
+            "User2 should receive expected burn points"
+        );
         
         // Finalize
         vm.warp(staking.startTimestamp() + 91 days);

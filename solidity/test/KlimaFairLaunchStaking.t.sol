@@ -868,45 +868,6 @@ contract KlimaFairLaunchStakingTest is Test {
         assertGt(laterPoints, points);
     }
 
-    /// @notice Test burn distribution across multiple stakes
-    function test_BurnDistribution() public {
-        // Setup staking
-        setupStaking();
-        uint256 stakeAmount = 100 * 1e9;
-        
-        // User1 and User2 stake same amount
-        createStake(user1, stakeAmount);
-        createStake(user2, stakeAmount);
-        
-        // Let points accumulate for 2 days
-        vm.warp(block.timestamp + 2 days);
-        
-        // Check initial points
-        uint256 user1InitialPoints = staking.previewUserPoints(user1);
-        uint256 user2InitialPoints = staking.previewUserPoints(user2);
-        assertGt(user1InitialPoints, 0, "User1 should have organic points");
-        assertGt(user2InitialPoints, 0, "User2 should have organic points");
-        
-        // User1 unstakes
-        vm.prank(user1);
-        staking.unstake(stakeAmount);
-        
-        // Let burn points distribute
-        vm.warp(block.timestamp + 1 days);
-        
-        // Check User2's points increased from burn distribution
-        uint256 user2PointsAfterBurn = staking.previewUserPoints(user2);
-        assertGt(user2PointsAfterBurn, user2InitialPoints, "User2 should receive burn points");
-        
-        // Finalize
-        vm.warp(staking.startTimestamp() + 91 days);
-        vm.prank(owner);
-        staking.storeTotalPoints(2);
-        
-        require(staking.finalizationComplete() == 1, "Finalization failed");
-        require(IERC20(KLIMA_V0_ADDR).balanceOf(address(staking)) == 0, "Staking should have no KLIMA_V0 tokens");
-    }
-
     /// @notice Test burn calculation with different durations
     function test_BurnCalculation() public {
         uint256 amount = 100 * 1e9;
