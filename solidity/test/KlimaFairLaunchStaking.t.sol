@@ -63,17 +63,19 @@ contract KlimaFairLaunchStakingTest is Test {
     address constant KLIMA_V0_ADDR = 0xDCEFd8C8fCc492630B943ABcaB3429F12Ea9Fea2;
 
     // Events
-    event StakeCreated(address indexed user, uint256 amount, uint256 multiplier, uint256 startTimestamp);
-    event StakeBurned(address indexed user, uint256 burnAmount, uint256 timestamp);
-    event Claimed(address indexed user, uint256 klimaAmount, uint256 klimaXAmount);
-    event FinalizationComplete();
+    event StakeCreated(address indexed user, uint256 indexed amountKlimaV0Staked, uint256 multiplier, uint256 indexed startTimestamp);
+    event StakeBurned(address indexed user, uint256 indexed amountKlimaV0Burned, uint256 indexed timestamp);
+    event StakeClaimed(address indexed user, uint256 totalUserStaked, uint256 indexed klimaAllocation, uint256 indexed klimaXAllocation, uint256 timestamp);
+    event FinalizationComplete(uint256 indexed finalizationTimestamp);
     event TokenAddressesSet(address indexed klima, address indexed klimax);
-    event StakingEnabled(uint256 startTimestamp, uint256 freezeTimestamp);
-    event StakingExtended(uint256 oldFreezeTimestamp, uint256 newFreezeTimestamp);
+    event StakingEnabled(uint256 indexed startTimestamp, uint256 indexed freezeTimestamp);
+    event StakingExtended(uint256 indexed oldFreezeTimestamp, uint256 indexed newFreezeTimestamp);
     event BurnVaultSet(address indexed burnVault);
-    event GrowthRateSet(uint256 newValue);
-    event KlimaSupplySet(uint256 newValue);
-    event KlimaXSupplySet(uint256 newValue);
+    event GrowthRateSet(uint256 indexed newValue);
+    event KlimaSupplySet(uint256 indexed newValue);
+    event KlimaXSupplySet(uint256 indexed newValue);
+    event PreStakingWindowSet(uint256 indexed preStakingWindow);
+    event StakeLimitsSet(uint256 indexed minStakeAmount, uint256 indexed maxTotalStakesPerUser);
 
     /// @notice Helper function to accurately calculate expected points using the exponential formula
     /// @param amount Stake amount (in native KLIMA V0 decimals)
@@ -831,7 +833,7 @@ contract KlimaFairLaunchStakingTest is Test {
 
         // Claim
         vm.startPrank(user1);
-        emit Claimed(user1, klimaAmount, klimaXAmount);
+        emit StakeClaimed(user1, stakeAmount, klimaAmount, klimaXAmount, block.timestamp);
         staking.unstake(0);
         vm.stopPrank();
     }

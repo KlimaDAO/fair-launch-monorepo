@@ -61,19 +61,19 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
 
     uint256 public claimDeadline; // timestamp after which KLIMA and KLIMA_X allocation claims can expire
 
-    event StakeCreated(address indexed user, uint256 amount, uint256 multiplier, uint256 startTimestamp);
-    event StakeBurned(address indexed user, uint256 burnAmount, uint256 timestamp);
-    event StakeClaimed(address indexed user, uint256 totalUserStaked, uint256 klimaAllocation, uint256 klimaXAllocation, uint256 timestamp);
-    event FinalizationComplete(uint256 finalizationTimestamp);
+    event StakeCreated(address indexed user, uint256 indexed amountKlimaV0Staked, uint256 multiplier, uint256 indexed startTimestamp);
+    event StakeBurned(address indexed user, uint256 indexed amountKlimaV0Burned, uint256 indexed timestamp);
+    event StakeClaimed(address indexed user, uint256 totalUserStaked, uint256 indexed klimaAllocation, uint256 indexed klimaXAllocation, uint256 timestamp);
+    event FinalizationComplete(uint256 indexed finalizationTimestamp);
     event TokenAddressesSet(address indexed klima, address indexed klimax);
-    event StakingEnabled(uint256 startTimestamp, uint256 freezeTimestamp);
-    event StakingExtended(uint256 oldFreezeTimestamp, uint256 newFreezeTimestamp);
+    event StakingEnabled(uint256 indexed startTimestamp, uint256 indexed freezeTimestamp);
+    event StakingExtended(uint256 indexed oldFreezeTimestamp, uint256 indexed newFreezeTimestamp);
     event BurnVaultSet(address indexed burnVault);
-    event GrowthRateSet(uint256 newValue);
-    event KlimaSupplySet(uint256 newValue);
-    event KlimaXSupplySet(uint256 newValue);
-    event PreStakingWindowSet(uint256 preStakingWindow);
-    event StakeLimitsSet(uint256 minStakeAmount, uint256 maxTotalStakesPerUser);
+    event GrowthRateSet(uint256 indexed newValue);
+    event KlimaSupplySet(uint256 indexed newValue);
+    event KlimaXSupplySet(uint256 indexed newValue);
+    event PreStakingWindowSet(uint256 indexed preStakingWindow);
+    event StakeLimitsSet(uint256 indexed minStakeAmount, uint256 indexed maxTotalStakesPerUser);
 
 
     /// @notice Prevents actions after pre-staking has begun
