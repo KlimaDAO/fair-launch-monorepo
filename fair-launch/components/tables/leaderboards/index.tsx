@@ -71,11 +71,15 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
           throw new Error('Network response was not ok');
         }
         const result = await response.json();
-        if (props.maxItems && result.data) {
-          setData(result.data?.slice(0, props.maxItems) || null);
-        } else {
+
+        console.log('result', result);
+        console.log('result.data?.slice(0, props.maxItems) ', result.data?.slice(0, props.maxItems) );
+
+        // if (props.maxItems && result.data) {
+        //   setData(result.data?.slice(0, props.maxItems) || null);
+        // } else {
           setData(result.data || null);
-        }
+        // }
       } catch (err: any) {
         setError(err.message);
       } finally {

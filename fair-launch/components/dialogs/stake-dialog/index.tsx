@@ -88,9 +88,6 @@ export const StakeDialog: FC = () => {
   const isSubmitSuccess = receipt?.status === "success";
   const isTransactionSuccess = isStakePending || (stakeData && isSubmitSuccess);
 
-  console.log('isSuccess', isSuccess);
-  console.log('isSubmitSuccess', isSubmitSuccess);
-
   const handleDialogState = () => {
     setOpen(!open);
     // reset dialog state when dialog is closed
