@@ -33,7 +33,7 @@ export const Navbar: FC = () => {
     window.location.reload();
     setTimeout(() => {
       router.push('/');
-    }, 10);
+    }, 100);
   };
 
   const toggleMenu = () => {
