@@ -22,10 +22,10 @@ dataSources:
         - name: KlimaFairLaunchStaking
           file: ./abis/KlimaFairLaunchStaking.json
       eventHandlers:
-        - event: StakeCreated(indexed address,uint256,uint256,uint256)
+        - event: StakeCreated(indexed address,indexed uint256,uint256,indexed uint256)
           handler: handleStakeCreated
-        - event: StakeBurned(indexed address,uint256,uint256)
+        - event: StakeBurned(indexed address,indexed uint256,indexed uint256)
           handler: handleStakeBurned
-        - event: StakeClaimed(indexed address,uint256,uint256,uint256,uint256)
+        - event: StakeClaimed(indexed address,uint256,indexed uint256,indexed uint256,uint256)
           handler: handleStakeClaimed
       file: ./src/klima-fair-launch-staking.ts

@@ -562,15 +562,15 @@
         "internalType": "address"
       },
       {
-        "name": "burnAmount",
+        "name": "amountKlimaV0Burned",
         "type": "uint256",
-        "indexed": false,
+        "indexed": true,
         "internalType": "uint256"
       },
       {
         "name": "timestamp",
         "type": "uint256",
-        "indexed": false,
+        "indexed": true,
         "internalType": "uint256"
       }
     ],
@@ -595,13 +595,13 @@
       {
         "name": "klimaAllocation",
         "type": "uint256",
-        "indexed": false,
+        "indexed": true,
         "internalType": "uint256"
       },
       {
         "name": "klimaXAllocation",
         "type": "uint256",
-        "indexed": false,
+        "indexed": true,
         "internalType": "uint256"
       },
       {
@@ -624,9 +624,9 @@
         "internalType": "address"
       },
       {
-        "name": "amount",
+        "name": "amountKlimaV0Staked",
         "type": "uint256",
-        "indexed": false,
+        "indexed": true,
         "internalType": "uint256"
       },
       {
@@ -638,7 +638,7 @@
       {
         "name": "startTimestamp",
         "type": "uint256",
-        "indexed": false,
+        "indexed": true,
         "internalType": "uint256"
       }
     ],

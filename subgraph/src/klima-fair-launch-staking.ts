@@ -9,12 +9,12 @@ import { loadOrCreateWallet, loadWallet } from "./utils/utils";
 
 export function handleStakeCreated(event: StakeCreatedEvent): void {
   let wallet = loadOrCreateWallet(event.params.user);
-  wallet.totalStaked = wallet.totalStaked.plus(event.params.amount);
+  wallet.totalStaked = wallet.totalStaked.plus(event.params.amountKlimaV0Staked);
   wallet.save();
 
   let stake = new Stake(event.transaction.hash);
   stake.wallet = wallet.id;
-  stake.amount = event.params.amount;
+  stake.amount = event.params.amountKlimaV0Staked;
   stake.multiplier = event.params.multiplier;
   stake.startTimestamp = event.params.startTimestamp;
   stake.stakeCreationHash = event.transaction.hash;
@@ -23,7 +23,7 @@ export function handleStakeCreated(event: StakeCreatedEvent): void {
 }
 
 export function handleStakeBurned(event: StakeBurnedEvent): void {
-  let burnAmount = event.params.burnAmount;
+  let burnAmount = event.params.amountKlimaV0Burned;
 
   if (burnAmount.isZero()) {
     log.error("Burn amount is zero for event: {}", [
@@ -33,7 +33,7 @@ export function handleStakeBurned(event: StakeBurnedEvent): void {
   }
 
   let wallet = loadOrCreateWallet(event.params.user);
-  wallet.totalStaked = wallet.totalStaked.minus(event.params.burnAmount);
+  wallet.totalStaked = wallet.totalStaked.minus(event.params.amountKlimaV0Burned);
   wallet.save();
 
   // Load all stakes for this wallet
