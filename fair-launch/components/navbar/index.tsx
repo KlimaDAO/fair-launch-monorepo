@@ -30,7 +30,6 @@ export const Navbar: FC = () => {
   const handleLogout = async () => {
     await disconnect();
     setIsMenuOpen(!isMenuOpen);
-    window.location.reload();
     setTimeout(() => {
       router.push('/');
     }, 100);
