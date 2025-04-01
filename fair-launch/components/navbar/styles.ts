@@ -61,6 +61,7 @@ export const navLinks = css({
   display: 'flex',
   flexDirection: 'column',
   gap: '0.4rem',
+  width: '100%',
 });
 
 export const navLink = css({
