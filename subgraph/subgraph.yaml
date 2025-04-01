@@ -8,24 +8,24 @@ dataSources:
     name: KlimaFairLaunchStaking
     network: base-sepolia
     source:
-      address: '0x458B094a27E3841Cb6dCe2AAda1150ff23dF04bf'
+      address: '0x0cff418d7028d32c2c5ea6af2da934e9f86efa18'
       abi: KlimaFairLaunchStaking
-      startBlock: 23269275
+      startBlock: 23848903
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
       language: wasm/assemblyscript
       entities:
-        - User
+        - Wallet
         - Stake
       abis:
         - name: KlimaFairLaunchStaking
           file: ./abis/KlimaFairLaunchStaking.json
       eventHandlers:
+        - event: StakeCreated(indexed address,uint256,uint256,uint256)
+          handler: handleStakeCreated
         - event: StakeBurned(indexed address,uint256,uint256)
           handler: handleStakeBurned
         - event: StakeClaimed(indexed address,uint256,uint256,uint256,uint256)
           handler: handleStakeClaimed
-        - event: StakeCreated(indexed address,uint256,uint256,uint256)
-          handler: handleStakeCreated
       file: ./src/klima-fair-launch-staking.ts

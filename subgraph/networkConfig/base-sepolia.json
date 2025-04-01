@@ -1,11 +1,11 @@
 {
   "network": "base-sepolia",
   "FairLaunch": {
-    "address": "0x458B094a27E3841Cb6dCe2AAda1150ff23dF04bf",
-    "startBlock": "23269275"
+    "address": "0x0cff418d7028d32c2c5ea6af2da934e9f86efa18",
+    "startBlock": "23848903"
   },
   "BurnVault": {
-    "address": "0xAcf51B874E5fBD04103EF466FBb782C9499e1C4F",
-    "startBlock": "23269275"
+    "address": "0x2701d60e4d72225947E7BE0017Df84360D0Ab4E2",
+    "startBlock": "23848903"
   }
 }
