@@ -10,7 +10,6 @@ import { formatUnits } from 'viem';
 const calculateLeaderboard = async () => {
   const results = [];
   const leaderboard = await fetchLeaderboard(1000);
-
   for (const wallet of leaderboard.wallets || []) {
     try {
       const userStakesInfo = await Promise.all(
@@ -49,6 +48,6 @@ const calculateLeaderboard = async () => {
 export async function GET() {
   const leaderboardData = await calculateLeaderboard();
   const response = NextResponse.json(leaderboardData);
-  response.headers.set('Cache-Control', 'public, max-age=600, stale-while-revalidate=300');
+  response.headers.set('Cache-Control', 'public, max-age=600, stale-while-revalidate=1800');
   return response;
 }
