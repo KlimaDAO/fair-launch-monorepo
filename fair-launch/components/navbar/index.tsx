@@ -31,7 +31,9 @@ export const Navbar: FC = () => {
     await disconnect();
     setIsMenuOpen(!isMenuOpen);
     window.location.reload();
-    router.push('/');
+    setTimeout(() => {
+      router.push('/');
+    }, 10);
   };
 
   const toggleMenu = () => {
