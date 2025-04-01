@@ -803,6 +803,19 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         return totalPoints;
     }
 
+    /// @notice Returns the number of stakes for a given user address
+    /// @param user Address of the user
+    /// @return Number of stakes
+    function getUserStakeCount(address user) public view returns (uint256) {
+        return userStakes[user].length;
+    }
+
+    /// @notice Returns the total number of stakerAddresses
+    /// @return Total number of stakerAddresses
+    function getTotalStakerAddresses() public view returns (uint256) {
+        return stakerAddresses.length;
+    }
+
     /// @dev Reserved storage space per auditor recommendation.
     uint256[50] private __gap;
 }
