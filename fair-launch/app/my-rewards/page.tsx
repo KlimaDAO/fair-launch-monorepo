@@ -222,7 +222,7 @@ const Page = async () => {
                 totalStaked={Number(totalUserStakes(allUserStakes || []))}
               />
             )}
-            <Tooltip content="When you unstake KLIMA, we take the amount starting from the most recent stake and then in descending order as required.">
+            <Tooltip content="When you unstake KLIMA, your tokens are always unstaked from the most recent stake first.">
               <MdHelpOutline className={styles.klimaXHelp} />
             </Tooltip>
           </div>
