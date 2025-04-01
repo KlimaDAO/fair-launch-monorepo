@@ -219,6 +219,7 @@ const Page = async () => {
           <div>
             {allUserStakes.length > 0 && (
               <UnstakeDialog
+                stakes={allUserStakes}
                 startTimestamp={String(allUserStakes[0].stakeStartTime)}
                 totalStaked={Number(totalUserStakes(allUserStakes || []))}
               />
@@ -261,9 +262,9 @@ const Page = async () => {
             </Tooltip>
           </div>
           <div className={styles.cardContents}>
-            <KlimaXAllocationTable 
-              userPoints={BigInt(previewUserPoints.result!)} 
-              totalPoints={BigInt(getTotalPoints.result!)} 
+            <KlimaXAllocationTable
+              userPoints={BigInt(previewUserPoints.result!)}
+              totalPoints={BigInt(getTotalPoints.result!)}
             />
           </div>
         </Card>

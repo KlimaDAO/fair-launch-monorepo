@@ -1,15 +1,13 @@
 "use client";
 
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
+import { StakeData } from "@components/tables/stakes";
 import klimav1Logo from "@public/tokens/klima-v1.svg";
+import { useChainModal } from "@rainbow-me/rainbowkit";
 import { useForm } from "@tanstack/react-form";
 import { FAIR_LAUNCH_CONTRACT_ADDRESS } from "@utils/constants";
 import { calculateUnstakePenalty } from "@utils/contract";
-import {
-  formatNumber,
-  formatTokenToValue,
-  truncateAddress,
-} from "@utils/formatting";
+import { formatNumber, truncateAddress } from "@utils/formatting";
 import clsx from "clsx";
 import Image from "next/image";
 import Link from "next/link";
@@ -17,18 +15,19 @@ import { Dialog } from "radix-ui";
 import type { FC } from "react";
 import { useEffect, useState } from "react";
 import { MdAccountBalance, MdWarningAmber } from "react-icons/md";
-// import { revalidatePathAction } from "@actions/revalidate-path";
 import { formatUnits, parseUnits } from "viem";
+import { baseSepolia } from "viem/chains";
 import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import * as styles from "./styles";
 
 type FocusOutsideEvent = CustomEvent<{ originalEvent: FocusEvent }>;
 type PointerDownOutsideEvent = CustomEvent<{ originalEvent: PointerEvent }>;
 
-interface UnstakeDialogProps {
+type Props = {
   startTimestamp: string;
   totalStaked: number;
-}
+  stakes: StakeData[];
+};
 
 enum DialogState {
   INITIAL,
@@ -37,21 +36,29 @@ enum DialogState {
   CONFIRM,
 }
 
-export const UnstakeDialog: FC<UnstakeDialogProps> = ({
+export const UnstakeDialog: FC<Props> = ({
   startTimestamp,
   totalStaked,
+  stakes,
 }) => {
   const [open, setOpen] = useState(false);
+  const { openChainModal } = useChainModal();
   const stakedBalance = formatUnits(BigInt(totalStaked) ?? BigInt(0), 9);
   const [dialogState, setDialogState] = useState(DialogState.INITIAL);
-  const { data: unstakeData, isPending: isUnstakePending, writeContract: unstakeContract } =
-    useWriteContract();
+
+  const {
+    data: unstakeData,
+    isPending: isUnstakePending,
+    writeContract: unstakeContract,
+    isError,
+    error,
+  } = useWriteContract();
 
   const form = useForm({
     defaultValues: {
       "burn-amount": "0",
       "receive-amount": "0",
-      "unstake-amount": '0',
+      "unstake-amount": "0",
     },
   });
 
@@ -60,7 +67,7 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({
     hash: unstakeData,
   });
 
-  const isTransactionSuccess = isUnstakePending || (unstakeData && !isSuccess)
+  const isTransactionSuccess = isUnstakePending || (unstakeData && !isSuccess);
 
   const handleProceed = () => {
     setDialogState(DialogState.UNSTAKE);
@@ -81,6 +88,7 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({
       functionName: "unstake",
       address: FAIR_LAUNCH_CONTRACT_ADDRESS,
       args: [parseUnits(unstakeAmount, 9)],
+      chainId: baseSepolia.id,
     });
   };
 
@@ -94,6 +102,47 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({
 
   const generateAllocationInfo = async (amount: string) => {
     if (Number(amount) <= 0) return;
+
+    // let remainingAmount = parseUnits(amount, 9); // Convert amount to the appropriate units
+    // let totalPenalty = 0; // Initialize total penalty
+
+    // for (const stake of stakes) {
+    //   const stakeAmount = Number(formatUnits(BigInt(stake.amount), 9)); // Assuming stake.amount is in the same units as remainingAmount
+    //   console.log('stakeAmount', stakeAmount);
+    //   console.log('remainingAmount', stakeAmount);
+
+    //   if (remainingAmount <= 0) break; // Exit if there's no amount left to process
+
+    //   // Determine how much to unstake from this stake
+    //   const amountToUnstake = remainingAmount < stakeAmount ? remainingAmount : stakeAmount;
+    //   console.log('amountToUnstake', amountToUnstake);
+
+    //   // Calculate penalty for the amount to unstake
+    //   const penalty = await calculateUnstakePenalty(parseUnits(amount, 9), stake.stakeStartTime);
+    //   console.log('penalty', penalty);
+
+    //   // Accumulate the total penalty
+    //   totalPenalty = totalPenalty + Number(penalty.burnValue);
+    //   console.log('totalPenalty', totalPenalty);
+
+    //   // Decrease the remaining amount
+    //   remainingAmount = Number(remainingAmount) - Number(amountToUnstake);
+    // }
+
+    // console.log('Total Penalty:', totalPenalty.toString());
+    // console.log('stakes', stakes);
+
+    // calculate the actual penalty...
+    // stakes.map((stake) => {
+    //   console.log('stkae');
+    // })
+
+    // // if amount passed in is 51:
+    // // stakes[0].amount = 50 -> calculate penalty with startTimestamp and amount 50
+    // // stakes[1].amount = 100 -> calculate penalty with startTimestamp and amount 1
+    // // add them together to get the burnValue...
+
+    // console.log('stakes', stakes);
     // todo -> cleanup
     const penalty = await calculateUnstakePenalty(
       parseUnits(amount, 9),
@@ -109,11 +158,20 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({
   useEffect(() => {
     setOpen(false);
     if (submitReceipt?.status === "success") {
-      window.localStorage.setItem('unstakeAmount', form.state.values["unstake-amount"] as string);
-      // revalidatePathAction('/my-rewards');
+      window.localStorage.setItem(
+        "unstakeAmount",
+        form.state.values["unstake-amount"] as string
+      );
       window.location.reload();
     }
   }, [submitReceipt]);
+
+  useEffect(() => {
+    if (error?.message.includes("The current chain of the wallet")) {
+      openChainModal?.();
+      handleDialogState();
+    }
+  }, [error]);
 
   const InitialView = () => (
     <>
@@ -127,8 +185,13 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({
         <div>
           The longer you leave your KLIMA staked, the better your rewards! If
           you unstake now, you’ll not only lose out on some KLIMA through{" "}
-          <Link target="_blank" href="https://github.com/KlimaDAO/klimadao-docs/blob/main/klima%202.0/KlimaDAO%20-%20Klima%202.0%20-%20Fair%20Launch%20FAQ%20-%20February%2021%2C%202025.md#burn-calculation">the burn mechanism</Link>, but you’ll also miss out on
-          KlimaX!
+          <Link
+            target="_blank"
+            href="https://github.com/KlimaDAO/klimadao-docs/blob/main/klima%202.0/KlimaDAO%20-%20Klima%202.0%20-%20Fair%20Launch%20FAQ%20-%20February%2021%2C%202025.md#burn-calculation"
+          >
+            the burn mechanism
+          </Link>
+          , but you’ll also miss out on KlimaX!
         </div>
         <div>
           Make sure you have a good reason to unstake before you go clickin’
@@ -151,8 +214,7 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({
       name="unstake-amount"
       listeners={{
         onMount: async ({ value }) => await generateAllocationInfo(value),
-        onChange: async ({ value }) =>
-          await generateAllocationInfo(value),
+        onChange: async ({ value }) => await generateAllocationInfo(value),
       }}
       validators={{
         onChange: ({ value }) => {
@@ -163,7 +225,7 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({
           } else {
             return undefined;
           }
-        }
+        },
       }}
     >
       {(field) => (
@@ -181,8 +243,14 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({
                     Available: {formatNumber(Number(stakedBalance), 3)}
                   </div>
                 </div>
-                <div className={styles.inputRow(!!field.state.meta.errors.length)}>
-                  <Image className={styles.klimaLogo} src={klimav1Logo} alt="Klima V1 Logo" />
+                <div
+                  className={styles.inputRow(!!field.state.meta.errors.length)}
+                >
+                  <Image
+                    className={styles.klimaLogo}
+                    src={klimav1Logo}
+                    alt="Klima V1 Logo"
+                  />
                   <input
                     type="number"
                     id={field.name}
@@ -202,7 +270,7 @@ export const UnstakeDialog: FC<UnstakeDialogProps> = ({
                 </div>
                 {field.state.meta.errors ? (
                   <div className={styles.errorText} role="alert">
-                    {field.state.meta.errors.join(', ')}
+                    {field.state.meta.errors.join(", ")}
                   </div>
                 ) : null}
               </>

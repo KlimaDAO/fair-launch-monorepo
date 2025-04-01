@@ -1,23 +1,23 @@
 "use client";
 
-import clsx from "clsx";
 import { abi as erc20Abi } from "@abi/erc20";
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
 import { Alert } from "@components/alert";
+import klimav1Logo from "@public/tokens/klima-v1.svg";
+import { useChainModal } from "@rainbow-me/rainbowkit";
 import { useForm } from "@tanstack/react-form";
-import Image from "next/image";
 import {
   FAIR_LAUNCH_CONTRACT_ADDRESS,
   KLIMA_V0_TOKEN_ADDRESS,
 } from "@utils/constants";
-import klimav1Logo from "@public/tokens/klima-v1.svg";
 import { formatNumber, truncateAddress } from "@utils/formatting";
+import clsx from "clsx";
+import Image from "next/image";
 import { Dialog } from "radix-ui";
 import { type FC, useEffect, useState } from "react";
 import { MdCelebration, MdLibraryAdd } from "react-icons/md";
-import { useRouter } from "next/navigation";
 import { formatUnits, parseUnits } from "viem";
-// import { revalidatePathAction } from "@actions/revalidate-path";
+import { baseSepolia } from "viem/chains";
 import {
   useAccount,
   useBalance,
@@ -47,6 +47,8 @@ enum DialogState {
 
 export const StakeDialog: FC = () => {
   const { address } = useAccount();
+  const [open, setOpen] = useState(false);
+  const { openChainModal } = useChainModal();
   const { data: balance } = useBalance({
     address: address,
     token: KLIMA_V0_TOKEN_ADDRESS,
@@ -56,17 +58,18 @@ export const StakeDialog: FC = () => {
   const form = useForm({ defaultValues: { "stake-amount": "0" } });
   const klimaBalance = formatUnits(balance?.value ?? BigInt(0), 9);
 
-  const [open, setOpen] = useState(false);
   const [dialogState, setDialogState] = useState(DialogState.INITIAL);
 
   const {
     data: approveData,
+    error: approveError,
     isPending: isApprovePending,
     writeContract: approveContract,
   } = useWriteContract();
 
   const {
     data: stakeData,
+    error: stakeError,
     isPending: isStakePending,
     writeContract: stakeContract,
   } = useWriteContract();
@@ -76,19 +79,17 @@ export const StakeDialog: FC = () => {
     args: [address, FAIR_LAUNCH_CONTRACT_ADDRESS],
   });
 
-  const { data: receipt, isError: isApproveError } = useWaitForTransactionReceipt({ hash: approveData });
+  const { data: receipt, isError: isApproveError } =
+    useWaitForTransactionReceipt({ hash: approveData });
   const isApproved = receipt?.status === "success";
   const isApprovalSuccess = isApprovePending || (approveData && !isApproved);
 
-  const { data: submitReceipt, isError, isSuccess } = useWaitForTransactionReceipt({
+  const { data: submitReceipt, isError } = useWaitForTransactionReceipt({
     confirmations: 3,
     hash: stakeData,
   });
   const isSubmitSuccess = receipt?.status === "success";
   const isTransactionSuccess = isStakePending || (stakeData && isSubmitSuccess);
-
-  // console.log('isSuccess', isSuccess);
-  // console.log('isSubmitSuccess', isSubmitSuccess);
 
   const handleDialogState = () => {
     setOpen(!open);
@@ -119,6 +120,7 @@ export const StakeDialog: FC = () => {
       functionName: "approve",
       address: KLIMA_V0_TOKEN_ADDRESS,
       args: [FAIR_LAUNCH_CONTRACT_ADDRESS, parseUnits(stakeAmount, 9)],
+      chainId: baseSepolia.id,
     });
   };
 
@@ -130,6 +132,7 @@ export const StakeDialog: FC = () => {
       address: FAIR_LAUNCH_CONTRACT_ADDRESS,
       args: [parseUnits(stakeAmount, 9)],
       gasPrice: gasPrice,
+      chainId: baseSepolia.id,
     });
   };
 
@@ -140,11 +143,23 @@ export const StakeDialog: FC = () => {
   useEffect(() => {
     setOpen(false);
     if (submitReceipt?.status === "success") {
-      // revalidatePathAction('/my-rewards');
-      window.localStorage.setItem('stakeAmount', form.state.values["stake-amount"] as string);
+      window.localStorage.setItem(
+        "stakeAmount",
+        form.state.values["stake-amount"] as string
+      );
       setTimeout(() => window.location.reload(), 1);
     }
   }, [submitReceipt]);
+
+  useEffect(() => {
+    if (
+      stakeError?.message.includes("The current chain of the wallet") ||
+      approveError?.message.includes("The current chain of the wallet")
+    ) {
+      openChainModal?.();
+      handleDialogState();
+    }
+  }, [stakeError, approveError]);
 
   const InitialView = () => (
     <>
@@ -181,7 +196,7 @@ export const StakeDialog: FC = () => {
             } else {
               return undefined;
             }
-          }
+          },
         }}
       >
         {(field) => (
@@ -199,10 +214,16 @@ export const StakeDialog: FC = () => {
                       Available: {formatNumber(Number(klimaBalance), 3)}
                     </div>
                   </div>
-                  <div className={
-                    clsx(styles.inputRow(!!field.state.meta.errors.length))
-                  }>
-                    <Image className={styles.klimaLogo} src={klimav1Logo} alt="Klima V1 Logo" />
+                  <div
+                    className={clsx(
+                      styles.inputRow(!!field.state.meta.errors.length)
+                    )}
+                  >
+                    <Image
+                      className={styles.klimaLogo}
+                      src={klimav1Logo}
+                      alt="Klima V1 Logo"
+                    />
                     <input
                       type="number"
                       id={field.name}
@@ -223,15 +244,15 @@ export const StakeDialog: FC = () => {
                 </>
                 {field.state.meta.errors ? (
                   <div className={styles.errorText} role="alert">
-                    {field.state.meta.errors.join(', ')}
+                    {field.state.meta.errors.join(", ")}
                   </div>
                 ) : null}
               </div>
             </div>
             <Alert variant="default">
-              <strong>Note:</strong> It is best to leave this amount staked until the
-              end of the Fair Launch period. Unstaking your KLIMA early will result in
-              a penalty.
+              <strong>Note:</strong> It is best to leave this amount staked
+              until the end of the Fair Launch period. Unstaking your KLIMA
+              early will result in a penalty.
             </Alert>
             <div className={styles.actions}>
               <button
