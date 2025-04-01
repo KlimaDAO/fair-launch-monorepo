@@ -11,7 +11,8 @@ import { IoTrophySharp } from "react-icons/io5";
 import Link from "next/link";
 import clsx from 'clsx';
 import * as styles from './styles';
-// import { IntroWalkthrough } from "@components/intro-walkthrough";
+import { IntroWalkthrough } from "@components/intro-walkthrough";
+import { Portal } from "radix-ui";
 
 const navLinks = [
   { href: '/my-rewards', icon: <IoTrophySharp />, label: 'My Rewards' },
@@ -24,6 +25,7 @@ export const Navbar: FC = () => {
   const { address } = useAccount();
   const { disconnect } = useDisconnect();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [startWalkthrough, setStartWalkthrough] = useState(false);
 
   const handleLogout = async () => {
     await disconnect();
@@ -34,6 +36,14 @@ export const Navbar: FC = () => {
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
+
+  const handleWalkthrough = () => {
+    setStartWalkthrough(true);
+    setTimeout(() => {
+      setIsMenuOpen(!isMenuOpen);
+      setStartWalkthrough(false);
+    }, 1);
+  }
 
   return (
     <div className={styles.navbar}>
@@ -65,11 +75,14 @@ export const Navbar: FC = () => {
             ))}
           </div>
           <div className={styles.buttonContainer}>
-            {/* <IntroWalkthrough /> */}
+            <div onClick={handleWalkthrough}>
+              <IntroWalkthrough startWalkthrough={startWalkthrough} />
+            </div>
             {address && (
               <button
                 onClick={handleLogout}
-                className={styles.logoutButton}>
+                className={styles.logoutButton}
+              >
                 <MdLogout />
                 <span>Logout</span>
               </button>

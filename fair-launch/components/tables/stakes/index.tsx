@@ -118,6 +118,7 @@ export const StakesTable = <T extends StakeData>({
             {table.getRowModel().rows.map((row) => (
               <div
                 key={row.id}
+
                 style={{
                   display: "flex",
                   flexDirection: "column",

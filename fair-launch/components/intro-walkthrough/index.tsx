@@ -3,13 +3,20 @@
 import type { FC } from 'react';
 import { driver } from 'driver.js';
 import { TourDialog } from '@components/dialogs/tour-dialog';
+import { useEffect } from 'react';
 
 interface Props {
   onOpen?: (open: boolean) => void;
+  startWalkthrough?: boolean;
 }
 
 export const IntroWalkthrough: FC<Props> = (props) => {
 
+  useEffect(() => {
+    if (props.startWalkthrough) {
+      handleWalkthrough();
+    }
+  }, [props.startWalkthrough]);
 
   const handleWalkthrough = () => {
     const driverObj = driver({

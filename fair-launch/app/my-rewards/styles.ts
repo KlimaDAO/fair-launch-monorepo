@@ -49,9 +49,14 @@ export const titleContainer = css({
 
 export const title = css({
   color: 'void.80',
-  fontSize: '2xl',
+  fontSize: 'xl',
   fontWeight: 700,
-  lineHeight: '2xl',
+  lineHeight: 'xl',
+
+  sm: {
+    fontSize: '2xl',
+    lineHeight: '2xl',
+  },
 
   lg: {
     fontSize: '4xl',
