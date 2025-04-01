@@ -22,7 +22,7 @@ export interface Wallet {
  * @param address - The address of the user
  * @returns The user stakes
  */
-export const fetchUserStakes = async (address: string | null): Promise<{ stakes?: Stake[]; error?: string }> => {  
+export const fetchUserStakes = async (address: string | null): Promise<{ stakes?: Stake[]; error?: string }> => {
   // 'use cache';
   if (!address) return { stakes: [] };
 
@@ -56,29 +56,36 @@ export const fetchUserStakes = async (address: string | null): Promise<{ stakes?
   }
 };
 
-/**
- * Fetch the current leaderboard
- * @returns The leaderboard
- */
-export const fetchLeaderboard = async (limit: number = 100): Promise<{ wallets?: Wallet[] }> => {
-  'use cache';
+export const fetchLeaderboard = async (limit: number = 100): Promise<{ wallets?: Wallet[]; error?: string }> => {
+  try {
+    const result = await request(
+      SUBGRAPH_URL,
+      `query ($limit: Int!) {
+        wallets(first: $limit, orderBy: totalStaked, orderDirection: desc) {
+          id
+          totalStaked,
+          stakes (first: 100) {
+            id
+            amount
+            startTimestamp
+            multiplier
+          }
+        }
+      }`,
+      { limit: limit }
+    );
+    return result || { wallets: [] };
+  } catch (error: any) {
+    console.error('Error fetching user stakes:', error);
+    let errorMessage = 'An error occurred while fetching stakes.';
 
-  const result = await request(
-    SUBGRAPH_URL,
-    `query ($limit: Int!) {
-      wallets(first: $limit, orderBy: totalStaked, orderDirection: desc) {
-        id
-        totalStaked
+    // Handle specific error codes
+    if (error.response && error.response.errors) {
+      const errorCode = error.response.errors[0].extensions.code;
+      if (errorCode === '429') {
+        errorMessage = 'Too many requests. Please try again later.';
       }
-    }`,
-    { limit: limit }
-  );
-
-  // stakes(first: 100) {
-  //   id
-  //   multiplier
-  //   amount
-  //   startTimestamp
-  // }
-  return result || { wallets: [] };
+    }
+    return { wallets: [], error: errorMessage }; // Return error message
+  }
 };

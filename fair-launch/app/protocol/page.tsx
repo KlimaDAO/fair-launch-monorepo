@@ -1,5 +1,4 @@
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
-import { calculateLeaderboardPoints } from "@actions/leaderboards-action";
 import { LeaderboardsTable } from "@components/tables/leaderboards";
 import klimav1Logo from "@public/tokens/klima-v1.svg";
 import {
@@ -22,7 +21,6 @@ const Page: FC = async () => {
   );
   const { data } = await klimaPrice.json();
   const price = data?.KLIMA?.[0]?.quote?.USD?.price;
-  const leaderboardData = await calculateLeaderboardPoints(100);
 
   const totalBurned = (await readContract(config, {
     abi: klimaFairLaunchAbi,
@@ -95,7 +93,7 @@ const Page: FC = async () => {
         </div>
       </div>
       <Card>
-        <LeaderboardsTable showPagination data={(leaderboardData as any[]) || []} />
+        <LeaderboardsTable showPagination />
       </Card>
     </>
   );

@@ -24,11 +24,12 @@ import { useAccount } from "wagmi";
 import * as styles from "../styles";
 import { MdKeyboardArrowLeft, MdKeyboardArrowRight } from "react-icons/md";
 import { Dropdown } from "@components/dropdown";
+import { calculateLeaderboardPoints } from "@actions/leaderboards-action";
+import { useQuery } from "@tanstack/react-query";
 
 interface Props<T> {
-  data: T[];
+  pageSize?: number;
   showPagination?: boolean;
-  totalStakerAddresses?: number;
 }
 
 export interface LeaderboardData {
@@ -37,9 +38,8 @@ export interface LeaderboardData {
   totalPoints: bigint | string;
 }
 
-const isUserWallet = (walletAddress: string, address: string) => {
-  return walletAddress.toLowerCase() === address?.toLowerCase();
-};
+const isUserWallet = (walletAddress: string, address: string) =>
+  walletAddress.toLowerCase() === address?.toLowerCase();
 
 const dropdownItems = [
   { value: "asc", label: "Points - high to low" },
@@ -49,13 +49,18 @@ const dropdownItems = [
 export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) => {
   const { address } = useAccount();
   const [sorting, setSorting] = useState<SortingState>([]);
-
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
-    pageSize: 10,
-  })
+    pageSize: props.pageSize ?? 10,
+  });
 
-  const columns: ColumnDef<T>[] = useMemo(
+  const { data = [], isLoading, error } = useQuery({
+    queryKey: ['leaderboards'],
+    queryFn: async () => await calculateLeaderboardPoints(100),
+    refetchInterval: 60000,
+  });
+
+  const columns: ColumnDef<any>[] = useMemo(
     () => [
       {
         id: "place",
@@ -139,32 +144,36 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
               })}
             >
               {formatLargeNumber(
-                Number(formatUnits(BigInt(value as string), 9))
+                Number(formatUnits(BigInt(value as string), 18))
               )}
             </div>
           );
         },
       },
     ],
-    []
+    [data]
   );
 
   const table = useReactTable({
     columns,
-    data: props.data,
+    data: data || [],
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     onPaginationChange: setPagination,
     onSortingChange: setSorting,
-    state: props.showPagination ? {
+    state: {
       pagination,
       sorting
-    } : undefined,
+    },
   });
 
   const handleSortOrderChange = (value: string) =>
     setSorting([{ id: 'totalPoints', desc: value !== 'desc' }]);
+
+  if (error) {
+    return <div className={styles.tableCell}>Error loading leaderboard data</div>;
+  }
 
   return (
     <>
@@ -197,6 +206,7 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
           </div>
         )}
       </div>
+
       <div className={clsx(styles.flexRow,
         css({
           hideFrom: "md", width: "100%",
@@ -346,12 +356,19 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
               )}
             </>
           ) : (
-            <div className={styles.tableCell}>
-              <i>No data to display yet</i>
-            </div>
+            <>
+              {isLoading ? (
+                <p>Loading Leaderboards...</p>
+              ) : (
+                <div className={styles.tableCell}>
+                  <i>No data to display yet</i>
+                </div>
+              )}
+            </>
           )
         }
-      </div >
+      </div>
+
       <div
         className={clsx(
           styles.tableContainer,
@@ -403,11 +420,21 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
                 ))}
               </>
             ) : (
-              <tr>
-                <td className={styles.tableCell} colSpan={4}>
-                  <i>No data to display yet</i>
-                </td>
-              </tr>
+              <>
+                {isLoading ? (
+                  <tr>
+                    <td className={styles.tableCell} colSpan={4}>
+                      Loading Leaderboards...
+                    </td>
+                  </tr>
+                ) : (
+                  <tr>
+                    <td className={styles.tableCell} colSpan={4}>
+                      <i>No data to display yet</i>
+                    </td>
+                  </tr>
+                )}
+              </>
             )}
           </tbody>
         </table>

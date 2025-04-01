@@ -3,7 +3,7 @@
 import { readContract } from "@wagmi/core";
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
 import { FAIR_LAUNCH_CONTRACT_ADDRESS } from "@utils/constants";
-import { fetchLeaderboard, fetchUserStakes } from "@utils/queries";
+import { fetchLeaderboard } from "@utils/queries";
 import { config } from "@utils/wagmi.server";
 import { unstable_cacheLife as cacheLife } from 'next/cache';
 
@@ -17,20 +17,15 @@ import { unstable_cacheLife as cacheLife } from 'next/cache';
 export const calculateLeaderboardPoints = async (limit = 10000) => {
   'use cache';
 
-  cacheLife({
-    stale: 120,
-    revalidate: 60,
-    expire: 900,
-  })
+  cacheLife('minutes');
 
   const results = [];
   const leaderboard = await fetchLeaderboard(limit);
 
   for (const wallet of leaderboard.wallets || []) {
     try {
-      const userStakes = await fetchUserStakes(wallet.id);
       const userStakesInfo = await Promise.all(
-        (userStakes?.stakes || []).map(async (stake, index) => {
+        (wallet?.stakes || []).map(async (_, index) => {
           const [amount] = await readContract(config, {
             abi: klimaFairLaunchAbi,
             address: FAIR_LAUNCH_CONTRACT_ADDRESS,

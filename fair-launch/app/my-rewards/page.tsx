@@ -45,7 +45,7 @@ const Page = async () => {
   }
 
   const [
-    totalStakerAddresses,
+    ,
     startTimestamp,
     burnRatio,
     totalSupply,
@@ -234,10 +234,7 @@ const Page = async () => {
 
       <div className={styles.twoCols}>
         <Card>
-          <LeaderboardsTable
-            data={[]}
-            totalStakerAddresses={totalStakerAddresses.result!}
-          />
+          <LeaderboardsTable pageSize={5} />
           <Link className={styles.leaderboardLink} href="/protocol">
             View full leaderboard
           </Link>
