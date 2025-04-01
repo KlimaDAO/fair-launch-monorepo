@@ -55,7 +55,7 @@ export const StakeDialog: FC = () => {
   });
 
   const { data: gasPrice } = useEstimateGas();
-  const form = useForm({ defaultValues: { "stake-amount": "0" } });
+  const form = useForm({ defaultValues: { "stake-amount": "1" } });
   const klimaBalance = formatUnits(balance?.value ?? BigInt(0), 9);
 
   const [dialogState, setDialogState] = useState(DialogState.INITIAL);
@@ -191,8 +191,8 @@ export const StakeDialog: FC = () => {
           onChange: ({ value }) => {
             if (Number(value) > Number(klimaBalance)) {
               return "You don't have enough KLIMA";
-            } else if (Number(klimaBalance) <= 0 || Number(value) <= 0) {
-              return "Invalid unstake amount";
+            } else if (Number(klimaBalance) <= 0 || Number(value) < 1) {
+              return "Invalid stake amount";
             } else {
               return undefined;
             }

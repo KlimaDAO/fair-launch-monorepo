@@ -46,21 +46,20 @@ export const UnstakeDialog: FC<Props> = ({
   const stakedBalance = formatUnits(BigInt(totalStaked) ?? BigInt(0), 9);
   const [dialogState, setDialogState] = useState(DialogState.INITIAL);
 
-  const {
-    data: unstakeData,
-    isPending: isUnstakePending,
-    writeContract: unstakeContract,
-    isError,
-    error,
-  } = useWriteContract();
-
   const form = useForm({
     defaultValues: {
       "burn-amount": "0",
       "receive-amount": "0",
-      "unstake-amount": "0",
+      "unstake-amount": "1",
     },
   });
+
+  const {
+    error,
+    data: unstakeData,
+    isPending: isUnstakePending,
+    writeContract: unstakeContract,
+  } = useWriteContract();
 
   const { data: submitReceipt, isSuccess } = useWaitForTransactionReceipt({
     confirmations: 3,
@@ -82,7 +81,7 @@ export const UnstakeDialog: FC<Props> = ({
   };
 
   const handleConfirm = () => {
-    const unstakeAmount = form.state.values["unstake-amount"];
+    const unstakeAmount = form.getFieldValue('unstake-amount');
     unstakeContract({
       abi: klimaFairLaunchAbi,
       functionName: "unstake",
@@ -155,12 +154,22 @@ export const UnstakeDialog: FC<Props> = ({
     );
   };
 
+  const validateInput = (value: string) => {
+    if (Number(value) > Number(stakedBalance)) {
+      return "You don't have enough staked KLIMA";
+    } else if (Number(stakedBalance) <= 0 || Number(value) <= 0) {
+      return "Invalid unstake amount";
+    } else {
+      return undefined;
+    }
+  }
+
   useEffect(() => {
     setOpen(false);
     if (submitReceipt?.status === "success") {
       window.localStorage.setItem(
         "unstakeAmount",
-        form.state.values["unstake-amount"] as string
+        form.getFieldValue('unstake-amount')
       );
       window.location.reload();
     }
@@ -213,19 +222,22 @@ export const UnstakeDialog: FC<Props> = ({
     <form.Field
       name="unstake-amount"
       listeners={{
-        onMount: async ({ value }) => await generateAllocationInfo(value),
-        onChange: async ({ value }) => await generateAllocationInfo(value),
+        onMount: async ({ value }) => {
+          return await generateAllocationInfo(value);
+        },
+        onChange: async ({ value }) => {
+          return await generateAllocationInfo(value);
+        }
       }}
       validators={{
-        onChange: ({ value }) => {
-          if (Number(value) > Number(stakedBalance)) {
-            return "You don't have enough staked KLIMA";
-          } else if (Number(stakedBalance) <= 0 || Number(value) <= 0) {
+        onMount: ({ value }) => {
+          if (Number(value) <= 0) {
             return "Invalid unstake amount";
-          } else {
-            return undefined;
           }
         },
+        onChange: ({ value }) => {
+          return validateInput(value);
+        }
       }}
     >
       {(field) => (
