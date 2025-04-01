@@ -13,7 +13,8 @@ import { css } from "styled-system/css";
 import * as styles from "../styles";
 
 interface Props {
-  userShare: number;
+  userPoints: bigint;
+  totalPoints: bigint;
 }
 
 export interface Data {
@@ -39,17 +40,18 @@ export const KlimaXAllocationTable = <T extends Data>(props: Props) => {
         cell: ({ getValue }) => formatCurrency(Number(getValue()), 0),
       },
     ],
-    [props.userShare]
+    [props.userPoints, props.totalPoints]
   );
 
   const table = useReactTable({
     columns,
     getCoreRowModel: getCoreRowModel(),
     data: marketCapList.map((marketCap) => {
-      const formattedCalculated = marketCap * 0.4 * (props.userShare / 100);
+      const fortyPercentMarketCap = (BigInt(marketCap) * BigInt(40)) / BigInt(100);
+      const userShareValue = (fortyPercentMarketCap * BigInt(props.userPoints)) / BigInt(props.totalPoints);
       return {
         marketCap,
-        projectedValue: formattedCalculated,
+        projectedValue: Number(userShareValue),
       }
     }) as T[],
   });

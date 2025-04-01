@@ -1,5 +1,9 @@
 "use client";
 
+import { calculateLeaderboardPoints } from "@actions/leaderboards-action";
+import { Badge } from "@components/badge";
+import { Dropdown } from "@components/dropdown";
+import { useQuery } from "@tanstack/react-query";
 import {
   ColumnDef,
   flexRender,
@@ -15,27 +19,23 @@ import {
   formatNumber,
   truncateAddress,
 } from "@utils/formatting";
-import { Badge } from "@components/badge";
 import clsx from "clsx";
 import { useMemo, useState } from "react";
+import { MdKeyboardArrowLeft, MdKeyboardArrowRight } from "react-icons/md";
 import { css } from "styled-system/css";
 import { formatUnits } from "viem";
 import { useAccount } from "wagmi";
 import * as styles from "../styles";
-import { MdKeyboardArrowLeft, MdKeyboardArrowRight } from "react-icons/md";
-import { Dropdown } from "@components/dropdown";
-import { calculateLeaderboardPoints } from "@actions/leaderboards-action";
-import { useQuery } from "@tanstack/react-query";
 
 interface Props<T> {
   pageSize?: number;
   showPagination?: boolean;
 }
 
-export interface LeaderboardData {
+export interface Data {
   id: string;
   totalStaked: bigint | string;
-  totalPoints: bigint | string;
+  totalPoints: bigint | string | null;
 }
 
 const isUserWallet = (walletAddress: string, address: string) =>
@@ -46,7 +46,7 @@ const dropdownItems = [
   { value: "desc", label: "Points - low to high" },
 ];
 
-export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) => {
+export const LeaderboardsTable = <T extends Data>(props: Props<T>) => {
   const { address } = useAccount();
   const [sorting, setSorting] = useState<SortingState>([]);
   const [pagination, setPagination] = useState<PaginationState>({
@@ -54,8 +54,12 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
     pageSize: props.pageSize ?? 10,
   });
 
-  const { data = [], isLoading, error } = useQuery({
-    queryKey: ['leaderboards'],
+  const {
+    data = [],
+    error,
+    isLoading,
+  } = useQuery({
+    queryKey: ["leaderboards"],
     queryFn: async () => await calculateLeaderboardPoints(100),
     refetchInterval: 60000,
   });
@@ -65,15 +69,10 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
       {
         id: "place",
         header: "Place",
-        accessorKey: "place",
         cell: ({ row }) => {
           const userWallet = isUserWallet(row.original.id, address as string);
           return (
-            <div
-              className={clsx({
-                [styles.userWalletText]: userWallet,
-              })}
-            >
+            <div className={clsx({ [styles.userWalletText]: userWallet })}>
               {row.index + 1}
             </div>
           );
@@ -88,21 +87,15 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
           const userWallet = isUserWallet(value, address as string);
           return (
             <div
-              className={clsx({
-                [styles.userWalletText]: userWallet,
-              })}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.8rem",
-              }}
+              className={clsx({ [styles.userWalletText]: userWallet })}
+              style={{ display: "flex", alignItems: "center", gap: "0.8rem" }}
             >
               {truncateAddress(value)}
               {userWallet && (
                 <Badge
-                  className={css({ hideBelow: "md" })}
-                  variant="table"
                   title="You"
+                  variant="table"
+                  className={css({ hideBelow: "md" })}
                 />
               )}
             </div>
@@ -117,11 +110,7 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
           const value = getValue();
           const userWallet = isUserWallet(row.original.id, address as string);
           return (
-            <div
-              className={clsx({
-                [styles.userWalletText]: userWallet,
-              })}
-            >
+            <div className={clsx({ [styles.userWalletText]: userWallet })}>
               {formatNumber(formatUnits(value as bigint, 9), 2)}
             </div>
           );
@@ -138,11 +127,7 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
             return;
           }
           return (
-            <div
-              className={clsx({
-                [styles.userWalletText]: userWallet,
-              })}
-            >
+            <div className={clsx({ [styles.userWalletText]: userWallet })}>
               {formatLargeNumber(
                 Number(formatUnits(BigInt(value as string), 18))
               )}
@@ -164,15 +149,17 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
     onSortingChange: setSorting,
     state: {
       pagination,
-      sorting
+      sorting,
     },
   });
 
   const handleSortOrderChange = (value: string) =>
-    setSorting([{ id: 'totalPoints', desc: value !== 'desc' }]);
+    setSorting([{ id: "totalPoints", desc: value !== "desc" }]);
 
   if (error) {
-    return <div className={styles.tableCell}>Error loading leaderboard data</div>;
+    return (
+      <div className={styles.tableCell}>Error loading leaderboard data</div>
+    );
   }
 
   return (
@@ -207,166 +194,178 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
         )}
       </div>
 
-      <div className={clsx(styles.flexRow,
-        css({
-          hideFrom: "md", width: "100%",
-          flexDirection: "column !important",
-          lg: { flexDirection: "row !important" },
-        }))}>
-        {
-          table.getRowModel().rows.length ? (
-            <>
-              {table.getRowModel().rows.map((row) => {
-                const firstCell = row.getAllCells()[0];
-                const walletAddress = row.getAllCells()[1].getContext().getValue()
-                return (
+      <div
+        className={clsx(
+          styles.flexRow,
+          css({
+            hideFrom: "md",
+            width: "100%",
+            flexDirection: "column !important",
+            lg: { flexDirection: "row !important" },
+          })
+        )}
+      >
+        {table.getRowModel().rows.length ? (
+          <>
+            {table.getRowModel().rows.map((row) => {
+              const firstCell = row.getAllCells()[0];
+              const walletAddress = row
+                .getAllCells()[1]
+                .getContext()
+                .getValue();
+              return (
+                <div
+                  key={row.id}
+                  style={{
+                    width: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "0rem",
+                    padding: "1.2rem 0",
+                    borderBottom: "1px solid #999999",
+                  }}
+                >
                   <div
-                    key={row.id}
                     style={{
-                      width: '100%',
+                      width: "100%",
+                      marginBottom: "1.2rem",
+                      color: "#1E1e1e",
+                      fontWeight: "700",
+                      fontSize: "1.8rem",
                       display: "flex",
-                      flexDirection: "column",
-                      gap: "0rem",
-                      padding: "1.2rem 0",
-                      borderBottom: "1px solid #999999",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: "0.8rem",
                     }}
                   >
                     <div
-                      style={{
-                        width: '100%',
-                        marginBottom: "1.2rem",
-                        color: "#1E1e1e",
-                        fontWeight: "700",
-                        fontSize: "1.8rem",
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: '0.8rem',
-                      }}
-                    >
-                      <div className={css({
+                      className={css({
                         textAlign: "center",
                         width: "3.3rem",
-                      })}>
-                        {flexRender(
-                          firstCell?.column?.columnDef?.cell,
-                          firstCell?.getContext()
-                        )}
-                      </div>
-                      {isUserWallet(walletAddress as string, address as string) && (
-                        <Badge variant="table" title="You" />
+                      })}
+                    >
+                      {flexRender(
+                        firstCell?.column?.columnDef?.cell,
+                        firstCell?.getContext()
                       )}
                     </div>
-                    {table.getHeaderGroups().map((headerGroup) => (
-                      <div
-                        className={css({
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          gap: "0rem",
-                        })}
-                        key={headerGroup.id}
-                      >
-                        {headerGroup.headers.map((header) => {
-                          if (header.id === "place") return null;
-                          return (
-                            <div
-                              className={css({
-                                fontWeight: 400,
-                                fontSize: "1.2rem",
-                                lineHeight: "1.6rem",
-                                color: "#777",
-                                display: "flex",
-                                flex: 1,
-                                alignItems: "center",
-                                justifyContent: "center",
-                                '&:first-child': {
-                                  justifyContent: "flex-start",
-                                },
-                                '&:last-child': {
-                                  justifyContent: "flex-end",
-                                },
-                              })}
-                              key={header.id}
-                            >
-                              {flexRender(
-                                header.column.columnDef.header,
-                                header.getContext()
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ))}
+                    {isUserWallet(
+                      walletAddress as string,
+                      address as string
+                    ) && <Badge variant="table" title="You" />}
+                  </div>
+                  {table.getHeaderGroups().map((headerGroup) => (
                     <div
-                      style={{
+                      className={css({
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "space-between",
-                        gap: "0.8rem",
-                      }}
+                        gap: "0rem",
+                      })}
+                      key={headerGroup.id}
                     >
-                      {row.getVisibleCells().map((cell) => {
-                        if (cell.column.id === "place") return null;
+                      {headerGroup.headers.map((header) => {
+                        if (header.id === "place") return null;
                         return (
                           <div
                             className={css({
                               fontWeight: 400,
-                              fontSize: "1.4rem",
-                              lineHeight: "2rem",
-                              color: "#1E1e1e",
+                              fontSize: "1.2rem",
+                              lineHeight: "1.6rem",
+                              color: "#777",
                               display: "flex",
                               flex: 1,
                               alignItems: "center",
                               justifyContent: "center",
-                              '&:first-child': {
+                              "&:first-child": {
                                 justifyContent: "flex-start",
                               },
-                              '&:last-child': {
+                              "&:last-child": {
                                 justifyContent: "flex-end",
                               },
                             })}
-                            key={cell.id}
+                            key={header.id}
                           >
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            {flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
                           </div>
                         );
                       })}
                     </div>
+                  ))}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: "0.8rem",
+                    }}
+                  >
+                    {row.getVisibleCells().map((cell) => {
+                      if (cell.column.id === "place") return null;
+                      return (
+                        <div
+                          className={css({
+                            fontWeight: 400,
+                            fontSize: "1.4rem",
+                            lineHeight: "2rem",
+                            color: "#1E1e1e",
+                            display: "flex",
+                            flex: 1,
+                            alignItems: "center",
+                            justifyContent: "center",
+                            "&:first-child": {
+                              justifyContent: "flex-start",
+                            },
+                            "&:last-child": {
+                              justifyContent: "flex-end",
+                            },
+                          })}
+                          key={cell.id}
+                        >
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
-                )
-              })}
-              {props.showPagination && (
-                <div className={styles.paginationButtons}>
-                  <button
-                    className={styles.paginationButton}
-                    onClick={() => table.previousPage()}
-                    disabled={!table.getCanPreviousPage()}
-                  >
-                    Previous
-                  </button>
-                  <button
-                    className={styles.paginationButton}
-                    onClick={() => table.nextPage()}
-                    disabled={!table.getCanNextPage()}
-                  >
-                    Next
-                  </button>
                 </div>
-              )}
-            </>
-          ) : (
-            <>
-              {isLoading ? (
-                <p>Loading Leaderboards...</p>
-              ) : (
-                <div className={styles.tableCell}>
-                  <i>No data to display yet</i>
-                </div>
-              )}
-            </>
-          )
-        }
+              );
+            })}
+            {props.showPagination && (
+              <div className={styles.paginationButtons}>
+                <button
+                  className={styles.paginationButton}
+                  onClick={() => table.previousPage()}
+                  disabled={!table.getCanPreviousPage()}
+                >
+                  Previous
+                </button>
+                <button
+                  className={styles.paginationButton}
+                  onClick={() => table.nextPage()}
+                  disabled={!table.getCanNextPage()}
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            {isLoading ? (
+              <p>Loading Leaderboards...</p>
+            ) : (
+              <div className={styles.tableCell}>
+                <i>No data to display yet</i>
+              </div>
+            )}
+          </>
+        )}
       </div>
 
       <div
@@ -438,13 +437,21 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
             )}
           </tbody>
         </table>
+
         {props.showPagination && table.getRowModel().rows.length ? (
           <div className={styles.pagination}>
             <div>
               <div className={styles.paginationText}>
-                Showing {table.getState().pagination.pageIndex * pagination.pageSize + 1} to{" "}
-                {Math.min((table.getState().pagination.pageIndex + 1) * pagination.pageSize, table.getRowCount())} of{' '}
-                {table.getRowCount().toLocaleString()} results
+                Showing{" "}
+                {table.getState().pagination.pageIndex * pagination.pageSize +
+                  1}{" "}
+                to{" "}
+                {Math.min(
+                  (table.getState().pagination.pageIndex + 1) *
+                    pagination.pageSize,
+                  table.getRowCount()
+                )}{" "}
+                of {table.getRowCount().toLocaleString()} results
               </div>
             </div>
             <div className={styles.paginationButtons}>
@@ -455,27 +462,35 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
               >
                 <MdKeyboardArrowLeft fontSize="2rem" />
               </button>
-              {Array.from({ length: Math.ceil(table.getRowCount() / pagination.pageSize) }, (_, index) => index + 1)
-                .map((page) => {
-                  const isCurrentPage = page === table.getState().pagination.pageIndex + 1;
-                  return (
-                    <button
-                      key={page}
-                      className={clsx(styles.paginationButton, { [styles.active]: isCurrentPage })}
-                      onClick={() => table.setPageIndex(page - 1)}
-                    >
-                      {page}
-                    </button>
-                  );
-                })
+              {Array.from(
+                {
+                  length: Math.ceil(table.getRowCount() / pagination.pageSize),
+                },
+                (_, index) => index + 1
+              )
+                .map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => table.setPageIndex(page - 1)}
+                    className={clsx(styles.paginationButton, {
+                      [styles.active]:
+                        page === table.getState().pagination.pageIndex + 1,
+                    })}
+                  >
+                    {page}
+                  </button>
+                ))
                 .reduce((acc, curr, index, array) => {
-                  if (index > 0 && index < array.length - 1 && (curr.props.children - array[index - 1].props.children > 1)) {
+                  if (
+                    index > 0 &&
+                    index < array.length - 1 &&
+                    curr.props.children - array[index - 1].props.children > 1
+                  ) {
                     acc.push(<span key={`ellipsis-${index}`}>...</span>);
                   }
                   acc.push(curr);
                   return acc;
-                }, [] as React.ReactNode[])
-              }
+                }, [] as React.ReactNode[])}
               <button
                 className={styles.paginationButton}
                 onClick={() => table.nextPage()}
@@ -484,7 +499,8 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
                 <MdKeyboardArrowRight fontSize="2rem" />
               </button>
             </div>
-          </div>) : null}
+          </div>
+        ) : null}
       </div>
     </>
   );

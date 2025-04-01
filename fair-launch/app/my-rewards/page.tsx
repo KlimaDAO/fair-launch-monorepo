@@ -25,6 +25,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { MdHelpOutline } from "react-icons/md";
 import { AbiFunction, formatUnits, parseUnits } from "viem";
+import { KlimaXAllocationTable } from "@components/tables/klimax-allocation";
 import { cookieToInitialState } from "wagmi";
 import * as styles from "./styles";
 
@@ -260,7 +261,10 @@ const Page = async () => {
             </Tooltip>
           </div>
           <div className={styles.cardContents}>
-            {/* <KlimaXAllocationTable userShare={totalPointsPercentage} /> */}
+            <KlimaXAllocationTable 
+              userPoints={BigInt(previewUserPoints.result!)} 
+              totalPoints={BigInt(getTotalPoints.result!)} 
+            />
           </div>
         </Card>
       </div>

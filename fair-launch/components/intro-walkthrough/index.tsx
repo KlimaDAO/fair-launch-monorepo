@@ -52,7 +52,7 @@ export const IntroWalkthrough: FC<Props> = (props) => {
                     Here’s where you can view your total points accumulated. The longer you leave your KLIMA staked, the more points you’ll receive. 
                   </div>
                   <div style="font-size:12px;font-weight:400;">
-                    At the end of our Fair Launch period, you’ll receive a share of our new token, KlimaX, based on how many points you’ve earned. You’ll also receive an allocation of our improved flagship token, KLIMA(v1).
+                    At the end of our Fair Launch period, you’ll receive a share of our new token, KlimaX, based on how many points you’ve earned. You’ll also receive an allocation of our improved flagship token, KLIMA.
                   </div>
                 </div>
               `

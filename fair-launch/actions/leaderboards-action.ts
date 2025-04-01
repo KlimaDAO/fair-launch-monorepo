@@ -1,6 +1,7 @@
 'use server';
 
 import { readContract } from "@wagmi/core";
+import { omit } from "lodash";
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
 import { FAIR_LAUNCH_CONTRACT_ADDRESS } from "@utils/constants";
 import { fetchLeaderboard } from "@utils/queries";
@@ -43,10 +44,10 @@ export const calculateLeaderboardPoints = async (limit = 10000) => {
         address: FAIR_LAUNCH_CONTRACT_ADDRESS,
         functionName: "previewUserPoints",
       });
-      results.push({ ...wallet, totalStaked, totalPoints: points });
+      results.push({ ...omit(wallet, 'stakes'), totalStaked, totalPoints: points });
     } catch (error) {
       console.error(`Error fetching points for ${wallet.id}:`, error);
-      results.push({ ...wallet, totalPoints: null }); // Handle error gracefully
+      results.push({ ...omit(wallet, 'stakes'), totalPoints: null }); // Handle error gracefully
     }
   }
   return results.sort((a, b) => Number(b.totalPoints) - Number(a.totalPoints));
