@@ -1,6 +1,5 @@
 "use client";
 
-import { calculateLeaderboardPoints } from "@actions/leaderboards-action";
 import { Badge } from "@components/badge";
 import { Dropdown } from "@components/dropdown";
 import { useQuery } from "@tanstack/react-query";
@@ -46,6 +45,14 @@ const dropdownItems = [
   { value: "desc", label: "Points - low to high" },
 ];
 
+const fetchLeaderboard = async () => {
+  const response = await fetch('/api/leaderboards');
+  if (!response.ok) {
+    throw new Error('Network response was not ok');
+  }
+  return response.json();
+};
+
 export const LeaderboardsTable = <T extends Data>(props: Props<T>) => {
   const { address } = useAccount();
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -60,7 +67,7 @@ export const LeaderboardsTable = <T extends Data>(props: Props<T>) => {
     isLoading,
   } = useQuery({
     queryKey: ["leaderboards"],
-    queryFn: async () => await calculateLeaderboardPoints(100),
+    queryFn: fetchLeaderboard,
     refetchInterval: 60000,
   });
 
@@ -128,9 +135,7 @@ export const LeaderboardsTable = <T extends Data>(props: Props<T>) => {
           }
           return (
             <div className={clsx({ [styles.userWalletText]: userWallet })}>
-              {formatLargeNumber(
-                Number(formatUnits(BigInt(value as string), 18))
-              )}
+              {formatLargeNumber(Number(value))}
             </div>
           );
         },
@@ -448,7 +453,7 @@ export const LeaderboardsTable = <T extends Data>(props: Props<T>) => {
                 to{" "}
                 {Math.min(
                   (table.getState().pagination.pageIndex + 1) *
-                    pagination.pageSize,
+                  pagination.pageSize,
                   table.getRowCount()
                 )}{" "}
                 of {table.getRowCount().toLocaleString()} results
