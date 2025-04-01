@@ -68,7 +68,7 @@ export const LeaderboardsTable = <T extends Data>(props: Props<T>) => {
   } = useQuery({
     queryKey: ["leaderboards"],
     queryFn: fetchLeaderboard,
-    refetchInterval: 60000,
+    refetchInterval: 300,
   });
 
   const columns: ColumnDef<any>[] = useMemo(
@@ -152,10 +152,7 @@ export const LeaderboardsTable = <T extends Data>(props: Props<T>) => {
     getPaginationRowModel: getPaginationRowModel(),
     onPaginationChange: setPagination,
     onSortingChange: setSorting,
-    state: {
-      pagination,
-      sorting,
-    },
+    state: { pagination, sorting },
   });
 
   const handleSortOrderChange = (value: string) =>
@@ -442,7 +439,6 @@ export const LeaderboardsTable = <T extends Data>(props: Props<T>) => {
             )}
           </tbody>
         </table>
-
         {props.showPagination && table.getRowModel().rows.length ? (
           <div className={styles.pagination}>
             <div>

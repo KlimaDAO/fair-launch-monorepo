@@ -26,7 +26,8 @@ export const Sidebar: FC = () => {
 
   const handleLogout = async () => {
     await disconnect();
-    setTimeout(() => router.push('/'), 100);
+    window.location.reload();
+    router.push('/');
   };
 
   return (
