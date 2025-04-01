@@ -1,4 +1,4 @@
-import { css, cva } from '../../styled-system/css';
+import { css } from '../../styled-system/css';
 
 export const badge = css({
   backgroundColor: 'green.30',
@@ -9,6 +9,7 @@ export const badge = css({
   color: 'green.100'
 });
 
+import { cva } from '../../styled-system/css';
 
 export const badgeVariants = cva({
   base: {

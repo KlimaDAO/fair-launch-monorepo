@@ -39,16 +39,19 @@ export const KlimaXAllocationTable = <T extends Data>(props: Props) => {
         cell: ({ getValue }) => formatCurrency(Number(getValue()), 0),
       },
     ],
-    []
+    [props.userShare]
   );
 
   const table = useReactTable({
     columns,
     getCoreRowModel: getCoreRowModel(),
-    data: marketCapList.map((marketCap) => ({
-      marketCap,
-      projectedValue: marketCap * 0.4 * (props.userShare / 100),
-    })) as T[],
+    data: marketCapList.map((marketCap) => {
+      const formattedCalculated = marketCap * 0.4 * (props.userShare / 100);
+      return {
+        marketCap,
+        projectedValue: formattedCalculated,
+      }
+    }) as T[],
   });
 
   return (

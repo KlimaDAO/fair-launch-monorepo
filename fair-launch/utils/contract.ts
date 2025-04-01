@@ -3,7 +3,7 @@ import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
 import { config } from "@utils/wagmi.server";
 import { readContract } from "@wagmi/core";
 import { FAIR_LAUNCH_CONTRACT_ADDRESS } from "./constants";
-import { formatLargeNumber, formatTokenToValue } from "./formatting";
+import { formatLargeNumber, formatNumber, formatTokenToValue } from "./formatting";
 
 export const calculateBurnFn = async (amount: bigint, timestamp: string) => {
   return (await readContract(config, {
@@ -42,7 +42,7 @@ export const calculateUnstakePenalty = async (
     Number(burnAmount),
     Number(stakeAmountFormatted)
   );
-  return { burnValue: `${burnAmount}`, percentage: `${Math.round(penaltyPercentage)}%` };
+  return { burnValue: `${burnAmount}`, percentage: `${formatNumber(penaltyPercentage, 2)}%` };
 };
 
 // @note - this is currently incorrect, but it's a placeholder for now

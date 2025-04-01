@@ -1,6 +1,5 @@
 "use client";
 
-import { Badge } from "@components/badge";
 import {
   ColumnDef,
   flexRender,
@@ -16,6 +15,7 @@ import {
   formatNumber,
   truncateAddress,
 } from "@utils/formatting";
+import { Badge } from "@components/badge";
 import clsx from "clsx";
 import { useMemo, useState } from "react";
 import { css } from "styled-system/css";
@@ -28,6 +28,7 @@ import { Dropdown } from "@components/dropdown";
 interface Props<T> {
   data: T[];
   showPagination?: boolean;
+  totalStakerAddresses?: number;
 }
 
 export interface LeaderboardData {
@@ -47,7 +48,7 @@ const dropdownItems = [
 
 export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) => {
   const { address } = useAccount();
-  const [sorting, setSorting] = useState<SortingState>([])
+  const [sorting, setSorting] = useState<SortingState>([]);
 
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
@@ -410,52 +411,53 @@ export const LeaderboardsTable = <T extends LeaderboardData>(props: Props<T>) =>
             )}
           </tbody>
         </table>
-        {props.showPagination && <div className={styles.pagination}>
-          <div>
-            <div className={styles.paginationText}>
-              Showing {table.getState().pagination.pageIndex * pagination.pageSize + 1} to{" "}
-              {Math.min((table.getState().pagination.pageIndex + 1) * pagination.pageSize, table.getRowCount())} of{' '}
-              {table.getRowCount().toLocaleString()} results
+        {props.showPagination && table.getRowModel().rows.length ? (
+          <div className={styles.pagination}>
+            <div>
+              <div className={styles.paginationText}>
+                Showing {table.getState().pagination.pageIndex * pagination.pageSize + 1} to{" "}
+                {Math.min((table.getState().pagination.pageIndex + 1) * pagination.pageSize, table.getRowCount())} of{' '}
+                {table.getRowCount().toLocaleString()} results
+              </div>
             </div>
-          </div>
-          <div className={styles.paginationButtons}>
-            <button
-              className={styles.paginationButton}
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-            >
-              <MdKeyboardArrowLeft fontSize="2rem" />
-            </button>
-            {Array.from({ length: Math.ceil(table.getRowCount() / pagination.pageSize) }, (_, index) => index + 1)
-              .map((page) => {
-                const isCurrentPage = page === table.getState().pagination.pageIndex + 1;
-                return (
-                  <button
-                    key={page}
-                    className={clsx(styles.paginationButton, { [styles.active]: isCurrentPage })}
-                    onClick={() => table.setPageIndex(page - 1)}
-                  >
-                    {page}
-                  </button>
-                );
-              })
-              .reduce((acc, curr, index, array) => {
-                if (index > 0 && index < array.length - 1 && (curr.props.children - array[index - 1].props.children > 1)) {
-                  acc.push(<span key={`ellipsis-${index}`}>...</span>);
-                }
-                acc.push(curr);
-                return acc;
-              }, [] as React.ReactNode[])
-            }
-            <button
-              className={styles.paginationButton}
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-            >
-              <MdKeyboardArrowRight fontSize="2rem" />
-            </button>
-          </div>
-        </div>}
+            <div className={styles.paginationButtons}>
+              <button
+                className={styles.paginationButton}
+                onClick={() => table.previousPage()}
+                disabled={!table.getCanPreviousPage()}
+              >
+                <MdKeyboardArrowLeft fontSize="2rem" />
+              </button>
+              {Array.from({ length: Math.ceil(table.getRowCount() / pagination.pageSize) }, (_, index) => index + 1)
+                .map((page) => {
+                  const isCurrentPage = page === table.getState().pagination.pageIndex + 1;
+                  return (
+                    <button
+                      key={page}
+                      className={clsx(styles.paginationButton, { [styles.active]: isCurrentPage })}
+                      onClick={() => table.setPageIndex(page - 1)}
+                    >
+                      {page}
+                    </button>
+                  );
+                })
+                .reduce((acc, curr, index, array) => {
+                  if (index > 0 && index < array.length - 1 && (curr.props.children - array[index - 1].props.children > 1)) {
+                    acc.push(<span key={`ellipsis-${index}`}>...</span>);
+                  }
+                  acc.push(curr);
+                  return acc;
+                }, [] as React.ReactNode[])
+              }
+              <button
+                className={styles.paginationButton}
+                onClick={() => table.nextPage()}
+                disabled={!table.getCanNextPage()}
+              >
+                <MdKeyboardArrowRight fontSize="2rem" />
+              </button>
+            </div>
+          </div>) : null}
       </div>
     </>
   );

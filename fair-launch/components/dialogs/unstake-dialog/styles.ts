@@ -172,6 +172,7 @@ export const unstakeButton = css({
   cursor: 'pointer',
   width: '100%',
   maxWidth: '8.1rem',
+  padding: '0.8rem 1rem',
   border: '0.1rem solid token(colors.void.80)',
 
   '&:hover': {

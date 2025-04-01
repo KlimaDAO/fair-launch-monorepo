@@ -20,11 +20,13 @@ interface Props<T> {
 
 export interface StakeData {
   amount: bigint | number | string;
-  multiplier: string;
-  burnValue: string;
+  stakeStartTime: bigint;
+  bonusMultiplier: bigint;
+  burnAccrued: bigint;
+  burnRatioSnapshot: bigint;
   points: bigint | number | string;
   burnPercentage: string;
-  startTimestamp: string;
+  burnValue: string;
   klimaxAllocation: bigint | number | string;
 }
 
@@ -32,12 +34,13 @@ export const StakesTable = <T extends StakeData>({
   data,
   totalStaked,
 }: Props<T>) => {
+
   const columns: ColumnDef<T>[] = useMemo(
     () => [
       {
-        id: "startTimestamp",
+        id: "stakeStartTime",
         header: "Timestamp",
-        accessorKey: "startTimestamp",
+        accessorKey: "stakeStartTime",
         cell: ({ getValue }) => {
           const value = getValue();
           return <>{formatTimestamp(parseInt(value as string))}</>;
@@ -57,7 +60,7 @@ export const StakesTable = <T extends StakeData>({
         header: "Points",
         cell: ({ row }) => {
           const points = row.original.points;
-          return <>{formatLargeNumber(Number(formatUnits(BigInt(points as string), 9)))}</>;
+          return <>{formatLargeNumber(Number(formatUnits(BigInt(points as string), 18)))}</>;
         },
       },
       {
@@ -89,11 +92,16 @@ export const StakesTable = <T extends StakeData>({
         header: "KlimaX Allocation",
         cell: ({ row }) => {
           const klimaxAllocation = row.original.klimaxAllocation;
-          return <><strong>{formatLargeNumber(Number(formatUnits(BigInt(klimaxAllocation as string), 9)))}</strong> KlimaX</>;
+          const formatted = Number(formatUnits(BigInt(klimaxAllocation as string), 9));
+          if (formatted < 1000) {
+            return <><strong>{formatNumber(formatted, 3)}</strong> KlimaX</>;
+          } else {
+            return <><strong>{formatLargeNumber(formatted)}</strong> KlimaX</>;
+          }
         },
       }
     ],
-    [data, totalStaked]
+    [totalStaked]
   );
 
   const table = useReactTable({

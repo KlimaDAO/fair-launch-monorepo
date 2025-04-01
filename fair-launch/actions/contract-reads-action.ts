@@ -5,47 +5,67 @@ import { abi as erc20Abi } from "@abi/erc20";
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
 import { FAIR_LAUNCH_CONTRACT_ADDRESS, KLIMA_V0_TOKEN_ADDRESS } from "@utils/constants";
 import { config } from "@utils/wagmi.server";
-import { unstable_cacheLife as cacheLife } from 'next/cache';
 import { AbiFunction } from "viem";
 
 export const getContractConstants = async (walletAddress: string) => {
-  'use cache';
-
-  // these values should be set for a long time in the cache...
-  cacheLife({ stale: 120, revalidate: 60, expire: 900 });
-
   try {
     return await readContracts(config, {
       contracts: [
         {
           abi: klimaFairLaunchAbi as AbiFunction[],
           address: FAIR_LAUNCH_CONTRACT_ADDRESS,
-          functionName: "burnRatio", // how often does this change?
+          functionName: "getTotalStakerAddresses",
+        },
+        {
+          abi: klimaFairLaunchAbi as AbiFunction[],
+          address: FAIR_LAUNCH_CONTRACT_ADDRESS,
+          functionName: "startTimestamp",
+        },
+        {
+          abi: klimaFairLaunchAbi as AbiFunction[],
+          address: FAIR_LAUNCH_CONTRACT_ADDRESS,
+          functionName: "burnRatio",
         },
         {
           abi: erc20Abi as AbiFunction[],
           address: KLIMA_V0_TOKEN_ADDRESS,
-          functionName: "totalSupply", // shouldn't change
+          functionName: "totalSupply",
         },
         {
           abi: klimaFairLaunchAbi as AbiFunction[],
           address: FAIR_LAUNCH_CONTRACT_ADDRESS,
-          functionName: "getTotalPoints", // how often does this change?
+          functionName: "getTotalPoints",
         },
         {
           abi: klimaFairLaunchAbi as AbiFunction[],
           address: FAIR_LAUNCH_CONTRACT_ADDRESS,
-          functionName: "GROWTH_RATE", // shouldnt' change
+          functionName: "EXP_GROWTH_RATE",
         },
         {
           abi: klimaFairLaunchAbi as AbiFunction[],
           address: FAIR_LAUNCH_CONTRACT_ADDRESS,
-          functionName: "previewUserPoints", // frequently
+          functionName: "previewUserPoints",
           args: [walletAddress],
         },
+        {
+          abi: klimaFairLaunchAbi as AbiFunction[],
+          address: FAIR_LAUNCH_CONTRACT_ADDRESS,
+          functionName: "getUserStakeCount",
+          args: [walletAddress],
+        },
+        {
+          abi: klimaFairLaunchAbi as AbiFunction[],
+          address: FAIR_LAUNCH_CONTRACT_ADDRESS,
+          functionName: "BURN_DISTRIBUTION_PRECISION",
+        },
+        {
+          abi: klimaFairLaunchAbi as AbiFunction[],
+          address: FAIR_LAUNCH_CONTRACT_ADDRESS,
+          functionName: "POINTS_SCALE_DENOMINATOR",
+        }
       ],
     });
   } catch (error) {
-    console.log('error', error);
+    console.error('error', error);
   }
 };

@@ -142,6 +142,7 @@ export const leaderboardLink = css({
   lineHeight: 'sm',
   fontWeight: 400,
   marginTop: '1.2rem',
+  width: 'fit-content',
   color: 'green.70 !important',
   textDecoration: 'underline',
 });
@@ -181,5 +182,20 @@ export const walletAddress = css({
 
   '& > span': {
     color: 'void.40 !important',
+  }
+});
+
+export const stakeHistoryContainer = css({
+  display: "flex",
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: "1rem",
+  marginBottom: "1rem",
+
+  '& div': {
+    display: 'flex', 
+    alignItems: 'center', 
+    gap: '0.8rem'
   }
 });
