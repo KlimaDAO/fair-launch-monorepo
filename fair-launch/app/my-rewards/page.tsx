@@ -89,13 +89,11 @@ const Page = async () => {
       const elapsedTime = Number(timestamp) - Number(stakeStartTime);
       const timeElapsedDays = elapsedTime / 86400;
 
+      const totalKlimaXSupply = formatUnits(BigInt(klimaXSupply), 9);
       const growthFactor = Math.exp(Number(growthRate.result) * timeElapsedDays - 1e18);
       const basePoints = (BigInt(amount) * (parseUnits(bonusMultiplier.toString(), 18))) / (BigInt(100) * pointsScaleDenominator.result!);
       const newPoints = BigInt(basePoints) * BigInt(growthFactor);
       let updatedPoints = newPoints + BigInt(organicPoints);
-
-      const supply = formatUnits(BigInt(klimaXSupply), 9);
-      const fortyPercentSupply = (BigInt(supply) * BigInt(40)) / BigInt(100);
 
       const burnRatioDiff =
         BigInt(burnRatio.result!) - BigInt(burnRatioSnapshot);
@@ -107,7 +105,7 @@ const Page = async () => {
       updatedPoints = updatedPoints + burnAccrued;
 
       const klimaxAllocation =
-        (BigInt(updatedPoints) * fortyPercentSupply) /
+        (BigInt(updatedPoints) * BigInt(totalKlimaXSupply)) /
         BigInt(getTotalPoints.result!);
 
       const { burnValue, percentage: burnPercentage } =
