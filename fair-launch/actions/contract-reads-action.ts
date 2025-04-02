@@ -14,7 +14,7 @@ export const getContractConstants = async (walletAddress: string) => {
         {
           abi: klimaFairLaunchAbi as AbiFunction[],
           address: FAIR_LAUNCH_CONTRACT_ADDRESS,
-          functionName: "getTotalStakerAddresses",
+          functionName: "preStakingWindow",
         },
         {
           abi: klimaFairLaunchAbi as AbiFunction[],

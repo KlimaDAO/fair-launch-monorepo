@@ -46,7 +46,7 @@ const Page = async () => {
   }
 
   const [
-    ,
+    prestakingWindow,
     startTimestamp,
     burnRatio,
     totalSupply,
@@ -147,7 +147,9 @@ const Page = async () => {
       <div className={styles.twoCols}>
         <div className={styles.titleContainer}>
           <h1 className={styles.title}>My Rewards</h1>
-          <PhaseBadge startTimestamp={String(startTimestamp.result)} />
+          <PhaseBadge
+            prestakingWindow={Number(prestakingWindow.result)}
+            startTimestamp={Number(startTimestamp.result)} />
         </div>
         <StakeDialog />
         {walletAddress &&

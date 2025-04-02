@@ -8,13 +8,19 @@ const threeDaysInSeconds = 259200;
 const oneWeekInSeconds = 604800;
 const twoWeeksInSeconds = 1209600;
 
-export const PhaseBadge: FC<{ startTimestamp: string }> = ({ startTimestamp }) => {
+type Props = {
+  startTimestamp: number;
+  prestakingWindow: number;
+}
+
+export const PhaseBadge: FC<Props> = ({ prestakingWindow, startTimestamp }) => {
 
   let phaseLabel = '';
   const currentTimestamp = Math.floor(Date.now() / 1000);
-  const elapsedTime = Number(currentTimestamp) - Number(startTimestamp);
+  const adjustedPrestakingWindow = prestakingWindow - threeDaysInSeconds;
+  const prestakingEndTimestamp = startTimestamp + adjustedPrestakingWindow;
 
-  if (elapsedTime < threeDaysInSeconds) {
+  if (currentTimestamp >= startTimestamp && currentTimestamp < prestakingEndTimestamp) {
     phaseLabel = "Pre-stake Period ACTIVE";
   } else if (
     currentTimestamp < Number(startTimestamp) ||
