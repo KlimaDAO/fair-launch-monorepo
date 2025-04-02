@@ -368,6 +368,7 @@ export const LeaderboardsTable = <T extends Data>(props: Props<T>) => {
             )}
           </>
         )}
+        {props.showPagination && <div className={styles.updatedText}>Updated every 15 minutes</div>}
       </div>
 
       <div
@@ -439,68 +440,72 @@ export const LeaderboardsTable = <T extends Data>(props: Props<T>) => {
             )}
           </tbody>
         </table>
+
         {props.showPagination && table.getRowModel().rows.length ? (
-          <div className={styles.pagination}>
-            <div>
-              <div className={styles.paginationText}>
-                Showing{" "}
-                {table.getState().pagination.pageIndex * pagination.pageSize +
-                  1}{" "}
-                to{" "}
-                {Math.min(
-                  (table.getState().pagination.pageIndex + 1) *
-                  pagination.pageSize,
-                  table.getRowCount()
-                )}{" "}
-                of {table.getRowCount().toLocaleString()} results
+          <>
+            <div className={styles.pagination}>
+              <div>
+                <div className={styles.paginationText}>
+                  Showing{" "}
+                  {table.getState().pagination.pageIndex * pagination.pageSize +
+                    1}{" "}
+                  to{" "}
+                  {Math.min(
+                    (table.getState().pagination.pageIndex + 1) *
+                    pagination.pageSize,
+                    table.getRowCount()
+                  )}{" "}
+                  of {table.getRowCount().toLocaleString()} results
+                </div>
+              </div>
+              <div className={styles.paginationButtons}>
+                <button
+                  className={styles.paginationButton}
+                  onClick={() => table.previousPage()}
+                  disabled={!table.getCanPreviousPage()}
+                >
+                  <MdKeyboardArrowLeft fontSize="2rem" />
+                </button>
+                {Array.from(
+                  {
+                    length: Math.ceil(table.getRowCount() / pagination.pageSize),
+                  },
+                  (_, index) => index + 1
+                )
+                  .map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => table.setPageIndex(page - 1)}
+                      className={clsx(styles.paginationButton, {
+                        [styles.active]:
+                          page === table.getState().pagination.pageIndex + 1,
+                      })}
+                    >
+                      {page}
+                    </button>
+                  ))
+                  .reduce((acc, curr, index, array) => {
+                    if (
+                      index > 0 &&
+                      index < array.length - 1 &&
+                      curr.props.children - array[index - 1].props.children > 1
+                    ) {
+                      acc.push(<span key={`ellipsis-${index}`}>...</span>);
+                    }
+                    acc.push(curr);
+                    return acc;
+                  }, [] as React.ReactNode[])}
+                <button
+                  className={styles.paginationButton}
+                  onClick={() => table.nextPage()}
+                  disabled={!table.getCanNextPage()}
+                >
+                  <MdKeyboardArrowRight fontSize="2rem" />
+                </button>
               </div>
             </div>
-            <div className={styles.paginationButtons}>
-              <button
-                className={styles.paginationButton}
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-              >
-                <MdKeyboardArrowLeft fontSize="2rem" />
-              </button>
-              {Array.from(
-                {
-                  length: Math.ceil(table.getRowCount() / pagination.pageSize),
-                },
-                (_, index) => index + 1
-              )
-                .map((page) => (
-                  <button
-                    key={page}
-                    onClick={() => table.setPageIndex(page - 1)}
-                    className={clsx(styles.paginationButton, {
-                      [styles.active]:
-                        page === table.getState().pagination.pageIndex + 1,
-                    })}
-                  >
-                    {page}
-                  </button>
-                ))
-                .reduce((acc, curr, index, array) => {
-                  if (
-                    index > 0 &&
-                    index < array.length - 1 &&
-                    curr.props.children - array[index - 1].props.children > 1
-                  ) {
-                    acc.push(<span key={`ellipsis-${index}`}>...</span>);
-                  }
-                  acc.push(curr);
-                  return acc;
-                }, [] as React.ReactNode[])}
-              <button
-                className={styles.paginationButton}
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-              >
-                <MdKeyboardArrowRight fontSize="2rem" />
-              </button>
-            </div>
-          </div>
+            <div className={styles.updatedText}>Updated every 15 minutes</div>
+          </>
         ) : null}
       </div>
     </>

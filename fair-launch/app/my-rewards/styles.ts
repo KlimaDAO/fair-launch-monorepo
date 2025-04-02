@@ -146,7 +146,6 @@ export const leaderboardLink = css({
   fontSize: 'sm',
   lineHeight: 'sm',
   fontWeight: 400,
-  marginTop: '1.2rem',
   width: 'fit-content',
   color: 'green.70 !important',
   textDecoration: 'underline',
@@ -203,4 +202,15 @@ export const stakeHistoryContainer = css({
     alignItems: 'center', 
     gap: '0.8rem'
   }
+});
+
+export const leaderboardFooter = css({
+  display: 'flex',
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  fontSize: 'xs',
+  color: 'void.60',
+  fontWeight: 400,
+  marginTop: '1.2rem',
 });

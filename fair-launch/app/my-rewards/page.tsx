@@ -235,9 +235,12 @@ const Page = async () => {
       <div className={styles.twoCols}>
         <Card>
           <LeaderboardsTable pageSize={5} />
-          <Link className={styles.leaderboardLink} href="/protocol">
-            View full leaderboard
-          </Link>
+          <div className={styles.leaderboardFooter}>
+            <div>Updated every 15 minutes</div>
+            <Link className={styles.leaderboardLink} href="/protocol">
+              View full leaderboard
+            </Link>
+          </div>
         </Card>
         <Card>
           <div

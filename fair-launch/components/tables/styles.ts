@@ -162,3 +162,17 @@ export const active = css({
   backgroundColor: 'void.80',
   color: 'white',
 });
+
+export const updatedText = css({
+  marginTop: '0.8rem',
+  fontSize: 'xs',
+  color: 'void.60',
+  fontWeight: 400,
+  textAlign: 'center',
+  width: '100%',
+
+  lg: {
+    textAlign: 'left',
+    marginTop: '2rem',
+  }
+});
