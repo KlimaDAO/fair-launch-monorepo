@@ -260,7 +260,7 @@ const Page = async () => {
                 My KlimaX Allocation Value At:
               </div>
             </div>
-            <Tooltip content="If more users stake and earn points, your individual share of the KLIMAx allocation may decrease. The projections below are based on your current share percentage.">
+            <Tooltip content="If more users stake and earn points, your individual share of the KlimaX allocation may decrease. The projections below are based on your current share percentage.">
               <MdHelpOutline className={styles.klimaXHelp} />
             </Tooltip>
           </div>

@@ -122,7 +122,7 @@ export const UnstakeDialog: FC<Props> = ({
       const amountToTake = Math.min(formatted, remainingAmount);
       const burnForStake = await calculateUnstakePenalty(
         parseUnits(amountToTake.toString(), 9),
-        startTimestamp
+        stake.stakeStartTime.toString()
       );
 
       totalUnstake += amountToTake;
