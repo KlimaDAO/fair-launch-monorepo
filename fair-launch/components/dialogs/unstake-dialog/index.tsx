@@ -190,7 +190,7 @@ export const UnstakeDialog: FC<Props> = ({
           you unstake now, you’ll not only lose out on some KLIMA through{" "}
           <Link
             target="_blank"
-            href="https://github.com/KlimaDAO/klimadao-docs/blob/main/klima%202.0/KlimaDAO%20-%20Klima%202.0%20-%20Fair%20Launch%20FAQ%20-%20February%2021%2C%202025.md#burn-calculation"
+            href="https://github.com/KlimaDAO/klimadao-docs/blob/main/klima%202.0/KlimaDAO%20-%20Klima%202.0%20-%20Fair%20Launch%20FAQ%20-%20April%201%2C%202025.md#burn-calculation"
           >
             the burn mechanism
           </Link>
@@ -341,7 +341,7 @@ export const UnstakeDialog: FC<Props> = ({
             <div>
               You will still get to keep the points and KlimaX you've accrued.
             </div>
-            <Link href="/">Learn more about burning KLIMA.</Link>
+            <Link target="_blank" href="https://github.com/KlimaDAO/klimadao-docs/blob/main/klima%202.0/KlimaDAO%20-%20Klima%202.0%20-%20Fair%20Launch%20FAQ%20-%20April%201%2C%202025.md#burn-calculation">Learn more about burning KLIMA.</Link>
           </div>
         )}
       />
