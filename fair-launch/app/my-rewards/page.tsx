@@ -257,10 +257,10 @@ const Page = async () => {
             <div className={styles.klimaXTitle}>
               <Image src={gklimaLogo} alt="Klima Logo" />
               <div className={styles.cardTitle}>
-                KlimaX Allocation Value at:
+                My KlimaX Allocation Value At:
               </div>
             </div>
-            <Tooltip content="As the value of KLIMA increases, so does your projected allocation. However, as the number of stakes increases, your overall share of KLIMA will naturally decrease.">
+            <Tooltip content="If more users stake and earn points, your individual share of the KLIMAx allocation may decrease. The projections below are based on your current share percentage.">
               <MdHelpOutline className={styles.klimaXHelp} />
             </Tooltip>
           </div>
