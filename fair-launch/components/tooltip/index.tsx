@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import type { FC } from 'react';
 import { Tooltip as TooltipPrimitive } from "radix-ui";
-import { useState } from 'react';
-import * as styles from './styles';
+import type { FC } from "react";
+import { useState } from "react";
+import * as styles from "./styles";
 
 interface Props {
   open?: boolean;
@@ -15,10 +15,10 @@ interface Props {
 
 export const Tooltip: FC<Props> = (props) => {
   const { open, defaultOpen, onOpenChange, children, content, ...rest } = props;
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <TooltipPrimitive.Provider delayDuration={10} >
+    <TooltipPrimitive.Provider delayDuration={10}>
       <TooltipPrimitive.Root
         open={isOpen}
         defaultOpen={defaultOpen}

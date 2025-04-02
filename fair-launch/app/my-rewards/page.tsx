@@ -1,10 +1,11 @@
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
 import { getContractConstants } from "@actions/contract-reads-action";
-import { PhaseBadge } from "@components/phase-badge";
 import { Card } from "@components/card";
 import { StakeDialog } from "@components/dialogs/stake-dialog";
 import { UnstakeDialog } from "@components/dialogs/unstake-dialog";
 import { Notification } from "@components/notification";
+import { PhaseBadge } from "@components/phase-badge";
+import { KlimaXAllocationTable } from "@components/tables/klimax-allocation";
 import { LeaderboardsTable } from "@components/tables/leaderboards";
 import { StakesTable } from "@components/tables/stakes";
 import { Tooltip } from "@components/tooltip";
@@ -17,7 +18,11 @@ import {
   getKlimaXSupply,
   totalUserStakes,
 } from "@utils/contract";
-import { formatLargeNumber, formatNumber, truncateAddress } from "@utils/formatting";
+import {
+  formatLargeNumber,
+  formatNumber,
+  truncateAddress,
+} from "@utils/formatting";
 import { config } from "@utils/wagmi.server";
 import { readContracts } from "@wagmi/core";
 import { headers } from "next/headers";
@@ -25,7 +30,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { MdHelpOutline } from "react-icons/md";
 import { AbiFunction, formatUnits, parseUnits } from "viem";
-import { KlimaXAllocationTable } from "@components/tables/klimax-allocation";
 import { cookieToInitialState } from "wagmi";
 import * as styles from "./styles";
 
@@ -55,11 +59,11 @@ const Page = async () => {
     previewUserPoints,
     userStakeCount,
     burnDistributionPrecision,
-    pointsScaleDenominator
+    pointsScaleDenominator,
   ] = contractConstants;
 
   const klimaXSupply = await getKlimaXSupply();
-  const stakes = new Array(Number(userStakeCount.result)).fill('');
+  const stakes = new Array(Number(userStakeCount.result)).fill("");
   // todo - move this to an action or util?
   const userStakes = await readContracts(config, {
     contracts: stakes.map((_, index) => ({
@@ -67,7 +71,7 @@ const Page = async () => {
       address: FAIR_LAUNCH_CONTRACT_ADDRESS,
       functionName: "userStakes",
       args: [walletAddress, index],
-    }))
+    })),
   }).then((stakes) =>
     stakes.map(async ({ result }) => {
       let [
@@ -90,8 +94,12 @@ const Page = async () => {
       const timeElapsedDays = elapsedTime / 86400;
 
       const totalKlimaXSupply = formatUnits(BigInt(klimaXSupply), 9);
-      const growthFactor = Math.exp(Number(growthRate.result) * timeElapsedDays - 1e18);
-      const basePoints = (BigInt(amount) * (parseUnits(bonusMultiplier.toString(), 18))) / (BigInt(100) * pointsScaleDenominator.result!);
+      const growthFactor = Math.exp(
+        Number(growthRate.result) * timeElapsedDays - 1e18
+      );
+      const basePoints =
+        (BigInt(amount) * parseUnits(bonusMultiplier.toString(), 18)) /
+        (BigInt(100) * pointsScaleDenominator.result!);
       const newPoints = BigInt(basePoints) * BigInt(growthFactor);
       let updatedPoints = newPoints + BigInt(organicPoints);
 
@@ -99,7 +107,8 @@ const Page = async () => {
         BigInt(burnRatio.result!) - BigInt(burnRatioSnapshot);
       if (burnRatioDiff > 0) {
         const newBurnAccrual =
-          (BigInt(organicPoints) * burnRatioDiff) / burnDistributionPrecision.result!;
+          (BigInt(organicPoints) * burnRatioDiff) /
+          burnDistributionPrecision.result!;
         burnAccrued = BigInt(burnAccrued) + BigInt(newBurnAccrual);
       }
       updatedPoints = updatedPoints + burnAccrued;
@@ -121,7 +130,7 @@ const Page = async () => {
         klimaxAllocation,
         burnValue,
         burnPercentage,
-      }
+      };
     })
   );
 
@@ -149,15 +158,16 @@ const Page = async () => {
           <h1 className={styles.title}>My Rewards</h1>
           <PhaseBadge
             prestakingWindow={Number(prestakingWindow.result)}
-            startTimestamp={Number(startTimestamp.result)} />
+            startTimestamp={Number(startTimestamp.result)}
+          />
         </div>
         <StakeDialog />
-        {walletAddress &&
+        {walletAddress && (
           <div className={styles.walletAddress}>
             Your Wallet Address:
             <span>{truncateAddress(walletAddress as string)}</span>
           </div>
-        }
+        )}
       </div>
       <div className={styles.card}>
         <div className={styles.cardInner}>
@@ -195,17 +205,14 @@ const Page = async () => {
           <div className={styles.cardContents}>
             <div id="step2" className={styles.mainText}>
               {formatLargeNumber(
-                Number(
-                  formatUnits(BigInt((previewUserPoints.result) || 0), 18)
-                ))}
+                Number(formatUnits(BigInt(previewUserPoints.result || 0), 18))
+              )}
             </div>
             <div className={styles.secondaryText}>
               <strong>&lt;{totalPointsPercentage.toFixed(2)}%</strong> of{" "}
               <strong>
                 {formatLargeNumber(
-                  Number(
-                    formatUnits(BigInt((getTotalPoints.result) || 0), 18)
-                  )
+                  Number(formatUnits(BigInt(getTotalPoints.result || 0), 18))
                 )}
               </strong>
             </div>
@@ -215,7 +222,9 @@ const Page = async () => {
 
       <Card>
         <div className={styles.stakeHistoryContainer}>
-          <h5 className={styles.cardTitle} id="step3">Stake History</h5>
+          <h5 className={styles.cardTitle} id="step3">
+            Stake History
+          </h5>
           <div>
             {allUserStakes.length > 0 && (
               <UnstakeDialog

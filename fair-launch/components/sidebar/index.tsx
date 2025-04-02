@@ -1,21 +1,21 @@
-'use client';
+"use client";
 
-import clsx from 'clsx';
-import type { FC } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import klimaLogo from "@public/kp-logo.svg";
-import { usePathname, useRouter } from 'next/navigation';
-import { IoTrophySharp } from "react-icons/io5";
 import { IntroWalkthrough } from "@components/intro-walkthrough";
-import { truncateAddress } from '@utils/formatting';
+import klimaLogo from "@public/kp-logo.svg";
+import { truncateAddress } from "@utils/formatting";
+import clsx from "clsx";
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import type { FC } from "react";
+import { IoTrophySharp } from "react-icons/io5";
 import { MdDashboard, MdLogout } from "react-icons/md";
 import { useAccount, useDisconnect } from "wagmi";
-import * as styles from './styles';
+import * as styles from "./styles";
 
 const navLinks = [
-  { href: '/my-rewards', icon: <IoTrophySharp />, label: 'My Rewards' },
-  { href: '/protocol', icon: <MdDashboard />, label: 'Protocol' },
+  { href: "/my-rewards", icon: <IoTrophySharp />, label: "My Rewards" },
+  { href: "/protocol", icon: <MdDashboard />, label: "Protocol" },
 ];
 
 export const Sidebar: FC = () => {
@@ -27,7 +27,7 @@ export const Sidebar: FC = () => {
   const handleLogout = async () => {
     await disconnect();
     setTimeout(() => {
-      router.push('/');
+      router.push("/");
     }, 100);
   };
 
@@ -36,25 +36,24 @@ export const Sidebar: FC = () => {
       <Image src={klimaLogo} alt="Klima Protocol Logo" />
       <div className={styles.titleContainer}>
         <p className={styles.title}>Fair Launch 2025</p>
-        {address &&
+        {address && (
           <div className={styles.walletAddress}>
             Your Wallet Address:
             <span>{truncateAddress(address as string)}</span>
           </div>
-        }
+        )}
       </div>
       <div className={styles.navLinks}>
         {navLinks.map((link) => (
           <Link
             key={link.href}
             href={link.href}
-            id={link.href === '/protocol' ? 'step5' : ''}
-            className={
-              clsx(
-                styles.navLink,
-                pathname === link.href && styles.activeLink
-              )
-            }>
+            id={link.href === "/protocol" ? "step5" : ""}
+            className={clsx(
+              styles.navLink,
+              pathname === link.href && styles.activeLink
+            )}
+          >
             {link.icon}
             {link.label}
           </Link>
@@ -63,14 +62,12 @@ export const Sidebar: FC = () => {
       <div className={styles.sidebarFooter}>
         <IntroWalkthrough />
         {address && (
-          <button
-            onClick={handleLogout}
-            className={styles.logoutButton}>
+          <button onClick={handleLogout} className={styles.logoutButton}>
             <MdLogout />
             <span>Logout</span>
           </button>
         )}
       </div>
     </div>
-  )
-};  
+  );
+};

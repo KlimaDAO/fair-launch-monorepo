@@ -6,7 +6,11 @@ import {
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { formatLargeNumber, formatNumber, formatTimestamp } from "@utils/formatting";
+import {
+  formatLargeNumber,
+  formatNumber,
+  formatTimestamp,
+} from "@utils/formatting";
 import clsx from "clsx";
 import { useMemo } from "react";
 import { css } from "styled-system/css";
@@ -34,7 +38,6 @@ export const StakesTable = <T extends StakeData>({
   data,
   totalStaked,
 }: Props<T>) => {
-
   const columns: ColumnDef<T>[] = useMemo(
     () => [
       {
@@ -52,7 +55,9 @@ export const StakesTable = <T extends StakeData>({
         header: "KLIMA Staked",
         cell: ({ getValue }) => {
           const value = getValue();
-          return <>{formatNumber(formatUnits(BigInt(value as string), 9), 4)}</>;
+          return (
+            <>{formatNumber(formatUnits(BigInt(value as string), 9), 4)}</>
+          );
         },
       },
       {
@@ -60,7 +65,13 @@ export const StakesTable = <T extends StakeData>({
         header: "Points",
         cell: ({ row }) => {
           const points = row.original.points;
-          return <>{formatLargeNumber(Number(formatUnits(BigInt(points as string), 18)))}</>;
+          return (
+            <>
+              {formatLargeNumber(
+                Number(formatUnits(BigInt(points as string), 18))
+              )}
+            </>
+          );
         },
       },
       {
@@ -92,14 +103,24 @@ export const StakesTable = <T extends StakeData>({
         header: "KlimaX Allocation",
         cell: ({ row }) => {
           const klimaxAllocation = row.original.klimaxAllocation;
-          const formatted = Number(formatUnits(BigInt(klimaxAllocation as string), 9));
+          const formatted = Number(
+            formatUnits(BigInt(klimaxAllocation as string), 9)
+          );
           if (formatted < 1000) {
-            return <><strong>{formatNumber(formatted, 3)}</strong> KlimaX</>;
+            return (
+              <>
+                <strong>{formatNumber(formatted, 3)}</strong> KlimaX
+              </>
+            );
           } else {
-            return <><strong>{formatLargeNumber(formatted)}</strong> KlimaX</>;
+            return (
+              <>
+                <strong>{formatLargeNumber(formatted)}</strong> KlimaX
+              </>
+            );
           }
         },
-      }
+      },
     ],
     [totalStaked]
   );
@@ -118,7 +139,6 @@ export const StakesTable = <T extends StakeData>({
             {table.getRowModel().rows.map((row) => (
               <div
                 key={row.id}
-
                 style={{
                   display: "flex",
                   flexDirection: "column",

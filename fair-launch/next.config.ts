@@ -1,9 +1,9 @@
-import type { NextConfig } from 'next'
+import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   experimental: {
-    useCache: true
+    useCache: true,
   },
   async headers() {
     return [
@@ -39,7 +39,7 @@ const nextConfig: NextConfig = {
     ];
   },
   webpack: (config) => {
-    config.externals.push('pino-pretty', 'lokijs', 'encoding');
+    config.externals.push("pino-pretty", "lokijs", "encoding");
     return config;
   },
 };

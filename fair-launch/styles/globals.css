@@ -112,7 +112,7 @@ a {
   color: #fff !important;
 }
 
-.driver-popover-navigation-btns button+button {
+.driver-popover-navigation-btns button + button {
   margin-left: 0 !important;
 }
 

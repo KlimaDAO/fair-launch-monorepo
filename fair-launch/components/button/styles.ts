@@ -1,22 +1,18 @@
-import { cva } from '../../styled-system/css';
+import { cva } from "../../styled-system/css";
 
 export const buttonVariants = cva({
   base: {
-    display: 'inline-flex',
-    justifyContent: 'center',
+    display: "inline-flex",
+    justifyContent: "center",
   },
   variants: {
     variant: {
-      default: {
-
-      },
+      default: {},
       destructive: {
-
         // "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
       },
       outline: {
         // "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
-
       },
       secondary: {
         // "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
@@ -26,7 +22,7 @@ export const buttonVariants = cva({
       },
       link: {
         // "text-primary underline-offset-4 hover:underline",
-      }
+      },
     },
     size: {
       default: {
@@ -40,12 +36,11 @@ export const buttonVariants = cva({
       },
       icon: {
         // "h-9 w-9",
-      }
+      },
     },
   },
   defaultVariants: {
     variant: "default",
     size: "default",
   },
-}
-)
+});

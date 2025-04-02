@@ -47,12 +47,15 @@ export const KlimaXAllocationTable = <T extends Data>(props: Props) => {
     columns,
     getCoreRowModel: getCoreRowModel(),
     data: marketCapList.map((marketCap) => {
-      const fortyPercentMarketCap = (BigInt(marketCap) * BigInt(40)) / BigInt(100);
-      const userShareValue = (fortyPercentMarketCap * BigInt(props.userPoints)) / BigInt(props.totalPoints);
+      const fortyPercentMarketCap =
+        (BigInt(marketCap) * BigInt(40)) / BigInt(100);
+      const userShareValue =
+        (fortyPercentMarketCap * BigInt(props.userPoints)) /
+        BigInt(props.totalPoints);
       return {
         marketCap,
         projectedValue: Number(userShareValue),
-      }
+      };
     }) as T[],
   });
 
@@ -163,12 +166,7 @@ export const KlimaXAllocationTable = <T extends Data>(props: Props) => {
                 {table.getRowModel().rows.map((row) => (
                   <tr key={row.id}>
                     {row.getVisibleCells().map((cell) => (
-                      <td
-                        className={
-                          styles.tableCell
-                        }
-                        key={cell.id}
-                      >
+                      <td className={styles.tableCell} key={cell.id}>
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext()

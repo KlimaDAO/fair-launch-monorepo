@@ -1,22 +1,21 @@
-'use client';
+"use client";
 
-import { useState, type FC } from "react";
-import Image from "next/image";
+import { IntroWalkthrough } from "@components/intro-walkthrough";
 import klimaLogo from "@public/kp-logo.svg";
+import clsx from "clsx";
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useState, type FC } from "react";
+import { IoTrophySharp } from "react-icons/io5";
 import { LuMenu } from "react-icons/lu";
 import { MdClose, MdDashboard, MdLogout } from "react-icons/md";
 import { useAccount, useDisconnect } from "wagmi";
-import { usePathname, useRouter } from "next/navigation";
-import { IoTrophySharp } from "react-icons/io5";
-import Link from "next/link";
-import clsx from 'clsx';
-import * as styles from './styles';
-import { IntroWalkthrough } from "@components/intro-walkthrough";
-import { Portal } from "radix-ui";
+import * as styles from "./styles";
 
 const navLinks = [
-  { href: '/my-rewards', icon: <IoTrophySharp />, label: 'My Rewards' },
-  { href: '/protocol', icon: <MdDashboard />, label: 'Protocol' },
+  { href: "/my-rewards", icon: <IoTrophySharp />, label: "My Rewards" },
+  { href: "/protocol", icon: <MdDashboard />, label: "Protocol" },
 ];
 
 export const Navbar: FC = () => {
@@ -31,7 +30,7 @@ export const Navbar: FC = () => {
     await disconnect();
     setIsMenuOpen(!isMenuOpen);
     setTimeout(() => {
-      router.push('/');
+      router.push("/");
     }, 100);
   };
 
@@ -45,7 +44,7 @@ export const Navbar: FC = () => {
       setIsMenuOpen(!isMenuOpen);
       setStartWalkthrough(false);
     }, 1);
-  }
+  };
 
   return (
     <div className={styles.navbar}>
@@ -53,7 +52,11 @@ export const Navbar: FC = () => {
       <div className={styles.menuContainer}>
         {address && (
           <button onClick={toggleMenu}>
-            {isMenuOpen ? <MdClose className={styles.menuIcon} /> : <LuMenu className={styles.menuIcon} />}
+            {isMenuOpen ? (
+              <MdClose className={styles.menuIcon} />
+            ) : (
+              <LuMenu className={styles.menuIcon} />
+            )}
           </button>
         )}
       </div>
@@ -64,13 +67,12 @@ export const Navbar: FC = () => {
               <Link
                 key={link.href}
                 href={link.href}
-                id={link.href === '/protocol' ? 'step5' : ''}
-                className={
-                  clsx(
-                    styles.navLink,
-                    pathname === link.href && styles.activeLink
-                  )
-                }>
+                id={link.href === "/protocol" ? "step5" : ""}
+                className={clsx(
+                  styles.navLink,
+                  pathname === link.href && styles.activeLink
+                )}
+              >
                 {link.icon}
                 {link.label}
               </Link>
@@ -81,10 +83,7 @@ export const Navbar: FC = () => {
               <IntroWalkthrough startWalkthrough={startWalkthrough} />
             </div>
             {address && (
-              <button
-                onClick={handleLogout}
-                className={styles.logoutButton}
-              >
+              <button onClick={handleLogout} className={styles.logoutButton}>
                 <MdLogout />
                 <span>Logout</span>
               </button>
@@ -93,5 +92,5 @@ export const Navbar: FC = () => {
         </div>
       )}
     </div>
-  )
+  );
 };

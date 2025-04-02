@@ -28,7 +28,7 @@ export const icon = css({
 });
 
 export const content = css({
-  width: '100%',
+  width: "100%",
   cursor: "pointer",
   overflow: "hidden",
   backgroundColor: "white",
@@ -44,7 +44,7 @@ export const content = css({
 
   lg: {
     width: "var(--radix-select-trigger-width)",
-  }
+  },
 });
 
 export const viewport = css({

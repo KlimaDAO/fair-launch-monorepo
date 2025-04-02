@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import type { FC } from 'react';
-import { driver } from 'driver.js';
-import { TourDialog } from '@components/dialogs/tour-dialog';
-import { useEffect } from 'react';
+import { TourDialog } from "@components/dialogs/tour-dialog";
+import { driver } from "driver.js";
+import type { FC } from "react";
+import { useEffect } from "react";
 
 interface Props {
   onOpen?: (open: boolean) => void;
@@ -11,7 +11,6 @@ interface Props {
 }
 
 export const IntroWalkthrough: FC<Props> = (props) => {
-
   useEffect(() => {
     if (props.startWalkthrough) {
       handleWalkthrough();
@@ -25,13 +24,13 @@ export const IntroWalkthrough: FC<Props> = (props) => {
       allowClose: false,
       steps: [
         {
-          element: '#step1',
+          element: "#step1",
           popover: {
             side: "bottom",
             align: "end",
-            showButtons: ['next', 'close'],
+            showButtons: ["next", "close"],
             progressText: `Step 2/6`,
-            nextBtnText: 'Next',
+            nextBtnText: "Next",
             description: `
               <div style="display:flex;flex-direction:column;gap:10px;color:#fff;font-family:var(--font-inter);">
                 <div style="font-size:12px;font-weight:400;">
@@ -41,18 +40,18 @@ export const IntroWalkthrough: FC<Props> = (props) => {
                   Staking is the only way to acquire KlimaX, which we’ll explain in a moment.
                 </div>
               </div>
-            `
+            `,
           },
         },
         {
-          element: '#step2',
+          element: "#step2",
           popover: {
             side: "bottom",
             align: "end",
-            showButtons: ['previous', 'next', 'close'],
+            showButtons: ["previous", "next", "close"],
             progressText: `Step 3/6`,
-            nextBtnText: 'Next',
-            prevBtnText: 'Back',
+            nextBtnText: "Next",
+            prevBtnText: "Back",
             description: `
                 <div style="display:flex;flex-direction:column;gap:10px;color:#fff;font-family:var(--font-inter);">
                   <div style="font-size:12px;font-weight:400;">
@@ -62,36 +61,36 @@ export const IntroWalkthrough: FC<Props> = (props) => {
                     At the end of our Fair Launch period, you’ll receive a share of our new token, KlimaX, based on how many points you’ve earned. You’ll also receive an allocation of our improved flagship token, KLIMA.
                   </div>
                 </div>
-              `
+              `,
           },
         },
         {
-          element: '#step3',
+          element: "#step3",
           popover: {
             side: "bottom",
             align: "center",
-            showButtons: ['previous', 'next', 'close'],
+            showButtons: ["previous", "next", "close"],
             progressText: `Step 4/6`,
-            nextBtnText: 'Next',
-            prevBtnText: 'Back',
+            nextBtnText: "Next",
+            prevBtnText: "Back",
             description: `
               <div style="display:flex;flex-direction:column;gap:10px;color:#fff;font-family:var(--font-inter);">
                 <div style="font-size:12px;font-weight:400;">
                   The table "Stake History" shows you each time you’ve staked, and what rewards you’ve earned from that stake.
                 </div>
               </div>
-              `
+              `,
           },
         },
         {
-          element: '#step4',
+          element: "#step4",
           popover: {
             side: "bottom",
             align: "end",
-            showButtons: ['previous', 'next', 'close'],
+            showButtons: ["previous", "next", "close"],
             progressText: `Step 5/6`,
-            nextBtnText: 'Next',
-            prevBtnText: 'Back',
+            nextBtnText: "Next",
+            prevBtnText: "Back",
             description: `
                 <div style="display:flex;flex-direction:column;gap:10px;color:#fff;font-family:var(--font-inter);">
                   <div style="font-size:12px;font-weight:400;">
@@ -101,18 +100,18 @@ export const IntroWalkthrough: FC<Props> = (props) => {
                     The KlimaX you hold can vote to influence KLIMA's carbon purchasing decisions. Votes provide real-time market data that influences the protocol's pricing of carbon credits.
                   </div>
                 </div>
-              `
+              `,
           },
         },
         {
-          element: '#step5',
+          element: "#step5",
           popover: {
             side: "right",
             align: "start",
-            showButtons: ['previous', 'next', 'close'],
+            showButtons: ["previous", "next", "close"],
             progressText: `Step 6/6`,
-            nextBtnText: 'Finish',
-            prevBtnText: 'Back',
+            nextBtnText: "Finish",
+            prevBtnText: "Back",
             description: `
                 <div style="display:flex;flex-direction:column;gap:10px;color:#fff;font-family:var(--font-inter);">
                   <div style="font-size:12px;font-weight:400;">
@@ -125,13 +124,13 @@ export const IntroWalkthrough: FC<Props> = (props) => {
                     You can learn more about Klima 2.0 by <a style="text-decoration:underline;" href="https://github.com/KlimaDAO/klimadao-docs/blob/main/klima%202.0/Klima%202.0%20-%20Whitepaper%20-%20March%2025%2C%202025.pdf" target="_blank" rel="noopener noreferrer">downloading our whitepaper</a>.
                   </div>
                 </div>
-              `
+              `,
           },
         },
-      ]
+      ],
     });
     driverObj.drive();
-  }
+  };
 
   return (
     <TourDialog

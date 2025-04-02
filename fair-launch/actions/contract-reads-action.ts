@@ -1,10 +1,13 @@
-'use server';
+"use server";
 
-import { readContracts } from "@wagmi/core";
 import { abi as erc20Abi } from "@abi/erc20";
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
-import { FAIR_LAUNCH_CONTRACT_ADDRESS, KLIMA_V0_TOKEN_ADDRESS } from "@utils/constants";
+import {
+  FAIR_LAUNCH_CONTRACT_ADDRESS,
+  KLIMA_V0_TOKEN_ADDRESS,
+} from "@utils/constants";
 import { config } from "@utils/wagmi.server";
+import { readContracts } from "@wagmi/core";
 import { AbiFunction } from "viem";
 
 export const getContractConstants = async (walletAddress: string) => {
@@ -62,10 +65,10 @@ export const getContractConstants = async (walletAddress: string) => {
           abi: klimaFairLaunchAbi as AbiFunction[],
           address: FAIR_LAUNCH_CONTRACT_ADDRESS,
           functionName: "POINTS_SCALE_DENOMINATOR",
-        }
+        },
       ],
     });
   } catch (error) {
-    console.error('error', error);
+    console.error("error", error);
   }
 };

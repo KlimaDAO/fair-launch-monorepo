@@ -24,7 +24,7 @@ export const content = css({
   lg: {
     gap: "2rem",
     padding: "8rem",
-  }
+  },
 });
 
 export const title = css({
@@ -38,7 +38,7 @@ export const title = css({
     lineHeight: "8xl",
     fontWeight: 700,
     textAlign: "left",
-  }
+  },
 });
 
 export const subtitle = css({
@@ -52,7 +52,7 @@ export const subtitle = css({
     lineHeight: "3xl",
     fontWeight: 400,
     textAlign: "left",
-  }
+  },
 });
 
 export const description = css({
@@ -66,7 +66,7 @@ export const description = css({
     fontSize: "xl",
     lineHeight: "xl",
     textAlign: "left",
-  }
+  },
 });
 
 export const learnMore = css({
@@ -80,7 +80,7 @@ export const learnMore = css({
 
   lg: {
     margin: "0",
-  }
+  },
 });
 
 export const backgroundImage = css({

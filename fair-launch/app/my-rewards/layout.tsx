@@ -1,10 +1,10 @@
+import { DisclaimerDialog } from "@components/dialogs/disclaimer-dialog";
 import { Footer } from "@components/footer";
 import { Navbar } from "@components/navbar";
 import { Sidebar } from "@components/sidebar";
 import type { Metadata } from "next";
 import type { FC, ReactNode } from "react";
 import * as styles from "./styles";
-import { DisclaimerDialog } from "@components/dialogs/disclaimer-dialog";
 
 export const metadata: Metadata = {
   title: "Klima Fair Launch dApp - My Rewards",
@@ -21,9 +21,7 @@ const Layout: FC<Props> = (props) => (
     <div className={styles.container}>
       <Sidebar />
       <div className={styles.main}>
-        <div className={styles.content}>
-          {props.children}
-        </div>
+        <div className={styles.content}>{props.children}</div>
         <Footer />
       </div>
     </div>

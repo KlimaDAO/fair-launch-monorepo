@@ -46,9 +46,9 @@ const dropdownItems = [
 ];
 
 const fetchLeaderboard = async () => {
-  const response = await fetch('/api/leaderboards');
+  const response = await fetch("/api/leaderboards");
   if (!response.ok) {
-    throw new Error('Network response was not ok');
+    throw new Error("Network response was not ok");
   }
   return response.json();
 };
@@ -368,7 +368,9 @@ export const LeaderboardsTable = <T extends Data>(props: Props<T>) => {
             )}
           </>
         )}
-        {props.showPagination && <div className={styles.updatedText}>Updated every 15 minutes</div>}
+        {props.showPagination && (
+          <div className={styles.updatedText}>Updated every 15 minutes</div>
+        )}
       </div>
 
       <div
@@ -452,7 +454,7 @@ export const LeaderboardsTable = <T extends Data>(props: Props<T>) => {
                   to{" "}
                   {Math.min(
                     (table.getState().pagination.pageIndex + 1) *
-                    pagination.pageSize,
+                      pagination.pageSize,
                     table.getRowCount()
                   )}{" "}
                   of {table.getRowCount().toLocaleString()} results
@@ -468,7 +470,9 @@ export const LeaderboardsTable = <T extends Data>(props: Props<T>) => {
                 </button>
                 {Array.from(
                   {
-                    length: Math.ceil(table.getRowCount() / pagination.pageSize),
+                    length: Math.ceil(
+                      table.getRowCount() / pagination.pageSize
+                    ),
                   },
                   (_, index) => index + 1
                 )

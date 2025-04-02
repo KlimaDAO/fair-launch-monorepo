@@ -1,9 +1,9 @@
 "use client";
 
-import clsx from "clsx";
-import { css } from "styled-system/css";
-import { useRouter } from "next/navigation";
 import { ConnectButton as ConnectButtonRainbow } from "@rainbow-me/rainbowkit";
+import clsx from "clsx";
+import { useRouter } from "next/navigation";
+import { css } from "styled-system/css";
 import * as styles from "./styles";
 
 export const ConnectButton = () => {
@@ -16,7 +16,7 @@ export const ConnectButton = () => {
         // after successful connection, redirect to /my-rewards
         if (connected && !chain.unsupported) {
           setTimeout(() => {
-            router.push('/my-rewards')
+            router.push("/my-rewards");
           }, 1);
         }
 
@@ -60,16 +60,19 @@ export const ConnectButton = () => {
                   <button
                     type="button"
                     disabled
-                    className={clsx(styles.connectButton, css({
-                      display: "flex",
-                      justifyContent: 'center',
-                      alignItems: "center",
-                      textAlign: 'center',
-                      '&:disabled': {
-                        cursor: 'not-allowed',
-                        opacity: 0.85,
-                      }
-                    }))}
+                    className={clsx(
+                      styles.connectButton,
+                      css({
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        textAlign: "center",
+                        "&:disabled": {
+                          cursor: "not-allowed",
+                          opacity: 0.85,
+                        },
+                      })
+                    )}
                   >
                     Connecting...
                   </button>
@@ -80,5 +83,5 @@ export const ConnectButton = () => {
         );
       }}
     </ConnectButtonRainbow.Custom>
-  )
+  );
 };

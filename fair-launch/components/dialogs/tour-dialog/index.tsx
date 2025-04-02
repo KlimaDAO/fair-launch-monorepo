@@ -1,10 +1,14 @@
-'use client';
+"use client";
 
-import { Dialog } from "radix-ui";
-import { MdOutlineClose, MdHelpOutline, MdOutlineHelpCenter } from "react-icons/md";
-import { type FC, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import * as styles from './styles';
+import { Dialog } from "radix-ui";
+import { type FC, useEffect, useState } from "react";
+import {
+  MdHelpOutline,
+  MdOutlineClose,
+  MdOutlineHelpCenter,
+} from "react-icons/md";
+import * as styles from "./styles";
 
 type InteractOutsideEvent =
   | CustomEvent<{ originalEvent: FocusEvent }>
@@ -26,9 +30,9 @@ export const TourDialog: FC<Props> = ({ onClose, onOpen }) => {
   const handleGetStarted = () => {
     setOpen(false);
     onClose();
-  }
+  };
 
-  if (!pathname.includes('my-rewards')) {
+  if (!pathname.includes("my-rewards")) {
     return null;
   }
 
@@ -45,18 +49,19 @@ export const TourDialog: FC<Props> = ({ onClose, onOpen }) => {
           onInteractOutside={(e: InteractOutsideEvent) => {
             e.preventDefault();
             e.stopPropagation();
-          }}>
+          }}
+        >
           <Dialog.Close>
             <MdOutlineClose className={styles.closeIcon} />
           </Dialog.Close>
           <div className={styles.icon}>
             <MdOutlineHelpCenter />
           </div>
-          <Dialog.Title className={styles.title}>
-            Welcome
-          </Dialog.Title>
+          <Dialog.Title className={styles.title}>Welcome</Dialog.Title>
           <div className={styles.description}>
-            <div>Welcome to the Klima Fair Launch 2025! We’re so glad you’re here.</div>
+            <div>
+              Welcome to the Klima Fair Launch 2025! We’re so glad you’re here.
+            </div>
             <div>Let’s take a quick tour so you know your way around.</div>
           </div>
           <div className={styles.actions}>
@@ -68,5 +73,5 @@ export const TourDialog: FC<Props> = ({ onClose, onOpen }) => {
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
-  )
+  );
 };
