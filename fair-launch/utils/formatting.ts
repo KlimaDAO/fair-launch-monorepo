@@ -35,8 +35,10 @@ export const formatTimestamp = (timestamp: number) => {
  * @param decimals - The number of decimals to format to
  * @returns The formatted token value
  */
-export const formatTokenToValue = (value: number | string | bigint, decimals: number = 9) =>
-  formatUnits(BigInt(value), decimals);
+export const formatTokenToValue = (
+  value: number | string | bigint,
+  decimals: number = 9
+) => formatUnits(BigInt(value), decimals);
 
 /**
  * Formats a token value to a human readable format
@@ -63,11 +65,11 @@ export const truncateAddress = (address: string): string => {
  */
 export const formatLargeNumber = (value: number) => {
   const thresholds = [
-    { limit: 1e15, suffix: 'Q' }, // Quadrillions
-    { limit: 1e12, suffix: 'T' }, // Trillions
-    { limit: 1e9, suffix: 'B' },   // Billions
-    { limit: 1e6, suffix: 'M' },   // Millions
-    { limit: 1e3, suffix: 'k' },   // Thousands
+    { limit: 1e15, suffix: "Q" }, // Quadrillions
+    { limit: 1e12, suffix: "T" }, // Trillions
+    { limit: 1e9, suffix: "B" }, // Billions
+    { limit: 1e6, suffix: "M" }, // Millions
+    { limit: 1e3, suffix: "k" }, // Thousands
   ];
 
   for (const { limit, suffix } of thresholds) {
@@ -79,8 +81,8 @@ export const formatLargeNumber = (value: number) => {
 };
 
 export const formatCurrency = (amount: number, maxDecimals: number = 2) =>
-  new Intl.NumberFormat('en', {
-    style: 'currency',
-    currency: 'USD',
+  new Intl.NumberFormat("en", {
+    style: "currency",
+    currency: "USD",
     maximumFractionDigits: maxDecimals,
   }).format(amount);

@@ -1,4 +1,5 @@
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
+import { Card } from "@components/card";
 import { LeaderboardsTable } from "@components/tables/leaderboards";
 import klimav1Logo from "@public/tokens/klima-v1.svg";
 import {
@@ -13,7 +14,6 @@ import Image from "next/image";
 import { type FC } from "react";
 import { erc20Abi, formatUnits } from "viem";
 import * as styles from "./styles";
-import { Card } from "@components/card";
 
 const Page: FC = async () => {
   const klimaPrice = await fetch(
@@ -83,7 +83,9 @@ const Page: FC = async () => {
         <div className={styles.cardInner}>
           <h5 className={styles.cardTitle}>KLIMA Burned</h5>
           <div className={styles.cardContents}>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.8rem" }}>
+            <div
+              style={{ display: "flex", alignItems: "center", gap: "0.8rem" }}
+            >
               <Image src={klimav1Logo} alt="Klima V1 Logo" />
               <div className={styles.mainText}>
                 {formatNumber(formatUnits(totalBurned, 9), 2)}

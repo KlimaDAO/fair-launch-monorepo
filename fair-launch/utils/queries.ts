@@ -17,7 +17,9 @@ export interface Wallet {
   stakes: Stake[];
 }
 
-export const fetchLeaderboard = async (limit: number = 100): Promise<{ wallets?: Wallet[]; error?: string }> => {
+export const fetchLeaderboard = async (
+  limit: number = 100
+): Promise<{ wallets?: Wallet[]; error?: string }> => {
   try {
     const result = await request(
       SUBGRAPH_URL,
@@ -37,8 +39,8 @@ export const fetchLeaderboard = async (limit: number = 100): Promise<{ wallets?:
     );
     return result || { wallets: [] };
   } catch (error: any) {
-    console.error('Error fetching user stakes:', error);
-    const errorMessage = 'An error occurred while fetching stakes.';
+    console.error("Error fetching user leaderboards:", error);
+    const errorMessage = "An error occurred while fetching leaderboards.";
     return { wallets: [], error: errorMessage };
   }
 };
