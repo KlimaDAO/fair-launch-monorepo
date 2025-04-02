@@ -225,7 +225,6 @@ export const StakesTable = <T extends StakeData>({
                           styles.stakeTableCell
                         )}
                         key={cell.id}
-                        id={rowIndex === 0 && cellIndex === 0 ? "step3" : ""}
                       >
                         {flexRender(
                           cell.column.columnDef.cell,

@@ -29,7 +29,7 @@ export const IntroWalkthrough: FC<Props> = (props) => {
           popover: {
             side: "bottom",
             align: "end",
-            showButtons: ['next'],
+            showButtons: ['next', 'close'],
             progressText: `Step 2/6`,
             nextBtnText: 'Next',
             description: `
@@ -49,7 +49,7 @@ export const IntroWalkthrough: FC<Props> = (props) => {
           popover: {
             side: "bottom",
             align: "end",
-            showButtons: ['previous', 'next'],
+            showButtons: ['previous', 'next', 'close'],
             progressText: `Step 3/6`,
             nextBtnText: 'Next',
             prevBtnText: 'Back',
@@ -70,14 +70,14 @@ export const IntroWalkthrough: FC<Props> = (props) => {
           popover: {
             side: "bottom",
             align: "center",
-            showButtons: ['previous', 'next'],
+            showButtons: ['previous', 'next', 'close'],
             progressText: `Step 4/6`,
             nextBtnText: 'Next',
             prevBtnText: 'Back',
             description: `
               <div style="display:flex;flex-direction:column;gap:10px;color:#fff;font-family:var(--font-inter);">
                 <div style="font-size:12px;font-weight:400;">
-                  This table shows you each time you’ve staked, and what rewards you’ve earned from that stake.
+                  The table "Stake History" shows you each time you’ve staked, and what rewards you’ve earned from that stake.
                 </div>
               </div>
               `
@@ -87,8 +87,8 @@ export const IntroWalkthrough: FC<Props> = (props) => {
           element: '#step4',
           popover: {
             side: "bottom",
-            align: "center",
-            showButtons: ['previous', 'next'],
+            align: "end",
+            showButtons: ['previous', 'next', 'close'],
             progressText: `Step 5/6`,
             nextBtnText: 'Next',
             prevBtnText: 'Back',
@@ -98,7 +98,7 @@ export const IntroWalkthrough: FC<Props> = (props) => {
                     This table also shows you our estimate of how much KlimaX you’ll receive at the end of our Fair Launch.
                   </div>
                   <div style="font-size:12px;font-weight:400;">
-                    The KlimaX you hold can vote to influence KLIMA's carbon purchasing decisions. Votes are real-time market data that allow the protocol to price carbon credits.
+                    The KlimaX you hold can vote to influence KLIMA's carbon purchasing decisions. Votes provide real-time market data that influences the protocol's pricing of carbon credits.
                   </div>
                 </div>
               `
@@ -108,8 +108,8 @@ export const IntroWalkthrough: FC<Props> = (props) => {
           element: '#step5',
           popover: {
             side: "right",
-            align: "center",
-            showButtons: ['previous', 'next'],
+            align: "start",
+            showButtons: ['previous', 'next', 'close'],
             progressText: `Step 6/6`,
             nextBtnText: 'Finish',
             prevBtnText: 'Back',

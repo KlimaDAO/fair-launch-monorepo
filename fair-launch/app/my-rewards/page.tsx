@@ -213,7 +213,7 @@ const Page = async () => {
 
       <Card>
         <div className={styles.stakeHistoryContainer}>
-          <h5 className={styles.cardTitle}>Stake History</h5>
+          <h5 className={styles.cardTitle} id="step3">Stake History</h5>
           <div>
             {allUserStakes.length > 0 && (
               <UnstakeDialog
