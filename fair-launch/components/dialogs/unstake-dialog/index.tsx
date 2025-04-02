@@ -9,6 +9,7 @@ import { FAIR_LAUNCH_CONTRACT_ADDRESS } from "@utils/constants";
 import { calculateUnstakePenalty } from "@utils/contract";
 import { formatNumber, truncateAddress } from "@utils/formatting";
 import clsx from "clsx";
+import sumBy from "lodash/sumBy";
 import Image from "next/image";
 import Link from "next/link";
 import { Dialog } from "radix-ui";
@@ -81,7 +82,7 @@ export const UnstakeDialog: FC<Props> = ({
   };
 
   const handleConfirm = () => {
-    const unstakeAmount = form.getFieldValue('unstake-amount');
+    const unstakeAmount = form.getFieldValue("unstake-amount");
     unstakeContract({
       abi: klimaFairLaunchAbi,
       functionName: "unstake",
@@ -102,55 +103,48 @@ export const UnstakeDialog: FC<Props> = ({
   const generateAllocationInfo = async (amount: string) => {
     if (Number(amount) <= 0) return;
 
-    // let remainingAmount = parseUnits(amount, 9); // Convert amount to the appropriate units
-    // let totalPenalty = 0; // Initialize total penalty
+    const penalties: {
+      stakeIndex: number;
+      amountTaken: number;
+      burnValue: number;
+      receiveAmount: number;
+    }[] = [];
+    let totalUnstake = 0;
+    let totalBurnAmount = 0;
+    const userAmount = Number(amount);
+    let remainingAmount = userAmount;
 
-    // for (const stake of stakes) {
-    //   const stakeAmount = Number(formatUnits(BigInt(stake.amount), 9)); // Assuming stake.amount is in the same units as remainingAmount
-    //   console.log('stakeAmount', stakeAmount);
-    //   console.log('remainingAmount', stakeAmount);
+    for (let i = 0; i < stakes.length; i++) {
+      const stake = stakes[i];
+      if (stake.amount === 0) continue;
 
-    //   if (remainingAmount <= 0) break; // Exit if there's no amount left to process
+      const formatted = Number(formatUnits(BigInt(stake.amount), 9));
+      const amountToTake = Math.min(formatted, remainingAmount);
+      const burnForStake = await calculateUnstakePenalty(
+        parseUnits(amountToTake.toString(), 9),
+        startTimestamp
+      );
 
-    //   // Determine how much to unstake from this stake
-    //   const amountToUnstake = remainingAmount < stakeAmount ? remainingAmount : stakeAmount;
-    //   console.log('amountToUnstake', amountToUnstake);
+      totalUnstake += amountToTake;
+      totalBurnAmount += Number(burnForStake.burnValue);
 
-    //   // Calculate penalty for the amount to unstake
-    //   const penalty = await calculateUnstakePenalty(parseUnits(amount, 9), stake.stakeStartTime);
-    //   console.log('penalty', penalty);
+      penalties.push({
+        stakeIndex: i,
+        amountTaken: amountToTake,
+        burnValue: Number(burnForStake.burnValue),
+        receiveAmount: amountToTake - Number(burnForStake.burnValue),
+      });
 
-    //   // Accumulate the total penalty
-    //   totalPenalty = totalPenalty + Number(penalty.burnValue);
-    //   console.log('totalPenalty', totalPenalty);
-
-    //   // Decrease the remaining amount
-    //   remainingAmount = Number(remainingAmount) - Number(amountToUnstake);
-    // }
-
-    // console.log('Total Penalty:', totalPenalty.toString());
-    // console.log('stakes', stakes);
-
-    // calculate the actual penalty...
-    // stakes.map((stake) => {
-    //   console.log('stkae');
-    // })
-
-    // // if amount passed in is 51:
-    // // stakes[0].amount = 50 -> calculate penalty with startTimestamp and amount 50
-    // // stakes[1].amount = 100 -> calculate penalty with startTimestamp and amount 1
-    // // add them together to get the burnValue...
-
-    // console.log('stakes', stakes);
-    // todo -> cleanup
-    const penalty = await calculateUnstakePenalty(
-      parseUnits(amount, 9),
-      startTimestamp
+      remainingAmount -= amountToTake;
+      if (remainingAmount <= 0) break;
+    }
+    form.setFieldValue(
+      "burn-amount",
+      formatNumber(sumBy(penalties, "burnValue"), 3)
     );
-    form.setFieldValue("burn-amount", formatNumber(penalty.burnValue, 8));
     form.setFieldValue(
       "receive-amount",
-      formatNumber(Number(amount) - Number(penalty.burnValue), 8)
+      formatNumber(sumBy(penalties, "receiveAmount"), 3)
     );
   };
 
@@ -162,14 +156,14 @@ export const UnstakeDialog: FC<Props> = ({
     } else {
       return undefined;
     }
-  }
+  };
 
   useEffect(() => {
     setOpen(false);
     if (submitReceipt?.status === "success") {
       window.localStorage.setItem(
         "unstakeAmount",
-        form.getFieldValue('unstake-amount')
+        form.getFieldValue("unstake-amount")
       );
       window.location.reload();
     }
@@ -227,7 +221,7 @@ export const UnstakeDialog: FC<Props> = ({
         },
         onChange: async ({ value }) => {
           return await generateAllocationInfo(value);
-        }
+        },
       }}
       validators={{
         onMount: ({ value }) => {
@@ -237,7 +231,7 @@ export const UnstakeDialog: FC<Props> = ({
         },
         onChange: ({ value }) => {
           return validateInput(value);
-        }
+        },
       }}
     >
       {(field) => (
