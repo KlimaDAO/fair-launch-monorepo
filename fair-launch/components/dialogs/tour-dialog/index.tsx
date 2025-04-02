@@ -1,7 +1,7 @@
 'use client';
 
 import { Dialog } from "radix-ui";
-import { MdHelpOutline, MdOutlineHelpCenter } from "react-icons/md";
+import { MdOutlineClose, MdHelpOutline, MdOutlineHelpCenter } from "react-icons/md";
 import { type FC, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import * as styles from './styles';
@@ -46,6 +46,9 @@ export const TourDialog: FC<Props> = ({ onClose, onOpen }) => {
             e.preventDefault();
             e.stopPropagation();
           }}>
+          <Dialog.Close>
+            <MdOutlineClose className={styles.closeIcon} />
+          </Dialog.Close>
           <div className={styles.icon}>
             <MdOutlineHelpCenter />
           </div>

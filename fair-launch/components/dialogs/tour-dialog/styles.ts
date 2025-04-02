@@ -115,3 +115,12 @@ export const stepText = css({
   textAlign: 'center',
   color: 'void.80',
 });
+
+export const closeIcon = css({
+  position: 'absolute',
+  top: '1rem',
+  right: '1rem',
+  cursor: 'pointer',
+  fontSize: '1.5rem',
+  fontWeight: 700,
+});
