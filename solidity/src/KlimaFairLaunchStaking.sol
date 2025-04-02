@@ -57,6 +57,11 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     uint256 public KLIMA_SUPPLY;
     uint256 public KLIMAX_SUPPLY;
     address public burnVault;
+
+    // stake limits
+    uint256 public minStakeAmount;
+    uint256 public maxTotalStakesPerUser;
+
     // events
     event StakeCreated(address indexed user, uint256 amount, uint256 multiplier, uint256 startTimestamp);
     event StakeBurned(address indexed user, uint256 burnAmount, uint256 timestamp);
@@ -70,6 +75,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     event KlimaSupplySet(uint256 newValue);
     event KlimaXSupplySet(uint256 newValue);
     event PreStakingWindowSet(uint256 preStakingWindow);
+    event StakeLimitsSet(uint256 minStakeAmount, uint256 maxTotalStakesPerUser);
 
     /// @notice Prevents actions after pre-staking has begun
     /// @dev Used to lock configuration changes once pre-staking begins
@@ -110,6 +116,10 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         KLIMA_SUPPLY = 17_500_000 * 1e18;
         KLIMAX_SUPPLY = 40_000_000 * 1e18;
         preStakingWindow = 3 days;
+
+        // Set default limits for DOS mitigation
+        minStakeAmount = 1e9;
+        maxTotalStakesPerUser = 200;
     }
 
     /// @notice Authorizes an upgrade to a new implementation
@@ -126,9 +136,11 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     /// @param amount Amount of KLIMA_V0 tokens to stake
     /// @dev Multiplier is 2x for week 1, 1.5x for week 2, 1x afterwards
     /// @dev Points accrue based on stake amount, time, and multiplier
+    /// @dev Reverts if amount is less than minStakeAmount or maxTotalStakesPerUser is reached to mitigate DOS
     function stake(uint256 amount) public whenNotPaused {
         // Require valid amount
-        require(amount > 0, "Amount must be greater than 0");
+        require(amount >= minStakeAmount, "Amount must be greater than or equal to minStakeAmount");
+        require(userStakes[msg.sender].length < maxTotalStakesPerUser, "Max total stakes per user reached");
 
         // Require staking is active (either pre-staking or regular staking period)
         require(startTimestamp > 0, "Staking not initialized");
@@ -217,10 +229,6 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         Stake[] storage userStakesList = userStakes[msg.sender];
         require(userStakesList.length > 0, "No stakes found");
 
-        // Track which indices were modified
-        uint256[] memory modifiedIndices = new uint256[](userStakesList.length);
-        uint256 modifiedCount = 0;
-        
         // Process stakes from newest to oldest
         for (uint256 i = userStakesList.length; i > 0 && totalUnstake < amount; i--) {
             uint256 index = i - 1;
@@ -252,7 +260,6 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
             // Only write back to storage if modified
             if (stakeUnstakeAmount > 0) {
                 userStakesList[index] = currentStake;
-                modifiedIndices[modifiedCount++] = index;
             }
         }
 
@@ -370,6 +377,12 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         for (uint256 i = 0; i < stakes.length; i++) {
             Stake memory currentStake = stakes[i];
             
+            // Skip if amount is zero
+            if (currentStake.amount == 0) {
+                updatedStakes[i] = currentStake;
+                continue;
+            }
+            
             // Skip if lastUpdateTime is already at or after freeze timestamp
             if (currentStake.lastUpdateTime >= freezeTimestamp) {
                 updatedStakes[i] = currentStake;
@@ -404,28 +417,37 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     /// @param _user Address of the user to update
     /// @dev Distributes burned tokens proportionally based on organic points
     function _updateBurnDistribution(address _user) internal {
-        // Load stakes into memory
-        Stake[] memory stakes = userStakes[_user];
-        Stake[] memory updatedStakes = new Stake[](stakes.length);
-
-        // Process all stakes in memory
-        for (uint256 i = 0; i < stakes.length; i++) {
-            Stake memory currentStake = stakes[i];
-
-            uint256 burnRatioDiff = burnRatio - currentStake.burnRatioSnapshot;
-            if (burnRatioDiff > 0) {
-                uint256 newBurnAccrual = (currentStake.organicPoints * burnRatioDiff) / GROWTH_DENOMINATOR;
-                currentStake.burnAccrued += newBurnAccrual;
+        // Skip if burnRatio is zero (no burns have occurred)
+        if (burnRatio == 0) {
+            return;
+        }
+        
+        // Get reference to storage array (no copy made yet)
+        Stake[] storage userStakesList = userStakes[_user];
+        
+        // Process stakes directly from storage to memory and back
+        for (uint256 i = 0; i < userStakesList.length; i++) {
+            // Load stake into memory
+            Stake memory currentStake = userStakesList[i];
+            
+            // Skip if amount is zero
+            if (currentStake.amount == 0) {
+                continue;
             }
+            
+            // Skip if burnRatio hasn't changed for this stake
+            uint256 burnRatioDiff = burnRatio - currentStake.burnRatioSnapshot;
+            if (burnRatioDiff == 0) {
+                continue;
+            }
+            
+            // Only update if there's a difference in burn ratio
+            uint256 newBurnAccrual = (currentStake.organicPoints * burnRatioDiff) / GROWTH_DENOMINATOR;
+            currentStake.burnAccrued += newBurnAccrual;
             currentStake.burnRatioSnapshot = burnRatio;
             
-            updatedStakes[i] = currentStake;
-        }
-
-        // Update storage once
-        Stake[] storage userStakesList = userStakes[_user];
-        for (uint256 i = 0; i < stakes.length; i++) {
-            userStakesList[i] = updatedStakes[i];
+            // Only write back to storage if modified
+            userStakesList[i] = currentStake;
         }
     }
 
@@ -446,9 +468,17 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     /// @param _startTimestamp Timestamp when staking begins
     /// @dev Freeze timestamp is 90 days after start
     /// @dev Can only be called by the owner
+    /// @dev Reverts if start timestamp is in the past
+    /// @dev Reverts if burn vault is not set
+    /// @dev Reverts if minStakeAmount is not set
+    /// @dev Reverts if maxTotalStakesPerUser is not set
+    /// @dev Reverts if growth rate is not set
     function enableStaking(uint256 _startTimestamp) external onlyOwner beforeStartTimestamp beforePreStaking {
         require(_startTimestamp > block.timestamp, "Start timestamp cannot be in the past");
         require(burnVault != address(0), "Burn vault not set");
+        require(minStakeAmount > 0, "Min stake amount not set");
+        require(maxTotalStakesPerUser > 0, "Max total stakes per user not set");
+        require(GROWTH_RATE > 0, "Growth rate not set");
         startTimestamp = _startTimestamp;
         freezeTimestamp = _startTimestamp + 90 days;
         emit StakingEnabled(_startTimestamp, freezeTimestamp);
@@ -574,6 +604,16 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         emit PreStakingWindowSet(_preStakingWindow);
     }
 
+    /// @notice Sets the minimum stake amount and maximum total stakes per user to mitigate DOS
+    /// @param _minStakeAmount Minimum stake amount
+    /// @param _maxTotalStakesPerUser Maximum total stakes per user address
+    /// @dev Can only be called by the owner
+    function setStakeLimits(uint256 _minStakeAmount, uint256 _maxTotalStakesPerUser) public onlyOwner {
+        minStakeAmount = _minStakeAmount;
+        maxTotalStakesPerUser = _maxTotalStakesPerUser;
+        emit StakeLimitsSet(minStakeAmount, maxTotalStakesPerUser);
+    }
+
     function pause() external onlyOwner {
         _pause();
     }
@@ -588,7 +628,10 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     /// @param amount Amount of tokens being unstaked
     /// @param stakeStartTime Timestamp when the stake was created
     /// @return Amount of tokens to burn
-    /// @dev Base burn is 25% of amount, additional burn up to 75% based on stake duration to total 100% max burn
+    /// @dev Base burn is 25% of amount, additional burn up to 75% based on stake duration, total 100% max burn at 365 days
+    /// @dev the time-based burn is meant to make a last man standing scenario where the longer you stake, the more you burn thus creating an incentive to stake for as long as it takes to launch klima 2.0 and not unstake early
+    /// @dev If the stake is still in the pre-staking period, only the base burn is applied
+    /// @dev If the stake is after the pre-staking period, the time-based burn is applied
     function calculateBurn(uint256 amount, uint256 stakeStartTime) public view returns (uint256) {
         // Base burn is 25% of amount
         uint256 baseBurn = (amount * 25) / 100;
@@ -598,16 +641,15 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
             return baseBurn;
         }
 
-        // Calculate time-based burn percentage with higher precision (capped at 75%)
-        // Use hours instead of days for more precision
-        uint256 timeBasedBurnPercent = (((block.timestamp - stakeStartTime) / 1 hours) * 75) / (24 * 365);
-        if (timeBasedBurnPercent > 75) timeBasedBurnPercent = 75;
-
-        // Calculate time-based burn amount
-        uint256 timeBasedBurn = (amount * timeBasedBurnPercent) / 100;
-
-        // Return total burn
-        return baseBurn + timeBasedBurn;
+        // Calculate time-based burn percentage with higher precision
+        // Scale by 1e9 (KLIMA V0 decimals) to avoid truncation in the integer division
+        uint256 scaledTimeBasedPercent = ((block.timestamp - stakeStartTime) * 75 * 1e9) / (365 days);
+        
+        // Cap the scaled percentage at 75 * 1e9
+        if (scaledTimeBasedPercent > 75 * 1e9) scaledTimeBasedPercent = 75 * 1e9;
+        
+        // Calculate and return total burn amount (base burn + time-based burn)
+        return baseBurn + ((amount * scaledTimeBasedPercent) / (100 * 1e9));
     }
 
     // view functions
