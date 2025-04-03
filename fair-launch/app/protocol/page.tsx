@@ -8,10 +8,10 @@ import { config as wagmiConfig } from "@utils/wagmi.server";
 import { getConfig } from "@utils/constants";
 import { readContract } from "@wagmi/core";
 import Image from "next/image";
+import { getTotalSupply } from "@actions/total-supply-action";
 import { type FC } from "react";
-import { erc20Abi, formatUnits } from "viem";
+import { formatUnits } from "viem";
 import * as styles from "./styles";
-
 
 const Page: FC = async () => {
   const config = getConfig();
@@ -21,6 +21,7 @@ const Page: FC = async () => {
   const { data } = await klimaPrice.json();
   const price = data?.KLIMA?.[0]?.quote?.USD?.price;
 
+  const totalSupply = await getTotalSupply();
   const totalBurned = (await readContract(wagmiConfig, {
     abi: klimaFairLaunchAbi,
     address: config.fairLaunchContractAddress,
@@ -33,15 +34,9 @@ const Page: FC = async () => {
     functionName: "totalStaked",
   })) as bigint;
 
-  const totalSupply = await readContract(wagmiConfig, {
-    abi: erc20Abi,
-    address: config.klimaTokenAddress,
-    functionName: "totalSupply",
-  });
-
   const tokenPercentage = calculateTokenPercentage(
     Number(formatUnits(totalStaked, 9)),
-    Number(formatUnits(totalSupply, 9))
+    Number(formatUnits(totalSupply!, 9))
   );
 
   return (
@@ -64,7 +59,7 @@ const Page: FC = async () => {
             <div className={styles.secondaryText}>
               <strong>{tokenPercentage.toFixed(2)}%</strong> of{" "}
               <strong>
-                {formatLargeNumber(Number(formatUnits(totalSupply, 9)))}
+                {formatLargeNumber(Number(formatUnits(totalSupply!, 9)))}
               </strong>{" "}
             </div>
           </div>

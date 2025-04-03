@@ -1,6 +1,5 @@
 "use server";
 
-import { abi as erc20Abi } from "@abi/erc20";
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
 import { getConfig } from "@utils/constants";
 import { config as wagmiConfig } from "@utils/wagmi.server";
@@ -26,11 +25,6 @@ export const getContractConstants = async (walletAddress: string) => {
           abi: klimaFairLaunchAbi as AbiFunction[],
           address: config.fairLaunchContractAddress,
           functionName: "burnRatio",
-        },
-        {
-          abi: erc20Abi as AbiFunction[],
-          address: config.klimaTokenAddress,
-          functionName: "totalSupply",
         },
         {
           abi: klimaFairLaunchAbi as AbiFunction[],

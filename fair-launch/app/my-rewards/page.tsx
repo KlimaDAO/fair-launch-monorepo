@@ -30,6 +30,7 @@ import Link from "next/link";
 import { MdHelpOutline } from "react-icons/md";
 import { AbiFunction, formatUnits, parseUnits } from "viem";
 import { getConfig } from "@utils/constants";
+import { getTotalSupply } from "@actions/total-supply-action";
 import { cookieToInitialState } from "wagmi";
 import * as styles from "./styles";
 
@@ -46,6 +47,7 @@ const Page = async () => {
     initialState?.current &&
     initialState.connections.get(initialState?.current)?.accounts[0];
 
+  const totalSupply = await getTotalSupply();
   const contractConstants = await getContractConstants(walletAddress as string);
   if (!Array.isArray(contractConstants)) {
     throw new Error("Failed to fetch contract constants");
@@ -55,7 +57,6 @@ const Page = async () => {
     prestakingWindow,
     startTimestamp,
     burnRatio,
-    totalSupply,
     getTotalPoints,
     growthRate,
     previewUserPoints,
@@ -142,7 +143,7 @@ const Page = async () => {
 
   const tokenPercentage = calculateTokenPercentage(
     Number(formatUnits(BigInt(totalUserStakes(allUserStakes)), 9)),
-    Number(formatUnits(totalSupply.result!, 9))
+    Number(formatUnits(totalSupply!, 9))
   );
 
   const totalPointsPercentage = calculateTokenPercentage(
@@ -195,7 +196,7 @@ const Page = async () => {
               <strong>&lt;{tokenPercentage.toFixed(2)}%</strong> of{" "}
               <strong>
                 {formatLargeNumber(
-                  Number(formatUnits(totalSupply.result as any, 9))
+                  Number(formatUnits(totalSupply!, 9))
                 )}
               </strong>{" "}
             </div>
