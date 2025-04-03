@@ -1,0 +1,14 @@
+**/.vercel
+**/.next/
+**/node_modules/
+**/out/
+**/build/
+**/locale/
+**/dist/
+**/coverage/
+**/.env.*
+**/.generated/
+**/package*.json
+*.md
+**/.sanity/
+**/.nyc_output/

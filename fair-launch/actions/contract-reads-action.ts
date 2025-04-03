@@ -1,0 +1,72 @@
+"use server";
+
+import { abi as erc20Abi } from "@abi/erc20";
+import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
+import { getConfig } from "@utils/constants";
+import { config as wagmiConfig } from "@utils/wagmi.server";
+import { readContracts } from "@wagmi/core";
+import { AbiFunction } from "viem";
+
+export const getContractConstants = async (walletAddress: string) => {
+  const config = getConfig();
+  try {
+    return await readContracts(wagmiConfig, {
+      contracts: [
+        {
+          abi: klimaFairLaunchAbi as AbiFunction[],
+          address: config.fairLaunchContractAddress,
+          functionName: "preStakingWindow",
+        },
+        {
+          abi: klimaFairLaunchAbi as AbiFunction[],
+          address: config.fairLaunchContractAddress,
+          functionName: "startTimestamp",
+        },
+        {
+          abi: klimaFairLaunchAbi as AbiFunction[],
+          address: config.fairLaunchContractAddress,
+          functionName: "burnRatio",
+        },
+        {
+          abi: erc20Abi as AbiFunction[],
+          address: config.klimaTokenAddress,
+          functionName: "totalSupply",
+        },
+        {
+          abi: klimaFairLaunchAbi as AbiFunction[],
+          address: config.fairLaunchContractAddress,
+          functionName: "getTotalPoints",
+        },
+        {
+          abi: klimaFairLaunchAbi as AbiFunction[],
+          address: config.fairLaunchContractAddress,
+          functionName: "EXP_GROWTH_RATE",
+        },
+        {
+          abi: klimaFairLaunchAbi as AbiFunction[],
+          address: config.fairLaunchContractAddress,
+          functionName: "previewUserPoints",
+          args: [walletAddress],
+        },
+        {
+          abi: klimaFairLaunchAbi as AbiFunction[],
+          address: config.fairLaunchContractAddress,
+          functionName: "getUserStakeCount",
+          args: [walletAddress],
+        },
+        {
+          abi: klimaFairLaunchAbi as AbiFunction[],
+          address: config.fairLaunchContractAddress,
+          functionName: "BURN_DISTRIBUTION_PRECISION",
+        },
+        {
+          abi: klimaFairLaunchAbi as AbiFunction[],
+          address: config.fairLaunchContractAddress,
+          functionName: "POINTS_SCALE_DENOMINATOR",
+        },
+      ],
+    });
+  } catch (error) {
+    console.error("error", error);
+  }
+};
