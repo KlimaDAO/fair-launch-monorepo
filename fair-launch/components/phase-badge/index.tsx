@@ -3,7 +3,6 @@
 import { FC } from "react";
 import * as styles from "./styles";
 
-const fourDaysInSeconds = 345600;
 const oneWeekInSeconds = 604800;
 const twoWeeksInSeconds = 1209600;
 
@@ -15,21 +14,15 @@ type Props = {
 export const PhaseBadge: FC<Props> = ({ prestakingWindow, startTimestamp }) => {
   let phaseLabel = "";
   const currentTimestamp = Math.floor(Date.now() / 1000);
-  const adjustedPrestakingWindow = prestakingWindow - fourDaysInSeconds;
-  const prestakingEndTimestamp = startTimestamp + adjustedPrestakingWindow;
 
-  if (
-    currentTimestamp >= startTimestamp &&
-    currentTimestamp < prestakingEndTimestamp
-  ) {
+  if (currentTimestamp < Number(startTimestamp)) {
     phaseLabel = "Pre-stake Period ACTIVE";
-  } else if (
-    currentTimestamp < Number(startTimestamp) ||
-    currentTimestamp - Number(startTimestamp) < oneWeekInSeconds
-  ) {
+  } else if (currentTimestamp < Number(startTimestamp) + oneWeekInSeconds) {
     phaseLabel = "2x Points Boost ACTIVE";
-  } else if (currentTimestamp - Number(startTimestamp) < twoWeeksInSeconds) {
+  } else if (currentTimestamp < Number(startTimestamp) + twoWeeksInSeconds) {
     phaseLabel = "1.5x Points Boost ACTIVE";
+  } else {
+    phaseLabel = "";
   }
 
   if (phaseLabel === '') {
