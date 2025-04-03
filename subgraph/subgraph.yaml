@@ -1,0 +1,31 @@
+specVersion: 1.0.0
+indexerHints:
+  prune: auto
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: KlimaFairLaunchStaking
+    network: base
+    source:
+      address: '0xea8a59D0bf9C05B437c6a5396cfB429F1A57B682'
+      abi: KlimaFairLaunchStaking
+      startBlock: 28451978
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Wallet
+        - Stake
+      abis:
+        - name: KlimaFairLaunchStaking
+          file: ./abis/KlimaFairLaunchStaking.json
+      eventHandlers:
+        - event: StakeCreated(indexed address,indexed uint256,uint256,indexed uint256)
+          handler: handleStakeCreated
+        - event: StakeBurned(indexed address,indexed uint256,indexed uint256)
+          handler: handleStakeBurned
+        - event: StakeClaimed(indexed address,uint256,indexed uint256,indexed uint256,uint256)
+          handler: handleStakeClaimed
+      file: ./src/klima-fair-launch-staking.ts

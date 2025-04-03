@@ -1,0 +1,16 @@
+type Wallet @entity {
+  id: Bytes!
+  totalStaked: BigInt!
+  klimaAllocation: BigInt!
+  klimaXAllocation: BigInt!
+  stakes: [Stake!]! @derivedFrom(field: "wallet")
+}
+
+type Stake @entity {
+  id: Bytes!
+  wallet: Wallet!
+  amount: BigInt!
+  multiplier: BigInt!
+  startTimestamp: BigInt!
+  stakeCreationHash: Bytes!
+}

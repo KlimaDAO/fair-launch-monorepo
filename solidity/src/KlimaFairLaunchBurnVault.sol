@@ -163,9 +163,4 @@ contract KlimaFairLaunchBurnVault is Initializable, UUPSUpgradeable, OwnableUpgr
 
     /// @dev Reserved storage space per auditor recommendation.
     uint256[50] private __gap;
-
-    // Optional: Add a function to ensure the contract has ETH for gas
-    function fundGasForAxelar() external payable onlyOwner {
-        // Just receives ETH, nothing else needed
-    }
 }
