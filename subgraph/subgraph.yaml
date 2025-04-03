@@ -6,11 +6,11 @@ schema:
 dataSources:
   - kind: ethereum
     name: KlimaFairLaunchStaking
-    network: base-sepolia
+    network: base
     source:
-      address: '0x0cff418d7028d32c2c5ea6af2da934e9f86efa18'
+      address: '0xea8a59D0bf9C05B437c6a5396cfB429F1A57B682'
       abi: KlimaFairLaunchStaking
-      startBlock: 23848903
+      startBlock: 28451978
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
