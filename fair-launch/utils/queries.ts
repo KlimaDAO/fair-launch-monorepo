@@ -17,7 +17,6 @@ export interface Wallet {
   stakes: Stake[];
 }
 
-
 export const fetchLeaderboard = async (
   limit: number = 100
 ): Promise<{ wallets?: Wallet[]; error?: string }> => {
@@ -39,6 +38,7 @@ export const fetchLeaderboard = async (
       }`,
       { limit: limit }
     );
+    // should we only be returning top 100 wallets after calculating points?
     return result || { wallets: [] };
   } catch (error: any) {
     console.error("Error fetching user leaderboards:", error);

@@ -68,7 +68,7 @@ export const LeaderboardsTable = <T extends Data>(props: Props<T>) => {
   } = useQuery({
     queryKey: ["leaderboards"],
     queryFn: fetchLeaderboard,
-    refetchInterval: 300,
+    refetchInterval: 120000,
   });
 
   const columns: ColumnDef<any>[] = useMemo(

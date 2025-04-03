@@ -44,7 +44,7 @@ const calculateLeaderboard = async () => {
       });
     } catch (error) {
       console.error(`Error fetching points for ${wallet.id}:`, error);
-      results.push({ ...omit(wallet, "stakes"), totalPoints: null }); // Handle error gracefully
+      results.push({ ...omit(wallet, "stakes"), totalPoints: null });
     }
   }
   return results.sort((a, b) => Number(b.totalPoints) - Number(a.totalPoints));

@@ -22,7 +22,7 @@ const CONFIG = {
   production: {
     chain: base.id,
     subgraphUrl: 'https://api.studio.thegraph.com/query/28985/fair-launch-sepolia/version/latest',
-    klimaTokenAddress: '0x50Fbf1a671D6E3d4D68E19C646f1F6Bae138E5Ce',
+    klimaTokenAddress: '0xDCEFd8C8fCc492630B943ABcaB3429F12Ea9Fea2',
     fairLaunchContractAddress: '0x0CfF418D7028D32C2C5Ea6af2dA934E9F86eFa18',
   },
   preview: {
