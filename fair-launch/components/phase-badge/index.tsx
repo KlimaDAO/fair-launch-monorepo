@@ -32,6 +32,10 @@ export const PhaseBadge: FC<Props> = ({ prestakingWindow, startTimestamp }) => {
     phaseLabel = "1.5x Points Boost ACTIVE";
   }
 
+  if (phaseLabel === '') {
+    return null;
+  }
+
   return (
     <div role="badge" className={styles.badgeVariants({ variant: "default" })}>
       {phaseLabel}
