@@ -1,7 +1,7 @@
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
-import { FAIR_LAUNCH_CONTRACT_ADDRESS } from "@utils/constants";
+import { getConfig } from "@utils/constants";
 import { fetchLeaderboard } from "@utils/queries";
-import { config } from "@utils/wagmi.server";
+import { config as wagmiConfig } from "@utils/wagmi.server";
 import { readContract } from "@wagmi/core";
 import { omit } from "lodash";
 import { NextResponse } from "next/server";
@@ -9,14 +9,15 @@ import { formatUnits } from "viem";
 
 const calculateLeaderboard = async () => {
   const results = [];
-  const leaderboard = await fetchLeaderboard(1000);
+  const config = getConfig();
+  const leaderboard = await fetchLeaderboard();
   for (const wallet of leaderboard.wallets || []) {
     try {
       const userStakesInfo = await Promise.all(
         (wallet?.stakes || []).map(async (_, index) => {
-          const [amount] = (await readContract(config, {
+          const [amount] = (await readContract(wagmiConfig, {
             abi: klimaFairLaunchAbi,
-            address: FAIR_LAUNCH_CONTRACT_ADDRESS,
+            address: config.fairLaunchContractAddress,
             functionName: "userStakes",
             args: [wallet.id, index],
           })) as bigint[];
@@ -29,10 +30,10 @@ const calculateLeaderboard = async () => {
         0
       );
 
-      const points = await readContract(config, {
+      const points = await readContract(wagmiConfig, {
         args: [wallet.id],
         abi: klimaFairLaunchAbi,
-        address: FAIR_LAUNCH_CONTRACT_ADDRESS,
+        address: config.fairLaunchContractAddress,
         functionName: "previewUserPoints",
       });
 

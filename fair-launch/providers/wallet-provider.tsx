@@ -4,8 +4,9 @@ import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { FC, ReactNode } from "react";
 import { cookieToInitialState, WagmiProvider } from "wagmi";
-import { baseSepolia } from "wagmi/chains";
-import { config } from "../utils/wagmi.client";
+import { getConfig } from "@utils/constants";
+import { config as wagmiConfig } from "@utils/wagmi.client";
+import { base } from "wagmi/chains";
 
 interface Props {
   children: ReactNode;
@@ -15,11 +16,12 @@ interface Props {
 const queryClient = new QueryClient();
 
 export const WalletProvider: FC<Props> = (props) => {
-  const initialState = cookieToInitialState(config, props.cookie);
+  const config = getConfig();
+  const initialState = cookieToInitialState(wagmiConfig, props.cookie);
   return (
-    <WagmiProvider config={config} initialState={initialState}>
+    <WagmiProvider config={wagmiConfig} initialState={initialState}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider initialChain={baseSepolia}>
+        <RainbowKitProvider initialChain={config.chain}>
           {props.children}
         </RainbowKitProvider>
       </QueryClientProvider>

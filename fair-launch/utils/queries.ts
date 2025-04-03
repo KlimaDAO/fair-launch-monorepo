@@ -1,5 +1,5 @@
 import { request } from "graphql-request";
-import { SUBGRAPH_URL } from "./constants";
+import { getConfig } from "./constants";
 
 export interface Stake {
   id: string;
@@ -17,12 +17,14 @@ export interface Wallet {
   stakes: Stake[];
 }
 
+
 export const fetchLeaderboard = async (
   limit: number = 100
 ): Promise<{ wallets?: Wallet[]; error?: string }> => {
+  const config = getConfig();
   try {
     const result = await request(
-      SUBGRAPH_URL,
+      config.subgraphUrl,
       `query ($limit: Int!) {
         wallets(first: $limit, orderBy: totalStaked, orderDirection: desc) {
           id

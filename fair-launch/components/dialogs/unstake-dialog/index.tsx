@@ -5,8 +5,8 @@ import { StakeData } from "@components/tables/stakes";
 import klimav1Logo from "@public/tokens/klima-v1.svg";
 import { useChainModal } from "@rainbow-me/rainbowkit";
 import { useForm } from "@tanstack/react-form";
-import { FAIR_LAUNCH_CONTRACT_ADDRESS } from "@utils/constants";
 import { calculateUnstakePenalty } from "@utils/contract";
+import { URLS, getConfig } from "@utils/constants";
 import { formatNumber, truncateAddress } from "@utils/formatting";
 import clsx from "clsx";
 import sumBy from "lodash/sumBy";
@@ -17,7 +17,6 @@ import type { FC } from "react";
 import { useEffect, useState } from "react";
 import { MdAccountBalance, MdWarningAmber } from "react-icons/md";
 import { formatUnits, parseUnits } from "viem";
-import { baseSepolia } from "viem/chains";
 import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import * as styles from "./styles";
 
@@ -42,6 +41,7 @@ export const UnstakeDialog: FC<Props> = ({
   totalStaked,
   stakes,
 }) => {
+  const config = getConfig();
   const [open, setOpen] = useState(false);
   const { openChainModal } = useChainModal();
   const stakedBalance = formatUnits(BigInt(totalStaked) ?? BigInt(0), 9);
@@ -86,9 +86,9 @@ export const UnstakeDialog: FC<Props> = ({
     unstakeContract({
       abi: klimaFairLaunchAbi,
       functionName: "unstake",
-      address: FAIR_LAUNCH_CONTRACT_ADDRESS,
+      address: config.fairLaunchContractAddress,
       args: [parseUnits(unstakeAmount, 9)],
-      chainId: baseSepolia.id,
+      chainId: config.chain,
     });
   };
 
@@ -188,10 +188,7 @@ export const UnstakeDialog: FC<Props> = ({
         <div>
           The longer you leave your KLIMA staked, the better your rewards! If
           you unstake now, you’ll not only lose out on some KLIMA through{" "}
-          <Link
-            target="_blank"
-            href="https://github.com/KlimaDAO/klimadao-docs/blob/main/klima%202.0/KlimaDAO%20-%20Klima%202.0%20-%20Fair%20Launch%20FAQ%20-%20April%201%2C%202025.md#burn-calculation"
-          >
+          <Link target="_blank" href={URLS.fairLaunchFaq}>
             the burn mechanism
           </Link>
           , but you’ll also miss out on KlimaX!
@@ -341,10 +338,7 @@ export const UnstakeDialog: FC<Props> = ({
             <div>
               You will still get to keep the points and KlimaX you've accrued.
             </div>
-            <Link
-              target="_blank"
-              href="https://github.com/KlimaDAO/klimadao-docs/blob/main/klima%202.0/KlimaDAO%20-%20Klima%202.0%20-%20Fair%20Launch%20FAQ%20-%20April%201%2C%202025.md#burn-calculation"
-            >
+            <Link target="_blank" href={URLS.fairLaunchFaq}>
               Learn more about burning KLIMA.
             </Link>
           </div>
@@ -376,7 +370,7 @@ export const UnstakeDialog: FC<Props> = ({
             Contract Address
           </label>
           <div id="confirm-unstake-contract-address" className={styles.input}>
-            {truncateAddress(FAIR_LAUNCH_CONTRACT_ADDRESS)}
+            {truncateAddress(config.fairLaunchContractAddress)}
           </div>
         </div>
         <div className={styles.inputContainer}>

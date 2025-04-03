@@ -1,13 +1,15 @@
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
-import { config } from "@utils/wagmi.server";
+import { config as wagmiConfig } from "@utils/wagmi.server";
 import { readContract } from "@wagmi/core";
-import { FAIR_LAUNCH_CONTRACT_ADDRESS } from "./constants";
+import { getConfig } from "./constants";
 import { formatNumber, formatTokenToValue } from "./formatting";
 
+const config = getConfig();
+
 export const calculateBurnFn = async (amount: bigint, timestamp: string) => {
-  return (await readContract(config, {
+  return (await readContract(wagmiConfig, {
     abi: klimaFairLaunchAbi,
-    address: FAIR_LAUNCH_CONTRACT_ADDRESS,
+    address: config.fairLaunchContractAddress,
     functionName: "calculateBurn",
     args: [amount, timestamp],
   })) as bigint;
@@ -15,9 +17,9 @@ export const calculateBurnFn = async (amount: bigint, timestamp: string) => {
 
 export const getKlimaXSupply = async () => {
   try {
-    return (await readContract(config, {
+    return (await readContract(wagmiConfig, {
       abi: klimaFairLaunchAbi,
-      address: FAIR_LAUNCH_CONTRACT_ADDRESS,
+      address: config.fairLaunchContractAddress,
       functionName: "KLIMAX_SUPPLY",
     })) as bigint;
   } catch (error) {

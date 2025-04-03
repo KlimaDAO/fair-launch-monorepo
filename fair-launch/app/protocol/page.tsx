@@ -2,41 +2,40 @@ import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
 import { Card } from "@components/card";
 import { LeaderboardsTable } from "@components/tables/leaderboards";
 import klimav1Logo from "@public/tokens/klima-v1.svg";
-import {
-  FAIR_LAUNCH_CONTRACT_ADDRESS,
-  KLIMA_V0_TOKEN_ADDRESS,
-} from "@utils/constants";
 import { calculateTokenPercentage } from "@utils/contract";
 import { formatLargeNumber, formatNumber } from "@utils/formatting";
-import { config } from "@utils/wagmi.server";
+import { config as wagmiConfig } from "@utils/wagmi.server";
+import { getConfig } from "@utils/constants";
 import { readContract } from "@wagmi/core";
 import Image from "next/image";
 import { type FC } from "react";
 import { erc20Abi, formatUnits } from "viem";
 import * as styles from "./styles";
 
+
 const Page: FC = async () => {
+  const config = getConfig();
   const klimaPrice = await fetch(
     "https://base.klimadao.finance/api/prices?symbols=KLIMA"
   );
   const { data } = await klimaPrice.json();
   const price = data?.KLIMA?.[0]?.quote?.USD?.price;
 
-  const totalBurned = (await readContract(config, {
+  const totalBurned = (await readContract(wagmiConfig, {
     abi: klimaFairLaunchAbi,
-    address: FAIR_LAUNCH_CONTRACT_ADDRESS,
+    address: config.fairLaunchContractAddress,
     functionName: "totalBurned",
   })) as bigint;
 
-  const totalStaked = (await readContract(config, {
+  const totalStaked = (await readContract(wagmiConfig, {
     abi: klimaFairLaunchAbi,
-    address: FAIR_LAUNCH_CONTRACT_ADDRESS,
+    address: config.fairLaunchContractAddress,
     functionName: "totalStaked",
   })) as bigint;
 
-  const totalSupply = await readContract(config, {
+  const totalSupply = await readContract(wagmiConfig, {
     abi: erc20Abi,
-    address: KLIMA_V0_TOKEN_ADDRESS,
+    address: config.klimaTokenAddress,
     functionName: "totalSupply",
   });
 

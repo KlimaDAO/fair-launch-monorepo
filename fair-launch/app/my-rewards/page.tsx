@@ -11,7 +11,6 @@ import { StakesTable } from "@components/tables/stakes";
 import { Tooltip } from "@components/tooltip";
 import gklimaLogo from "@public/tokens/g-klima.svg";
 import klimav1Logo from "@public/tokens/klima-v1.svg";
-import { FAIR_LAUNCH_CONTRACT_ADDRESS } from "@utils/constants";
 import {
   calculateTokenPercentage,
   calculateUnstakePenalty,
@@ -23,22 +22,25 @@ import {
   formatNumber,
   truncateAddress,
 } from "@utils/formatting";
-import { config } from "@utils/wagmi.server";
+import { config as wagmiConfig } from "@utils/wagmi.server";
 import { readContracts } from "@wagmi/core";
 import { headers } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
 import { MdHelpOutline } from "react-icons/md";
 import { AbiFunction, formatUnits, parseUnits } from "viem";
+import { getConfig } from "@utils/constants";
 import { cookieToInitialState } from "wagmi";
 import * as styles from "./styles";
 
 type StakeResult = [bigint, bigint, bigint, bigint, bigint, bigint, bigint];
 
+
 const Page = async () => {
+  const config = getConfig();
   const headersList = await headers();
   const cookie = headersList.get("cookie");
-  const initialState = cookieToInitialState(config, cookie);
+  const initialState = cookieToInitialState(wagmiConfig, cookie);
 
   const walletAddress =
     initialState?.current &&
@@ -65,10 +67,10 @@ const Page = async () => {
   const klimaXSupply = await getKlimaXSupply();
   const stakes = new Array(Number(userStakeCount.result)).fill("");
   // todo - move this to an action or util?
-  const userStakes = await readContracts(config, {
+  const userStakes = await readContracts(wagmiConfig, {
     contracts: stakes.map((_, index) => ({
       abi: klimaFairLaunchAbi as AbiFunction[],
-      address: FAIR_LAUNCH_CONTRACT_ADDRESS,
+      address: config.fairLaunchContractAddress,
       functionName: "userStakes",
       args: [walletAddress, index],
     })),

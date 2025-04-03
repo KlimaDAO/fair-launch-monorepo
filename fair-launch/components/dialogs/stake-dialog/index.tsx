@@ -6,10 +6,7 @@ import { Alert } from "@components/alert";
 import klimav1Logo from "@public/tokens/klima-v1.svg";
 import { useChainModal } from "@rainbow-me/rainbowkit";
 import { useForm } from "@tanstack/react-form";
-import {
-  FAIR_LAUNCH_CONTRACT_ADDRESS,
-  KLIMA_V0_TOKEN_ADDRESS,
-} from "@utils/constants";
+import { getConfig } from "@utils/constants";
 import { formatNumber, truncateAddress } from "@utils/formatting";
 import clsx from "clsx";
 import Image from "next/image";
@@ -17,7 +14,6 @@ import { Dialog } from "radix-ui";
 import { type FC, useEffect, useState } from "react";
 import { MdCelebration, MdLibraryAdd } from "react-icons/md";
 import { formatUnits, parseUnits } from "viem";
-import { baseSepolia } from "viem/chains";
 import {
   useAccount,
   useBalance,
@@ -32,12 +28,6 @@ type InteractOutsideEvent =
   | CustomEvent<{ originalEvent: FocusEvent }>
   | CustomEvent<{ originalEvent: PointerEvent }>;
 
-const allowanceConfig = {
-  abi: erc20Abi,
-  functionName: "allowance",
-  address: KLIMA_V0_TOKEN_ADDRESS,
-} as const;
-
 enum DialogState {
   INITIAL,
   STAKE,
@@ -46,12 +36,14 @@ enum DialogState {
 }
 
 export const StakeDialog: FC = () => {
+  const config = getConfig();
   const { address } = useAccount();
   const [open, setOpen] = useState(false);
   const { openChainModal } = useChainModal();
+
   const { data: balance } = useBalance({
     address: address,
-    token: KLIMA_V0_TOKEN_ADDRESS,
+    token: config.klimaTokenAddress,
   });
 
   const { data: gasPrice } = useEstimateGas();
@@ -75,8 +67,10 @@ export const StakeDialog: FC = () => {
   } = useWriteContract();
 
   const { data: allowanceData } = useReadContract({
-    ...allowanceConfig,
-    args: [address, FAIR_LAUNCH_CONTRACT_ADDRESS],
+    abi: erc20Abi,
+    functionName: "allowance",
+    address: config.klimaTokenAddress,
+    args: [address, config.fairLaunchContractAddress],
   });
 
   const { data: receipt, isError: isApproveError } =
@@ -118,9 +112,9 @@ export const StakeDialog: FC = () => {
     approveContract({
       abi: erc20Abi,
       functionName: "approve",
-      address: KLIMA_V0_TOKEN_ADDRESS,
-      args: [FAIR_LAUNCH_CONTRACT_ADDRESS, parseUnits(stakeAmount, 9)],
-      chainId: baseSepolia.id,
+      address: config.klimaTokenAddress,
+      args: [config.fairLaunchContractAddress, parseUnits(stakeAmount, 9)],
+      chainId: config.chain
     });
   };
 
@@ -129,10 +123,10 @@ export const StakeDialog: FC = () => {
     stakeContract({
       abi: klimaFairLaunchAbi,
       functionName: "stake",
-      address: FAIR_LAUNCH_CONTRACT_ADDRESS,
+      address: config.fairLaunchContractAddress,
       args: [parseUnits(stakeAmount, 9)],
       gasPrice: gasPrice,
-      chainId: baseSepolia.id,
+      chainId: config.chain,
     });
   };
 
@@ -289,7 +283,7 @@ export const StakeDialog: FC = () => {
         <div className={styles.inputContainer}>
           <label htmlFor="approve-contract-address">Contract Address</label>
           <div id="approve-contract-address" className={styles.input}>
-            {truncateAddress(FAIR_LAUNCH_CONTRACT_ADDRESS)}
+            {truncateAddress(config.fairLaunchContractAddress)}
           </div>
         </div>
         <div className={styles.inputContainer}>
@@ -339,7 +333,7 @@ export const StakeDialog: FC = () => {
         <div className={styles.inputContainer}>
           <label htmlFor="confirm-contract-address">Contract Address</label>
           <div id="confirm-contract-address" className={styles.input}>
-            {truncateAddress(FAIR_LAUNCH_CONTRACT_ADDRESS)}
+            {truncateAddress(config.fairLaunchContractAddress)}
           </div>
         </div>
         <div className={styles.inputContainer}>
