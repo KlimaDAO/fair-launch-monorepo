@@ -3,7 +3,7 @@
 import { FC } from "react";
 import * as styles from "./styles";
 
-const threeDaysInSeconds = 259200;
+const fourDaysInSeconds = 345600;
 const oneWeekInSeconds = 604800;
 const twoWeeksInSeconds = 1209600;
 
@@ -15,7 +15,7 @@ type Props = {
 export const PhaseBadge: FC<Props> = ({ prestakingWindow, startTimestamp }) => {
   let phaseLabel = "";
   const currentTimestamp = Math.floor(Date.now() / 1000);
-  const adjustedPrestakingWindow = prestakingWindow - threeDaysInSeconds;
+  const adjustedPrestakingWindow = prestakingWindow - fourDaysInSeconds;
   const prestakingEndTimestamp = startTimestamp + adjustedPrestakingWindow;
 
   if (

@@ -11,6 +11,7 @@ import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Own
 import {IERC1967} from "@openzeppelin/contracts/interfaces/IERC1967.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
+import { UD60x18, ud, mul, div, exp, sub } from "@prb/math/UD60x18.sol";
 
 contract MockKlimaV0 is ERC20 {
     constructor() ERC20("KLIMA", "KLIMA") {
@@ -18,7 +19,7 @@ contract MockKlimaV0 is ERC20 {
     }
 
     function decimals() public pure override returns (uint8) {
-        return 12;
+        return 9;
     }
 }
 
@@ -58,21 +59,63 @@ contract KlimaFairLaunchStakingTest is Test {
     MockKlimaV0 public klimaV0;
     MockKlima public klimaToken;
     MockKlimaX public klimaXToken;
-    uint256 public constant INITIAL_BALANCE = 1000 * 1e12; // 1000 KLIMA
+    uint256 public constant INITIAL_BALANCE = 1000 * 1e9; // 1000 KLIMA
     address constant KLIMA_V0_ADDR = 0xDCEFd8C8fCc492630B943ABcaB3429F12Ea9Fea2;
 
     // Events
-    event StakeCreated(address indexed user, uint256 amount, uint256 multiplier, uint256 startTimestamp);
-    event StakeBurned(address indexed user, uint256 burnAmount, uint256 timestamp);
-    event Claimed(address indexed user, uint256 klimaAmount, uint256 klimaXAmount);
-    event FinalizationComplete();
+    event StakeCreated(address indexed user, uint256 indexed amountKlimaV0Staked, uint256 multiplier, uint256 indexed startTimestamp);
+    event StakeBurned(address indexed user, uint256 indexed amountKlimaV0Burned, uint256 indexed timestamp);
+    event StakeClaimed(address indexed user, uint256 totalUserStaked, uint256 indexed klimaAllocation, uint256 indexed klimaXAllocation, uint256 timestamp);
+    event FinalizationComplete(uint256 indexed finalizationTimestamp);
     event TokenAddressesSet(address indexed klima, address indexed klimax);
-    event StakingEnabled(uint256 startTimestamp, uint256 freezeTimestamp);
-    event StakingExtended(uint256 oldFreezeTimestamp, uint256 newFreezeTimestamp);
+    event StakingEnabled(uint256 indexed startTimestamp, uint256 indexed freezeTimestamp);
+    event StakingExtended(uint256 indexed oldFreezeTimestamp, uint256 indexed newFreezeTimestamp);
     event BurnVaultSet(address indexed burnVault);
-    event GrowthRateSet(uint256 newValue);
-    event KlimaSupplySet(uint256 newValue);
-    event KlimaXSupplySet(uint256 newValue);
+    event GrowthRateSet(uint256 indexed newValue);
+    event KlimaSupplySet(uint256 indexed newValue);
+    event KlimaXSupplySet(uint256 indexed newValue);
+    event PreStakingWindowSet(uint256 indexed preStakingWindow);
+    event StakeLimitsSet(uint256 indexed minStakeAmount, uint256 indexed maxTotalStakesPerUser);
+
+    /// @notice Helper function to accurately calculate expected points using the exponential formula
+    /// @param amount Stake amount (in native KLIMA V0 decimals)
+    /// @param bonusMultiplier Multiplier (e.g., 200 for 2x)
+    /// @param timeElapsedSeconds Time elapsed since stake start in seconds
+    /// @param growthRate Growth rate to use (default should be 274 representing 0.00274)
+    /// @return Expected points using the exact same calculation as the contract
+    function calculateExpectedPoints(
+        uint256 amount,
+        uint256 bonusMultiplier,
+        uint256 timeElapsedSeconds,
+        uint256 growthRate
+    ) public view returns (uint256) {
+        uint256 initialPoints = amount * 1e9 * bonusMultiplier/100;
+
+        // Skip calculation if no time has elapsed
+        if (timeElapsedSeconds == 0) return initialPoints;
+        
+        // Convert inputs to UD60x18 format
+        UD60x18 timeElapsed_days = div(ud(timeElapsedSeconds), ud(86400)); // SECONDS_PER_DAY
+        UD60x18 growthRate_ud = ud(growthRate * 1e13); // Convert from "274" to "0.00274 * 1e18"
+        
+        // Calculate e^(growthRate * timeElapsedDays) - 1
+        UD60x18 exponent = mul(growthRate_ud, timeElapsed_days);
+        UD60x18 growthFactor = sub(exp(exponent), ud(1e18));
+        
+        // Calculate base points (amount * bonusMultiplier / 100) / 1e27/1e18
+        UD60x18 bonusMultiplier_ud = div(ud(bonusMultiplier * 1e18), ud(100));
+        UD60x18 amount_ud = ud(amount);
+        UD60x18 basePoints = div(mul(amount_ud, bonusMultiplier_ud), ud(1e27));
+        
+        // Calculate points (basePoints * growthFactor)
+        UD60x18 points_ud = mul(basePoints, growthFactor);
+
+        uint256 newPoints = points_ud.intoUint256() + initialPoints;
+        console.log("newPoints", newPoints);
+        
+        // Convert back to uint256
+        return newPoints;
+    }
 
     function setUp() public {
         // Create and select Base fork
@@ -319,7 +362,7 @@ contract KlimaFairLaunchStakingTest is Test {
 
         // Create some stakes
         vm.warp(startTime);
-        createStake(user1, 100 * 1e12);
+        createStake(user1, 100 * 1e9);
 
         // Warp to after freeze period and ensure enough time for point accumulation
         vm.warp(startTime + 91 days);
@@ -355,9 +398,9 @@ contract KlimaFairLaunchStakingTest is Test {
         // Create stakes for multiple users
         vm.warp(startTime);
         
-        createStake(user1, 100 * 1e12);
+        createStake(user1, 100 * 1e9);
 
-        createStake(user2, 100 * 1e12);
+        createStake(user2, 100 * 1e9);
 
         // Warp to after freeze period and ensure enough time for point accumulation
         vm.warp(startTime + 91 days);
@@ -410,13 +453,32 @@ contract KlimaFairLaunchStakingTest is Test {
         emit GrowthRateSet(newRate);
         staking.setGrowthRate(newRate);
 
-        assertEq(staking.GROWTH_RATE(), newRate);
+        uint256 expectedGrowthRate = newRate * 1e13;
+        UD60x18 currentGrowthRate = staking.EXP_GROWTH_RATE();
+        uint256 currentGrowthRateUint = currentGrowthRate.intoUint256();
+
+        // assert that the growth rate is set correctly in a way that is compatible with the UD60x18 type
+        assertEq(currentGrowthRateUint, expectedGrowthRate);
+
+        newRate = 1000;
+        
+        vm.prank(owner);
+        vm.expectEmit(true, true, true, true);
+        emit GrowthRateSet(newRate);
+        staking.setGrowthRate(newRate);
+
+        expectedGrowthRate = newRate * 1e13;
+        currentGrowthRate = staking.EXP_GROWTH_RATE();
+        currentGrowthRateUint = currentGrowthRate.intoUint256();
+
+        // assert that the growth rate is set correctly in a way that is compatible with the UD60x18 type
+        assertEq(currentGrowthRateUint, expectedGrowthRate);
     }
 
-    /// @notice Test setting zero growth rate fails
-    function test_RevertWhen_SettingZeroGrowthRate() public {
+    /// @notice Test reverting when setting below minimum growth rate
+    function test_RevertWhen_SettingBelowMinimumGrowthRate() public {
         vm.prank(owner);
-        vm.expectRevert("Growth Rate must be greater than 0");
+        vm.expectRevert("Growth rate too low, min 0.0001");
         staking.setGrowthRate(0);
     }
 
@@ -475,7 +537,7 @@ contract KlimaFairLaunchStakingTest is Test {
 
         // Create a stake to have something to finalize
         vm.warp(startTime);
-        createStake(user1, 100 * 1e12);
+        createStake(user1, 100 * 1e9);
 
         // Warp to after freeze period
         vm.warp(startTime + 91 days);
@@ -512,7 +574,7 @@ contract KlimaFairLaunchStakingTest is Test {
 
         // Stake in week 1
         vm.warp(startTime + 1 days);
-        uint256 stakeAmount = 100 * 1e12;
+        uint256 stakeAmount = 100 * 1e9;
         
         vm.startPrank(user1);
         IERC20(KLIMA_V0_ADDR).approve(address(staking), stakeAmount);
@@ -546,8 +608,8 @@ contract KlimaFairLaunchStakingTest is Test {
         vm.stopPrank();
 
         // Stake in week 2
-        vm.warp(startTime + 8 days); // After first week
-        uint256 stakeAmount = 100 * 1e12;
+        vm.warp(startTime + 7 days + 1); // After first week
+        uint256 stakeAmount = 100 * 1e9;
         
         vm.startPrank(user1);
         IERC20(KLIMA_V0_ADDR).approve(address(staking), stakeAmount);
@@ -581,8 +643,8 @@ contract KlimaFairLaunchStakingTest is Test {
         vm.stopPrank();
 
         // Stake in week 3
-        vm.warp(startTime + 15 days); // After second week
-        uint256 stakeAmount = 100 * 1e12;
+        vm.warp(startTime + 14 days + 1); // After second week
+        uint256 stakeAmount = 100 * 1e9;
         
         vm.startPrank(user1);
         IERC20(KLIMA_V0_ADDR).approve(address(staking), stakeAmount);
@@ -616,7 +678,7 @@ contract KlimaFairLaunchStakingTest is Test {
         vm.stopPrank();
 
         // Try to stake before start
-        uint256 stakeAmount = 100 * 1e12;
+        uint256 stakeAmount = 100 * 1e9;
         vm.startPrank(user1);
         IERC20(KLIMA_V0_ADDR).approve(address(staking), stakeAmount);
         
@@ -635,7 +697,7 @@ contract KlimaFairLaunchStakingTest is Test {
 
         // Try to stake after freeze
         vm.warp(startTime + 91 days);
-        uint256 stakeAmount = 100 * 1e12;
+        uint256 stakeAmount = 100 * 1e9;
         vm.startPrank(user1);
         IERC20(KLIMA_V0_ADDR).approve(address(staking), stakeAmount);
         
@@ -658,7 +720,7 @@ contract KlimaFairLaunchStakingTest is Test {
 
         // Create stake for user1
         vm.warp(startTime);
-        uint256 stakeAmount = 100 * 1e12;
+        uint256 stakeAmount = 100 * 1e9;
         createStake(user1, stakeAmount);
 
         // Create stake for user2 (to receive burn points)
@@ -679,9 +741,6 @@ contract KlimaFairLaunchStakingTest is Test {
         staking.unstake(stakeAmount);
         vm.stopPrank();
 
-        // Let the burn points distribute
-        vm.warp(startTime + 3 days);
-
         // Check user1's stake is cleared
         (uint256 remainingAmount,,,,,,,) = staking.userStakes(user1, 0);
         assertEq(remainingAmount, 0, "Stake amount should be 0");
@@ -701,7 +760,7 @@ contract KlimaFairLaunchStakingTest is Test {
 
         // Create stake
         vm.warp(startTime);
-        uint256 stakeAmount = 100 * 1e12;
+        uint256 stakeAmount = 100 * 1e9;
         createStake(user1, stakeAmount);
 
         // Verify stake was created
@@ -740,7 +799,7 @@ contract KlimaFairLaunchStakingTest is Test {
     function test_RevertWhen_UnstakingInsufficientBalance() public {
         // Setup staking
         setupStaking();
-        uint256 stakeAmount = 100 * 1e12;
+        uint256 stakeAmount = 100 * 1e9;
         
         // Create stake
         createStake(user1, stakeAmount);
@@ -762,7 +821,7 @@ contract KlimaFairLaunchStakingTest is Test {
 
         // Create stake
         vm.warp(startTime);
-        uint256 stakeAmount = 100 * 1e12;
+        uint256 stakeAmount = 100 * 1e9;
         createStake(user1, stakeAmount);
 
         // Finalize
@@ -774,7 +833,7 @@ contract KlimaFairLaunchStakingTest is Test {
 
         // Claim
         vm.startPrank(user1);
-        emit Claimed(user1, klimaAmount, klimaXAmount);
+        emit StakeClaimed(user1, stakeAmount, klimaAmount, klimaXAmount, block.timestamp);
         staking.unstake(0);
         vm.stopPrank();
     }
@@ -789,7 +848,7 @@ contract KlimaFairLaunchStakingTest is Test {
 
         // Create stake
         vm.warp(startTime);
-        uint256 stakeAmount = 100 * 1e12;
+        uint256 stakeAmount = 100 * 1e9;
         createStake(user1, stakeAmount);
 
         // Try to claim before finalization
@@ -815,7 +874,7 @@ contract KlimaFairLaunchStakingTest is Test {
 
         // Create stake
         vm.warp(startTime);
-        uint256 stakeAmount = 100 * 1e12;
+        uint256 stakeAmount = 100 * 1e9;
         createStake(user1, stakeAmount);
 
         // Check points after time passes
@@ -829,47 +888,9 @@ contract KlimaFairLaunchStakingTest is Test {
         assertGt(laterPoints, points);
     }
 
-    /// @notice Test burn distribution across multiple stakes
-    function test_BurnDistribution() public {
-        // Setup staking
-        setupStaking();
-        
-        // User1 and User2 stake same amount
-        createStake(user1, 100000000000000);
-        createStake(user2, 100000000000000);
-        
-        // Let points accumulate for 2 days
-        vm.warp(block.timestamp + 2 days);
-        
-        // Check initial points
-        uint256 user1InitialPoints = staking.previewUserPoints(user1);
-        uint256 user2InitialPoints = staking.previewUserPoints(user2);
-        assertGt(user1InitialPoints, 0, "User1 should have organic points");
-        assertGt(user2InitialPoints, 0, "User2 should have organic points");
-        
-        // User1 unstakes
-        vm.prank(user1);
-        staking.unstake(100000000000000);
-        
-        // Let burn points distribute
-        vm.warp(block.timestamp + 1 days);
-        
-        // Check User2's points increased from burn distribution
-        uint256 user2PointsAfterBurn = staking.previewUserPoints(user2);
-        assertGt(user2PointsAfterBurn, user2InitialPoints, "User2 should receive burn points");
-        
-        // Finalize
-        vm.warp(staking.startTimestamp() + 91 days);
-        vm.prank(owner);
-        staking.storeTotalPoints(2);
-        
-        require(staking.finalizationComplete() == 1, "Finalization failed");
-        require(IERC20(KLIMA_V0_ADDR).balanceOf(address(staking)) == 0, "Staking should have no KLIMA_V0 tokens");
-    }
-
     /// @notice Test burn calculation with different durations
     function test_BurnCalculation() public {
-        uint256 amount = 100 * 1e12;
+        uint256 amount = 100 * 1e9;
         
         // Set a reasonable current timestamp first
         uint256 currentTime = 1000000;
@@ -896,7 +917,7 @@ contract KlimaFairLaunchStakingTest is Test {
     function test_PartialStakingPeriodRewards() public {
         // Setup staking
         setupStaking();
-        uint256 stakeAmount = 100 * 1e12;
+        uint256 stakeAmount = 100 * 1e9;
 
         // Create stakes for both users
         createStake(user1, stakeAmount);
@@ -957,7 +978,7 @@ contract KlimaFairLaunchStakingTest is Test {
         
         // User1 stakes during pre-staking period
         vm.warp(startTime - 2 days);
-        uint256 stakeAmount = 100 * 1e12;
+        uint256 stakeAmount = 100 * 1e9;
         createStake(user1, stakeAmount);
         
         // User2 stakes during regular period (week 1)
@@ -978,33 +999,13 @@ contract KlimaFairLaunchStakingTest is Test {
         // Verify exact values
         assertEq(actualUser1Klima, expectedUser1Klima, "User1 should get the correct KLIMA allocation");
         assertEq(actualUser2Klima, expectedUser2Klima, "User2 should get the correct KLIMA allocation");
-        
-        // Since both users staked the same amount, they should get the same KLIMA allocation
-        assertEq(actualUser1Klima, actualUser2Klima, "Both users should get the same KLIMA allocation for equal stakes");
-        
-        // Warp forward to check points
-        vm.warp(startTime + 7 days);
-        
-        // User1 should have more points since their stake has been accruing for longer
-        uint256 user1Points = staking.previewUserPoints(user1);
-        uint256 user2Points = staking.previewUserPoints(user2);
-        
-        console.log("User1 points:", user1Points);
-        console.log("User2 points:", user2Points);
-        
-        assertGt(user1Points, user2Points, "Earlier staker should have more points");
-        
-        // The difference should be approximately 1 day of points
-        uint256 expectedDiff = (stakeAmount * 200 * 1 days * 274) / 100000;
-        uint256 actualDiff = user1Points - user2Points;
-        assertApproxEqRel(actualDiff, expectedDiff, 0.01e18); // Within 1%
     }
 
     /// @notice Test KLIMA_X allocation calculation
     function test_CalculateKlimaXAllocation() public {
         // Setup staking
         setupStaking();
-        uint256 stakeAmount = 100 * 1e12;
+        uint256 stakeAmount = 100 * 1e9;
 
         // Create stakes for both users
         createStake(user1, stakeAmount);
@@ -1055,7 +1056,7 @@ contract KlimaFairLaunchStakingTest is Test {
 
         // Create stake
         vm.warp(startTime);
-        uint256 stakeAmount = 100 * 1e12;
+        uint256 stakeAmount = 100 * 1e9;
         createStake(user1, stakeAmount);
 
         // Preview points
@@ -1076,7 +1077,7 @@ contract KlimaFairLaunchStakingTest is Test {
 
         // Create stakes for multiple users
         vm.warp(startTime);
-        uint256 stakeAmount = 100 * 1e12;
+        uint256 stakeAmount = 100 * 1e9;
         
         createStake(user1, stakeAmount);
 
@@ -1103,7 +1104,7 @@ contract KlimaFairLaunchStakingTest is Test {
 
         // Staking phase
         vm.warp(startTime);
-        uint256 stakeAmount = 100 * 1e12;
+        uint256 stakeAmount = 100 * 1e9;
         
         createStake(user1, stakeAmount);
 
@@ -1136,7 +1137,7 @@ contract KlimaFairLaunchStakingTest is Test {
 
         // User 1 stakes
         vm.warp(startTime);
-        uint256 stakeAmount = 100 * 1e12;
+        uint256 stakeAmount = 100 * 1e9;
         
         createStake(user1, stakeAmount);
         vm.warp(startTime + 1 days);
@@ -1157,7 +1158,7 @@ contract KlimaFairLaunchStakingTest is Test {
     function test_MixedUnstakingAndClaiming() public {
         // --- 1. SET UP STAKING ---
         setupStaking();
-        uint256 stakeAmount = 100 * 1e12; // Example stake amount
+        uint256 stakeAmount = 100 * 1e9; // Example stake amount
 
         // Create a stake for user1
         createStake(user1, stakeAmount);
@@ -1188,7 +1189,7 @@ contract KlimaFairLaunchStakingTest is Test {
     function test_MaximumBurn() public {
         // Setup staking
         setupStaking();
-        uint256 stakeAmount = 100 * 1e12;
+        uint256 stakeAmount = 100 * 1e9;
         
         // Create stake
         createStake(user1, stakeAmount);
@@ -1231,17 +1232,17 @@ contract KlimaFairLaunchStakingTest is Test {
         setupStaking();
         
         // Create multiple stakes for same user
-        createStake(user1, 50 * 1e12);
+        createStake(user1, 50 * 1e9);
         vm.warp(block.timestamp + 1 days);
-        createStake(user1, 50 * 1e12);
+        createStake(user1, 50 * 1e9);
         
         // Unstake more than one stake's worth
         vm.prank(user1);
-        staking.unstake(75 * 1e12);
+        staking.unstake(75 * 1e9);
         
         // Verify correct amount unstaked
         (uint256 remainingAmount,,,,,,,) = staking.userStakes(user1, 0);
-        assertEq(remainingAmount, 25 * 1e12, "First stake should have 25 tokens left");
+        assertEq(remainingAmount, 25 * 1e9, "First stake should have 25 tokens left");
         (uint256 secondStakeAmount,,,,,,,) = staking.userStakes(user1, 1);
         assertEq(secondStakeAmount, 0, "Second stake should be fully unstaked");
     }
@@ -1321,15 +1322,15 @@ contract KlimaFairLaunchStakingTest is Test {
         // Verify that staking is blocked when paused
         vm.warp(startTime + 1 days);  // Ensure we're within the staking period
         vm.startPrank(user1);
-        IERC20(KLIMA_V0_ADDR).approve(address(staking), 100 * 1e12);
+        IERC20(KLIMA_V0_ADDR).approve(address(staking), 100 * 1e9);
         vm.expectRevert(abi.encodeWithSelector(PausableUpgradeable.EnforcedPause.selector));
-        staking.stake(100 * 1e12);
+        staking.stake(100 * 1e9);
         vm.stopPrank();
 
         // Verify that unstaking is blocked when paused
         vm.startPrank(user1);
         vm.expectRevert(abi.encodeWithSelector(PausableUpgradeable.EnforcedPause.selector));
-        staking.unstake(100 * 1e12);
+        staking.unstake(100 * 1e9);
         vm.stopPrank();
 
         // Owner can unpause the contract
@@ -1338,11 +1339,11 @@ contract KlimaFairLaunchStakingTest is Test {
         assertFalse(staking.paused(), "Contract should be unpaused after owner call");
 
         // Verify that staking works after unpausing
-        createStake(user1, 100 * 1e12);
+        createStake(user1, 100 * 1e9);
 
         // Verify that unstaking works after unpausing
         vm.startPrank(user1);
-        staking.unstake(100 * 1e12);
+        staking.unstake(100 * 1e9);
         vm.stopPrank();
     }
 
@@ -1463,7 +1464,7 @@ contract KlimaFairLaunchStakingTest is Test {
         setupStaking();
         
         // Create stake
-        createStake(user1, 100 * 1e12);
+        createStake(user1, 100 * 1e9);
         
         // Warp to after freeze time
         warpToFinalization();
@@ -1511,42 +1512,6 @@ contract KlimaFairLaunchStakingTest is Test {
         assertEq(stakedAmount, minimalAmount, "Minimal stake should be created");
     }
 
-    /// @notice Test with very high growth rate
-    function test_HighGrowthRate() public {
-        // Set a very high growth rate (just below the denominator)
-        uint256 highRate = 99999; // Just below GROWTH_DENOMINATOR (100000)
-        
-        vm.prank(owner);
-        staking.setGrowthRate(highRate);
-        
-        // Setup staking period
-        vm.prank(owner);
-        staking.setBurnVault(address(burnVault));
-        uint256 startTime = block.timestamp + 1 days;
-        vm.prank(owner);
-        staking.enableStaking(startTime);
-        
-        // Create stake
-        vm.warp(startTime);
-        uint256 stakeAmount = 100 * 1e12;
-        createStake(user1, stakeAmount);
-        
-        // Advance time by a small amount
-        vm.warp(startTime + 1 hours);
-        
-        // Check points - should be very high due to high growth rate
-        uint256 points = staking.previewUserPoints(user1);
-        assertGt(points, stakeAmount * 200, "Points should be very high with high growth rate");
-    }
-
-    /// @notice Test setting invalid growth rate
-    function test_RevertWhen_SettingInvalidGrowthRate() public {
-        // Try to set growth rate equal to denominator
-        vm.prank(owner);
-        vm.expectRevert("Growth Rate must be less than denominator");
-        staking.setGrowthRate(100000); // Equal to GROWTH_DENOMINATOR
-    }
-
     /// @notice Test with many small stakes
     function test_ManySmallStakes() public {
         // Setup staking period
@@ -1568,6 +1533,7 @@ contract KlimaFairLaunchStakingTest is Test {
         
         // Create 10 small stakes
         for (uint256 i = 0; i < 15; i++) {
+            vm.warp(block.timestamp + 15 minutes);
             staking.stake(smallAmount);
         }
         vm.stopPrank();
@@ -1584,7 +1550,7 @@ contract KlimaFairLaunchStakingTest is Test {
         }
         assertEq(stakeCount, 15, "Should have 15 stakes");
         
-        // Unstake half the total amount
+        // Unstake part of the total amount
         vm.prank(user1);
         staking.unstake(smallAmount * 5);
         
@@ -1597,51 +1563,9 @@ contract KlimaFairLaunchStakingTest is Test {
         assertEq(remainingTotal, smallAmount * 10, "Should have half the amount remaining");
     }
 
-        /// @notice Test adding a new test to verify the exact compounding formula
-    function test_PointsCompoundingFormula() public {
-        // Setup staking with specific growth rate
-        vm.startPrank(owner);
-        staking.setGrowthRate(274); // 0.00274 as per spec
-        staking.setBurnVault(address(burnVault));
-        uint256 startTime = block.timestamp + 1 days;
-        staking.enableStaking(startTime);
-        vm.stopPrank();
-
-        // Create stake in week 1 (2x bonus)
-        vm.warp(startTime);
-        uint256 stakeAmount = 1000 * 1e12; // 1000 KLIMA
-        
-        createStake(user1, stakeAmount);
-
-        // Initial points should be 0 since no time has passed
-        uint256 initialPoints = staking.previewUserPoints(user1);
-        assertEq(initialPoints, 0, "Initial points should be 0");
-        
-        // Day 1 - after 1 day, points should start accumulating
-        vm.warp(startTime + 1 days);
-        uint256 day1Points = staking.previewUserPoints(user1);
-        // Expected: 1000 * 2.0 bonus * 1 day * 0.00274 growth rate
-        uint256 expectedDay1Points = (stakeAmount * 200 * 1 days * 274) / 100000;
-        assertApproxEqRel(day1Points, expectedDay1Points, 0.01e18); // Within 1%
-        
-        // Day 30 - should show significant growth
-        vm.warp(startTime + 30 days);
-        uint256 day30Points = staking.previewUserPoints(user1);
-        // Expected: approximately 8.2% growth from initial stake value
-        uint256 expectedDay30Points = (stakeAmount * 200 * 30 days * 274) / 100000;
-        assertApproxEqRel(day30Points, expectedDay30Points, 0.01e18); // Within 1%
-        
-        // Day 90 - should show even more growth
-        vm.warp(startTime + 90 days);
-        uint256 day90Points = staking.previewUserPoints(user1);
-        // Expected: approximately 28.4% growth from initial stake value
-        uint256 expectedDay90Points = (stakeAmount * 200 * 90 days * 274) / 100000;
-        assertApproxEqRel(day90Points, expectedDay90Points, 0.01e18); // Within 1%
-    }
-
     /// @notice Test adding a new test to verify the exact burn formula
     function test_BurnFormula() public {
-        uint256 stakeAmount = 100 * 1e12;
+        uint256 stakeAmount = 100 * 1e9;
         uint256 stakeTime = block.timestamp;
         
         // Test Day 30 burn
@@ -1683,12 +1607,12 @@ contract KlimaFairLaunchStakingTest is Test {
         
         // User1 stakes 1000 KLIMA in week 1 (2x bonus)
         vm.warp(staking.startTimestamp());
-        uint256 user1Amount = 1000 * 1e12;
+        uint256 user1Amount = 1000 * 1e9;
         createStake(user1, user1Amount);
         
         // User2 stakes 500 KLIMA in week 2 (1.5x bonus)
         vm.warp(staking.startTimestamp() + 8 days);
-        uint256 user2Amount = 500 * 1e12;
+        uint256 user2Amount = 500 * 1e9;
         createStake(user2, user2Amount);
         
         // Advance to freeze date
@@ -1754,7 +1678,7 @@ contract KlimaFairLaunchStakingTest is Test {
         vm.warp(startTime - 2 days);
         
         // Stake during pre-staking period
-        uint256 stakeAmount = 100 * 1e12;
+        uint256 stakeAmount = 100 * 1e9;
         createStake(user1, stakeAmount);
 
         // Verify stake details
@@ -1784,7 +1708,7 @@ contract KlimaFairLaunchStakingTest is Test {
         vm.warp(startTime - 4 days); // Changed from 3 days to 4 days
         
         // Try to stake before pre-staking window
-        uint256 stakeAmount = 100 * 1e12;
+        uint256 stakeAmount = 100 * 1e9;
         vm.startPrank(user1);
         IERC20(KLIMA_V0_ADDR).approve(address(staking), stakeAmount);
         vm.expectRevert("Staking not started");
@@ -1805,7 +1729,7 @@ contract KlimaFairLaunchStakingTest is Test {
         vm.warp(startTime - 2 days);
         
         // Should be able to stake
-        uint256 stakeAmount = 100 * 1e12;
+        uint256 stakeAmount = 100 * 1e9;
         createStake(user1, stakeAmount);
         
         // Verify stake details
@@ -1823,7 +1747,7 @@ contract KlimaFairLaunchStakingTest is Test {
     function test_RevertWhen_ZeroPreStakingWindow() public {
         vm.startPrank(owner);
         // Try to set pre-staking window to zero
-        vm.expectRevert("Pre-staking window must be between 3 days and 7 days");
+        vm.expectRevert("Pre-staking window must be at least 2 days");
         staking.setPreStakingWindow(0);
         vm.stopPrank();
     }
@@ -1840,26 +1764,27 @@ contract KlimaFairLaunchStakingTest is Test {
         vm.warp(startTime - 2 days);
         
         // Stake during pre-staking period
-        uint256 stakeAmount = 100 * 1e12;
+        uint256 stakeAmount = 100 * 1e9;
         createStake(user1, stakeAmount);
 
-        // Check points - should be 0 during pre-staking
+        // Check points - should be initial points during pre-staking
+        uint256 initialPoints = stakeAmount * 1e9 * 2;
         uint256 pointsDuringPreStaking = staking.previewUserPoints(user1);
-        assertEq(pointsDuringPreStaking, 0, "No points should accrue during pre-staking");
+        assertEq(pointsDuringPreStaking, initialPoints, "No points should accrue during pre-staking");
         
         // Warp to exactly the start time
         vm.warp(startTime);
         
-        // Points should still be 0 at the exact start time
+        // Points should still be initial points at the exact start time
         uint256 pointsAtStart = staking.previewUserPoints(user1);
-        assertEq(pointsAtStart, 0, "No points should accrue at the exact start time");
+        assertEq(pointsAtStart, initialPoints, "No points should accrue at the exact start time");
         
         // Warp to after start time
         vm.warp(startTime + 1 days);
         
         // Check points - should be non-zero after start time
         uint256 pointsAfterStart = staking.previewUserPoints(user1);
-        assertGt(pointsAfterStart, 0, "Points should accrue after official start time");
+        assertGt(pointsAfterStart, initialPoints, "Points should accrue after official start time");
     }
 
     /// @notice Test pre-staking with multiple users
@@ -1874,7 +1799,7 @@ contract KlimaFairLaunchStakingTest is Test {
         vm.warp(startTime - 2 days);
         
         // User1 stakes during pre-staking period
-        uint256 stakeAmount = 100 * 1e12;
+        uint256 stakeAmount = 100 * 1e9;
         createStake(user1, stakeAmount);
         
         // User2 stakes during pre-staking period
@@ -1895,11 +1820,13 @@ contract KlimaFairLaunchStakingTest is Test {
         vm.startPrank(owner);
         uint256 startTime = block.timestamp + 5 days;
         staking.enableStaking(startTime);
+        // Ensure we're using the default growth rate in the test
+        staking.setGrowthRate(274); // 0.00274 as per spec
         vm.stopPrank();
 
         // User1 stakes during pre-staking period
         vm.warp(startTime - 2 days);
-        uint256 stakeAmount = 100 * 1e12;
+        uint256 stakeAmount = 100 * 1e9; // Using correct 9 decimals for KLIMA_V0
         createStake(user1, stakeAmount);
         
         // User2 stakes during regular period (week 1)
@@ -1914,10 +1841,30 @@ contract KlimaFairLaunchStakingTest is Test {
         uint256 user2Points = staking.previewUserPoints(user2);
         assertGt(user1Points, user2Points, "Earlier staker should have more points");
         
-        // The difference should be exactly 1 day of points
-        uint256 expectedDiff = (stakeAmount * 200 * 1 days * 274) / 100000;
+        // Calculate expected points using helper function
+        // User1 has accrued for 2 days (from startTime to startTime+2)
+        uint256 expected1 = calculateExpectedPoints(
+            stakeAmount,
+            200, // 2x multiplier in week 1
+            2 days, // 2 days of accrual
+            274 // growth rate
+        );
+        
+        // User2 has accrued for 1 day (from startTime+1 to startTime+2)
+        uint256 expected2 = calculateExpectedPoints(
+            stakeAmount,
+            200, // 2x multiplier in week 1
+            1 days, // 1 day of accrual
+            274 // growth rate
+        );
+        
+        // Calculate the expected difference
+        uint256 expectedDiff = expected1 - expected2;
         uint256 actualDiff = user1Points - user2Points;
-        assertApproxEqRel(actualDiff, expectedDiff, 0.01e18); // Within 1%
+        
+        assertApproxEqRel(user1Points, expected1, 0.01e18, "User1 points should match expected calculation");
+        assertApproxEqRel(user2Points, expected2, 0.01e18, "User2 points should match expected calculation");
+        assertApproxEqRel(actualDiff, expectedDiff, 0.01e18, "Point difference should match expected calculation");
     }
 
     /// @notice Test unstaking during pre-staking period applies only base burn
@@ -1928,7 +1875,7 @@ contract KlimaFairLaunchStakingTest is Test {
         
         // User1 stakes during pre-staking period
         vm.warp(startTime - 2 days); // 2 days before official start
-        uint256 stakeAmount = 100 * 1e12;
+        uint256 stakeAmount = 100 * 1e9;
         createStake(user1, stakeAmount);
         
         // Check initial stake details
@@ -2016,6 +1963,77 @@ contract KlimaFairLaunchStakingTest is Test {
             0.01e18, // Within 1%
             "User should receive stake amount minus burn amount"
         );
+    }
+
+    /// @notice Test expired claims can be transferred after claimDeadline
+    function test_ExpiredClaimsCanBeTransferredAfterClaimDeadline() public {
+        // Setup staking
+        setupStaking();
+        createStake(user1, 100 * 1e9);
+        createStake(user2, 100 * 1e9);
+        finalizeStaking();
+
+        // only user 1 claims their allocation before claimDeadline
+        vm.startPrank(user1);
+        staking.unstake(0);
+        vm.stopPrank();
+
+        vm.warp(staking.claimDeadline() + 1 days);
+        vm.startPrank(owner);
+        staking.transferExpiredClaims();
+        vm.stopPrank();
+
+        uint256 klimaSupply = staking.KLIMA_SUPPLY();
+        uint256 klimaXSupply = staking.KLIMAX_SUPPLY();
+
+        // user 1 should have received their allocation
+        assertEq(IERC20(staking.KLIMA()).balanceOf(user1), klimaSupply/2, "User 1 should have received their allocation");
+        assertEq(IERC20(staking.KLIMA_X()).balanceOf(user1), klimaXSupply/2, "User 1 should have received their allocation");
+
+        // remaining KLIMA should be transferred to owner
+        assertEq(IERC20(staking.KLIMA()).balanceOf(owner), klimaSupply/2, "remaining KLIMA should be transferred to owner");
+        // remaining KLIMA_X should be transferred to owner
+        assertEq(IERC20(staking.KLIMA_X()).balanceOf(owner), klimaXSupply/2, "remaining KLIMA_X should be transferred to owner");
+    }
+
+    /// @notice Test expired claims cannot be transferred before claimDeadline
+    function test_RevertWhen_ExpiredClaimsCannotBeTransferredBeforeClaimDeadline() public {
+                // Setup staking
+        setupStaking();
+        createStake(user1, 100 * 1e9);
+        createStake(user2, 100 * 1e9);
+        finalizeStaking();
+
+        // only user 1 claims their allocation before claimDeadline
+        vm.startPrank(user1);
+        staking.unstake(0);
+        vm.stopPrank();
+
+        vm.warp(staking.claimDeadline() - 1 days);
+        vm.startPrank(owner);
+        vm.expectRevert("Claim deadline has not passed");
+        staking.transferExpiredClaims();
+        vm.stopPrank();
+    }
+
+    /// @notice Test revert when non-owner calls transferExpiredClaims
+    function test_RevertWhen_NotOwnerCallsTransferExpiredClaims() public {
+                // Setup staking
+        setupStaking();
+        createStake(user1, 100 * 1e9);
+        createStake(user2, 100 * 1e9);
+        finalizeStaking();
+
+        // only user 1 claims their allocation before claimDeadline
+        vm.startPrank(user1);
+        staking.unstake(0);
+        vm.stopPrank();
+
+        vm.warp(staking.claimDeadline() - 1 days);
+        vm.startPrank(user1);
+        vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, user1));
+        staking.transferExpiredClaims();
+        vm.stopPrank();
     }
 
 } 
