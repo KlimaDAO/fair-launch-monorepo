@@ -111,7 +111,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         // Initialize default values
         KLIMA_SUPPLY = 17_500_000 * 1e18;
         KLIMAX_SUPPLY = 40_000_000 * 1e18;
-        preStakingWindow = 3 days;
+        preStakingWindow = 5 days;
         minStakeAmount = 1e9;
         maxTotalStakesPerUser = 100;
 
@@ -636,7 +636,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     /// @param _preStakingWindow Time in seconds before start when pre-staking is allowed
     /// @dev Can only be called by the owner before pre-staking begins
     function setPreStakingWindow(uint256 _preStakingWindow) external onlyOwner beforePreStaking {
-        require(_preStakingWindow >= 3 days && _preStakingWindow <= 7 days, "Pre-staking window must be between 3 days and 7 days");
+        require(_preStakingWindow >= 2 days, "Pre-staking window must be at least 2 days");
         preStakingWindow = _preStakingWindow;
         emit PreStakingWindowSet(_preStakingWindow);
     }

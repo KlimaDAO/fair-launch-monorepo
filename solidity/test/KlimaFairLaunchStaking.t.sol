@@ -1747,7 +1747,7 @@ contract KlimaFairLaunchStakingTest is Test {
     function test_RevertWhen_ZeroPreStakingWindow() public {
         vm.startPrank(owner);
         // Try to set pre-staking window to zero
-        vm.expectRevert("Pre-staking window must be between 3 days and 7 days");
+        vm.expectRevert("Pre-staking window must be at least 2 days");
         staking.setPreStakingWindow(0);
         vm.stopPrank();
     }

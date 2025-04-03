@@ -13,6 +13,6 @@ remappings = [
 
 [rpc_endpoints]
 base = "https://mainnet.base.org"
-polygon = "https://polygon.llamarpc.com"
+polygon = "https://polygon-rpc.com"
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
