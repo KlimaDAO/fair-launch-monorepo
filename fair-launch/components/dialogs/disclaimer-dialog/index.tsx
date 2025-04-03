@@ -67,7 +67,7 @@ export const DisclaimerDialog: FC = () => {
               adversely affect your investment.
             </div>
             <div>
-              Operational Risks: The KlimaDAO platform relies on various
+              Operational Risks: The Klima Protocol platform relies on various
               technologies related to the Base network and other digital assets.
               These technologies are subject to change, and such changes could
               adversely affect your investment.
