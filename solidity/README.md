@@ -9,6 +9,19 @@ The Fair Launch represents KlimaDAO's transition from the legacy KLIMA V0 token 
 - **KLIMA**: A dynamic carbon index token (17.5M supply) that maintains the protocol's carbon backing
 - **KLIMAX**: An economic governance token (40M supply) for the Klima X ecosystem
 
+### Deployment addresses
+
+- Base:
+KlimaFairLaunchStaking Proxy: 0xea8a59D0bf9C05B437c6a5396cfB429F1A57B682
+KlimaFairLaunchStaking Implementation: 0x8f2e94B5eB2F726C4752D0880B0251Cc070014c0
+KlimaFairLaunchBurnVault Proxy: 0x51FE162A4C8bBdE72265edF1667BBf14449d4972
+KlimaFairLaunchBurnVault Implementation: 0x6F8ce15386ee8323fd634AabE9194F39BAB3396e
+
+- Polygon:
+KlimaFairLaunchPolygonBurnHelper Proxy: 0x4f640DA0ccf61CF068E35017283f295231b3A658
+KlimaFairLaunchPolygonBurnHelper Implementation: 0x2D8457Ca0Eed11192F66C1D22fF05d5Bf5dE77e4
+
+
 ### Key Dynamics
 
 The staking contract implements a "last man standing" mechanism that:
