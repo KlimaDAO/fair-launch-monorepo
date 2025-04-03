@@ -23,7 +23,7 @@ export const content = css({
   transform: "translate(-50%, -20%)",
   width: "38.2rem",
   maxWidth: "38.2rem",
-  maxHeight: "95vh",
+  maxHeight: "80vh",
   overflowY: "auto",
   padding: "2rem",
   display: "flex",
@@ -33,6 +33,7 @@ export const content = css({
   lg: {
     width: "69.2rem",
     maxWidth: "69.2rem",
+    maxHeight: "95vh",
   },
 });
 
