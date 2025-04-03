@@ -7,75 +7,74 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { UD60x18, ud, mul, div, exp, sub } from "@prb/math/UD60x18.sol";
 
 interface IKlimaFairLaunchBurnVault {
     function addKlimaAmountToBurn(address _user, uint256 _amount) external;
 }
 
 contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgradeable, PausableUpgradeable, ReentrancyGuardUpgradeable {
-    // user stakes
     struct Stake {
-        uint256 amount;
-        uint256 stakeStartTime;
-        // points
-        uint256 lastUpdateTime;
-        uint256 bonusMultiplier;
-        uint256 organicPoints;
-        uint256 burnRatioSnapshot;
-        uint256 burnAccrued;
+        uint256 amount; // raw amount of KLIMA V0 staked
+        uint256 stakeStartTime; // timestamp when the stake was created
+        uint256 lastUpdateTime; // timestamp when the stake was last updated
+        uint256 bonusMultiplier; // Percentage (200 = 2x)
+        uint256 organicPoints; // e18
+        uint256 burnRatioSnapshot; // e18
+        uint256 burnAccrued; // e18
         uint256 hasBeenClaimed;  // 0 = not claimed, 1 = claimed
     }
 
     mapping(address => Stake[]) public userStakes;
 
-    // staking timeline
-    uint256 public startTimestamp;
-    uint256 public freezeTimestamp;
-    uint256 public preStakingWindow; // Time before startTimestamp when staking is allowed but points are not accruing
+    uint256 public startTimestamp; // timestamp when staking begins and organic points are accruing
+    uint256 public freezeTimestamp; // timestamp when staking is frozen and organic points are not accruing
+    uint256 public preStakingWindow; // Time before startTimestamp when staking is allowed but organic points are not accruing
 
-    // global totals
-    uint256 public totalOrganicPoints;
-    uint256 public totalBurned;
-    uint256 public totalStaked;
-    address[] public stakerAddresses;
-    uint256 public burnRatio;
 
-    // finalization
-    uint256 public finalTotalPoints;
-    uint256 public finalizeIndex;
-    uint256 public finalizationComplete;
+    uint256 public totalOrganicPoints; // e18 // total amount of organic points in the contract
+    uint256 public totalBurned; // e9 // total amount of KLIMA V0 sent to the burn vault
+    uint256 public totalStaked; // e9 // total amount of KLIMA V0 staked in this contract
+    address[] public stakerAddresses; // array of staker addresses
+    uint256 public burnRatio; // e18 used to calculate the burn distribution
 
-    // constants
-    uint256 constant GROWTH_DENOMINATOR = 100000;
-    address constant KLIMA_V0 = 0xDCEFd8C8fCc492630B943ABcaB3429F12Ea9Fea2; // current klima address on Base
-    
-    uint256 public GROWTH_RATE;
+    uint256 public finalTotalPoints; // e18
+    uint256 public finalizeIndex; // index of the last staker addressthat has been processed
+    uint256 public finalizationComplete; // 0 = not finalized, 1 = finalized
 
-    // token state
-    address public KLIMA;
-    address public KLIMA_X;
-    uint256 public KLIMA_SUPPLY;
-    uint256 public KLIMAX_SUPPLY;
-    address public burnVault;
+    uint256 public constant BURN_DISTRIBUTION_PRECISION = 1e18; // e18 for burn calc
+    address public constant KLIMA_V0 = 0xDCEFd8C8fCc492630B943ABcaB3429F12Ea9Fea2;
 
-    // stake limits
-    uint256 public minStakeAmount;
-    uint256 public maxTotalStakesPerUser;
+    UD60x18 public SECONDS_PER_DAY; // constant set in initialize
+    UD60x18 public PERCENTAGE_SCALE; // constant set in initialize
+    UD60x18 public POINTS_SCALE_DENOMINATOR; // constant set in initialize
+    UD60x18 public EXP_GROWTH_RATE; // adjustable with setGrowthRate
 
-    // events
-    event StakeCreated(address indexed user, uint256 amount, uint256 multiplier, uint256 startTimestamp);
-    event StakeBurned(address indexed user, uint256 burnAmount, uint256 timestamp);
-    event StakeClaimed(address indexed user, uint256 totalUserStaked, uint256 klimaAllocation, uint256 klimaXAllocation, uint256 timestamp);
-    event FinalizationComplete();
+    address public KLIMA; // address of the KLIMA token 
+    address public KLIMA_X; // address of the KLIMA_X token
+    uint256 public KLIMA_SUPPLY; // e18 // total supply of KLIMA to be claimed
+    uint256 public KLIMAX_SUPPLY; // e18 // total supply of KLIMA_X to be claimed
+    address public burnVault; // address of the burn vault contract
+
+    uint256 public minStakeAmount; // e9 // minimum amount of KLIMA V0 that can be staked
+    uint256 public maxTotalStakesPerUser; // maximum number of stakes per user
+
+    uint256 public claimDeadline; // timestamp after which KLIMA and KLIMA_X allocation claims can expire
+
+    event StakeCreated(address indexed user, uint256 indexed amountKlimaV0Staked, uint256 multiplier, uint256 indexed startTimestamp);
+    event StakeBurned(address indexed user, uint256 indexed amountKlimaV0Burned, uint256 indexed timestamp);
+    event StakeClaimed(address indexed user, uint256 totalUserStaked, uint256 indexed klimaAllocation, uint256 indexed klimaXAllocation, uint256 timestamp);
+    event FinalizationComplete(uint256 indexed finalizationTimestamp);
     event TokenAddressesSet(address indexed klima, address indexed klimax);
-    event StakingEnabled(uint256 startTimestamp, uint256 freezeTimestamp);
-    event StakingExtended(uint256 oldFreezeTimestamp, uint256 newFreezeTimestamp);
+    event StakingEnabled(uint256 indexed startTimestamp, uint256 indexed freezeTimestamp);
+    event StakingExtended(uint256 indexed oldFreezeTimestamp, uint256 indexed newFreezeTimestamp);
     event BurnVaultSet(address indexed burnVault);
-    event GrowthRateSet(uint256 newValue);
-    event KlimaSupplySet(uint256 newValue);
-    event KlimaXSupplySet(uint256 newValue);
-    event PreStakingWindowSet(uint256 preStakingWindow);
-    event StakeLimitsSet(uint256 minStakeAmount, uint256 maxTotalStakesPerUser);
+    event GrowthRateSet(uint256 indexed newValue);
+    event KlimaSupplySet(uint256 indexed newValue);
+    event KlimaXSupplySet(uint256 indexed newValue);
+    event PreStakingWindowSet(uint256 indexed preStakingWindow);
+    event StakeLimitsSet(uint256 indexed minStakeAmount, uint256 indexed maxTotalStakesPerUser);
+
 
     /// @notice Prevents actions after pre-staking has begun
     /// @dev Used to lock configuration changes once pre-staking begins
@@ -103,23 +102,23 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         _disableInitializers();
     }
 
-    /// @notice Initializes the contract with the initial owner
-    /// @param initialOwner Address that will be granted owner role
     function initialize(address initialOwner) external initializer {
         __Ownable_init(initialOwner);
         __Pausable_init();
         __UUPSUpgradeable_init();
         __ReentrancyGuard_init();
-        
+
         // Initialize default values
-        GROWTH_RATE = 274;
         KLIMA_SUPPLY = 17_500_000 * 1e18;
         KLIMAX_SUPPLY = 40_000_000 * 1e18;
-        preStakingWindow = 3 days;
-
-        // Set default limits for DOS mitigation
+        preStakingWindow = 5 days;
         minStakeAmount = 1e9;
-        maxTotalStakesPerUser = 200;
+        maxTotalStakesPerUser = 100;
+
+        SECONDS_PER_DAY = ud(86400);
+        EXP_GROWTH_RATE = ud(2740000000000000); // 0.00274 * 1e18
+        PERCENTAGE_SCALE = ud(100);
+        POINTS_SCALE_DENOMINATOR = ud(1e27); // 10^27
     }
 
     /// @notice Authorizes an upgrade to a new implementation
@@ -129,8 +128,6 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {
         require(newImplementation != address(0), "New implementation cannot be zero address");
     }
-
-    // user functions
 
     /// @notice Allows users to stake KLIMA_V0 tokens to earn points
     /// @param amount Amount of KLIMA_V0 tokens to stake
@@ -177,11 +174,13 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
             stakeStartTime: stakeStartTime,
             lastUpdateTime: stakeStartTime, // Points start accruing from stakeStartTime
             bonusMultiplier: multiplier,
-            organicPoints: 0,
+            organicPoints: amount * 1e9 * multiplier / 100, // scaled to 18 decimals
             burnRatioSnapshot: burnRatio,
             burnAccrued: 0,
             hasBeenClaimed: 0
         });
+
+        totalOrganicPoints += amount * 1e9 * multiplier / 100; // scaled to 18 decimals
 
         // Add stake to user's stakes
         userStakes[msg.sender].push(newStake);
@@ -212,7 +211,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         }
     }
 
-    // internal functions
+
 
     /// @notice Processes unstaking before the freeze period, applying burn penalties
     /// @param amount Amount of tokens to unstake and partially burn
@@ -220,14 +219,14 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     function _unstakeAndBurn(uint256 amount) internal nonReentrant {
         require(amount > 0, "Amount must be greater than 0");
 
+        // Get reference to storage array (no copy made yet)
+        Stake[] storage userStakesList = userStakes[msg.sender];
+        require(userStakesList.length > 0, "No stakes found");
+
         // Track totals
         uint256 totalUnstake;
         uint256 totalBurnAmount;
         uint256 freedOrganicPointsTotal;
-
-        // Get reference to storage array (no copy made yet)
-        Stake[] storage userStakesList = userStakes[msg.sender];
-        require(userStakesList.length > 0, "No stakes found");
 
         // Process stakes from newest to oldest
         for (uint256 i = userStakesList.length; i > 0 && totalUnstake < amount; i--) {
@@ -272,7 +271,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
 
         // Update burn ratio if applicable
         if (totalOrganicPoints > 0) {
-            burnRatio = burnRatio + ((freedOrganicPointsTotal * GROWTH_DENOMINATOR) / totalOrganicPoints);
+            burnRatio = burnRatio + ((freedOrganicPointsTotal * BURN_DISTRIBUTION_PRECISION) / totalOrganicPoints);
         }
 
         // Send tokens to burn vault for the burn portion
@@ -358,6 +357,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         _updateBurnDistribution(_user);
     }
 
+
     /// @notice Updates organic points for a user's stakes
     /// @param _user Address of the user to update
     /// @dev Points accrue based on stake amount, time, and multiplier
@@ -395,63 +395,68 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
                 timeElapsed = cutoffTime - currentStake.lastUpdateTime;
             }
             
-            uint256 newPoints = 
-                (currentStake.amount * currentStake.bonusMultiplier * timeElapsed * GROWTH_RATE) / GROWTH_DENOMINATOR;
-
-            newTotalOrganicPoints += newPoints;
-            currentStake.organicPoints += newPoints;
-            currentStake.lastUpdateTime = cutoffTime; // Always use cutoffTime (max freezeTimestamp)
-            
+            if (timeElapsed > 0) {
+                // Optimization: Combined multiple UD60x18 operations to reduce conversions and operations
+                // Convert time elapsed to days (division by SECONDS_PER_DAY)
+                UD60x18 timeElapsed_days = div(ud(timeElapsed), SECONDS_PER_DAY);
+                
+                // Calculate e^(growthRate * timeElapsedDays) - 1
+                UD60x18 growthFactor = sub(exp(mul(EXP_GROWTH_RATE, timeElapsed_days)), ud(1e18));
+                
+                // Optimize: Combine bonus multiplier and amount calculations
+                // bonusMultiplier / 100 * amount / 1e27 = (bonusMultiplier * amount) / (100 * 1e27)
+                UD60x18 basePoints = div(
+                    mul(ud(currentStake.amount), ud(currentStake.bonusMultiplier * 1e18)), 
+                    mul(PERCENTAGE_SCALE, POINTS_SCALE_DENOMINATOR)
+                );
+                
+                // Calculate new points (basePoints * growthFactor)
+                uint256 newPoints = mul(basePoints, growthFactor).intoUint256();
+                
+                // Update total organic points
+                newTotalOrganicPoints += newPoints;
+                // Update stake organic points
+                currentStake.organicPoints += newPoints;
+                // Update last update time
+                currentStake.lastUpdateTime = cutoffTime;
+            }
+            // Update stake in memory
             updatedStakes[i] = currentStake;
         }
-
-        // Update storage once
+        // Update stakes in storage
         Stake[] storage userStakesList = userStakes[_user];
         for (uint256 i = 0; i < stakes.length; i++) {
             userStakesList[i] = updatedStakes[i];
         }
+        // Update total organic points
         totalOrganicPoints = newTotalOrganicPoints;
     }
 
-    /// @notice Updates burn distribution for a user's stakes
-    /// @param _user Address of the user to update
-    /// @dev Distributes burned tokens proportionally based on organic points
     function _updateBurnDistribution(address _user) internal {
         // Skip if burnRatio is zero (no burns have occurred)
-        if (burnRatio == 0) {
-            return;
-        }
-        
-        // Get reference to storage array (no copy made yet)
+        if (burnRatio == 0) return;
+        // Load stakes into memory
         Stake[] storage userStakesList = userStakes[_user];
-        
-        // Process stakes directly from storage to memory and back
+        // Process each stake
         for (uint256 i = 0; i < userStakesList.length; i++) {
-            // Load stake into memory
             Stake memory currentStake = userStakesList[i];
-            
-            // Skip if amount is zero
-            if (currentStake.amount == 0) {
-                continue;
-            }
-            
-            // Skip if burnRatio hasn't changed for this stake
+            // Skip if stake amount is zero
+            if (currentStake.amount == 0) continue;
+            // Calculate burn ratio difference
             uint256 burnRatioDiff = burnRatio - currentStake.burnRatioSnapshot;
-            if (burnRatioDiff == 0) {
-                continue;
+            // Only update if there's a difference
+            if (burnRatioDiff > 0) {
+                // Calculate new burn accrual
+                uint256 newBurnAccrual = (currentStake.organicPoints * burnRatioDiff) / BURN_DISTRIBUTION_PRECISION;
+                // Update burn accrued amount
+                currentStake.burnAccrued += newBurnAccrual;
+                // Update snapshot for next comparison
+                currentStake.burnRatioSnapshot = burnRatio;
+                // Write back to storage
+                userStakesList[i] = currentStake;
             }
-            
-            // Only update if there's a difference in burn ratio
-            uint256 newBurnAccrual = (currentStake.organicPoints * burnRatioDiff) / GROWTH_DENOMINATOR;
-            currentStake.burnAccrued += newBurnAccrual;
-            currentStake.burnRatioSnapshot = burnRatio;
-            
-            // Only write back to storage if modified
-            userStakesList[i] = currentStake;
         }
     }
-
-    // admin functions
 
     /// @notice Sets the addresses for KLIMA and KLIMA_X tokens
     /// @param _klima Address of the KLIMA token contract
@@ -478,7 +483,6 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         require(burnVault != address(0), "Burn vault not set");
         require(minStakeAmount > 0, "Min stake amount not set");
         require(maxTotalStakesPerUser > 0, "Max total stakes per user not set");
-        require(GROWTH_RATE > 0, "Growth rate not set");
         startTimestamp = _startTimestamp;
         freezeTimestamp = _startTimestamp + 90 days;
         emit StakingEnabled(_startTimestamp, freezeTimestamp);
@@ -539,21 +543,54 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
             require(IERC20(KLIMA).balanceOf(address(this)) >= KLIMA_SUPPLY, "Insufficient KLIMA balance");
             require(IERC20(KLIMA_X).balanceOf(address(this)) >= KLIMAX_SUPPLY, "Insufficient KLIMA_X balance");
             finalizationComplete = 1;
-            emit FinalizationComplete();
+            claimDeadline = block.timestamp + 365 days;
+            emit FinalizationComplete(block.timestamp);
         }
     }
 
-    /// @notice Sets the growth rate for point accrual
-    /// @param _newValue New growth rate value
-    /// @dev Can only be called before staking starts
-    /// @dev Must be less than GROWTH_DENOMINATOR to prevent excessive point accrual
-    function setGrowthRate(uint256 _newValue) external onlyOwner beforeStartTimestamp {
-        require(_newValue > 0, "Growth Rate must be greater than 0");
-        require(_newValue < GROWTH_DENOMINATOR, "Growth Rate must be less than denominator");
-        GROWTH_RATE = _newValue;
-        emit GrowthRateSet(_newValue);
+    /// @notice Owner can transfer all KLIMA and KLIMA_X remaining from expired claims after claimDeadline
+    /// @dev Can only be called after claimDeadline (which is 365 days after finalization)
+    /// @dev Can only be called by the owner
+    function transferExpiredClaims() external onlyOwner {
+        require(block.timestamp >= claimDeadline, "Claim deadline has not passed");
+        require(IERC20(KLIMA).transfer(msg.sender, IERC20(KLIMA).balanceOf(address(this))), "KLIMA transfer failed");
+        require(IERC20(KLIMA_X).transfer(msg.sender, IERC20(KLIMA_X).balanceOf(address(this))), "KLIMA_X transfer failed");
     }
 
+    /// @notice Sets the growth rate for point accrual
+    /// @param _newValue New growth rate value e.g., 274 -> 0.00274 * 1e18
+    /// @dev Can only be called before staking starts
+    /// @dev Ensures growth rate is safe for up to 395 days of staking
+    /// @dev PRBMath exp function has a maximum input of ~130.7, so we need to ensure
+    /// @dev growthRate * 395 days < 130.7
+    /// @dev The spec recommends a value of 0.00274 (274 as input)
+    function setGrowthRate(uint256 _newValue) external onlyOwner beforeStartTimestamp {
+        // Lower bound check - ensure growth rate is positive and meaningful
+        // 10 would equal 0.0001 which is very small but still valid
+        require(_newValue >= 10, "Growth rate too low, min 0.0001");
+        
+        // Convert to the actual value that will be used (e.g., 274 -> 0.00274 * 1e18)
+        uint256 actualRate = _newValue * 1e13;
+        
+        // The PRBMath exp function has a maximum safe input value of approximately 130.7 * 1e18
+        // For safety, we'll use a more conservative limit of 130 * 1e18
+        // Calculate the maximum rate that would be safe for 395 days:
+        // maxRate * 395 days < 130 * 1e18
+        // maxRate < (130 * 1e18) / 395
+        // ~0.329 * 1e18 = 329000000000000000 (safe value)
+        uint256 MAX_SAFE_RATE = 329000000000000000; // Hard-coded safe value for 395 days
+        
+        // Ensure the rate is safe
+        require(actualRate < MAX_SAFE_RATE, "Growth rate too high for long-term staking");
+        
+        // For reference, spec recommends 0.00274, which gives e^(0.00274 × 90) ≈ 1.284 after 90 days
+        // This is a 28.4% increase, reasonable for the intended staking period
+        
+        // Set the growth rate
+        EXP_GROWTH_RATE = ud(actualRate);
+        emit GrowthRateSet(_newValue);
+    }
+    
     /// @notice Sets the total KLIMA token supply for distribution
     /// @param _newValue New KLIMA supply value (raw value with 18 decimals)
     /// @dev Can only be called before finalization
@@ -599,7 +636,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     /// @param _preStakingWindow Time in seconds before start when pre-staking is allowed
     /// @dev Can only be called by the owner before pre-staking begins
     function setPreStakingWindow(uint256 _preStakingWindow) external onlyOwner beforePreStaking {
-        require(_preStakingWindow >= 3 days && _preStakingWindow <= 7 days, "Pre-staking window must be between 3 days and 7 days");
+        require(_preStakingWindow >= 2 days, "Pre-staking window must be at least 2 days");
         preStakingWindow = _preStakingWindow;
         emit PreStakingWindowSet(_preStakingWindow);
     }
@@ -681,14 +718,11 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     /// @notice Previews a user's total points without updating state
     /// @param user Address of the user
     /// @return Total points including organic and burn points
-    /// @dev Simulates point updates up to current timestamp
+    /// @dev Simulates point updates up to current timestamp using exponential growth
     function previewUserPoints(address user) public view returns (uint256) {
         uint256 totalPoints;
-        
-        // Load stakes into memory once
         Stake[] memory stakes = userStakes[user];
 
-        // If finalization is complete, simply use the stored points
         if (finalizationComplete == 1) {
             for (uint256 i = 0; i < stakes.length; i++) {
                 Stake memory currentStake = stakes[i];
@@ -698,51 +732,55 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
             return totalPoints;
         }
 
-        // Determine the timestamp to calculate points up to
-        uint256 calculationTimestamp = block.timestamp;
-        if (freezeTimestamp < block.timestamp) {
-            calculationTimestamp = freezeTimestamp;
-        }
+        uint256 calculationTimestamp = block.timestamp < freezeTimestamp ? block.timestamp : freezeTimestamp;
 
-        // First simulate organic points update for all stakes
         Stake[] memory updatedStakes = new Stake[](stakes.length);
         for (uint256 i = 0; i < stakes.length; i++) {
             Stake memory currentStake = stakes[i];
-            if (currentStake.amount == 0) continue;
-            
-            // Skip if lastUpdateTime is already at or after freeze timestamp
-            if (currentStake.lastUpdateTime >= freezeTimestamp) {
+            if (currentStake.amount == 0 || currentStake.lastUpdateTime >= freezeTimestamp) {
                 updatedStakes[i] = currentStake;
                 continue;
             }
 
-            // Calculate time elapsed up to calculation timestamp
-            uint256 timeElapsed = 0;
-            if (calculationTimestamp > currentStake.lastUpdateTime) {
-                timeElapsed = calculationTimestamp - currentStake.lastUpdateTime;
-            }
+            // Start with existing stored organic points
+            uint256 existingOrganicPoints = currentStake.organicPoints;
             
-            // Update organic points
-            uint256 newPoints = (currentStake.amount * currentStake.bonusMultiplier * timeElapsed * GROWTH_RATE) / GROWTH_DENOMINATOR;
-            currentStake.organicPoints += newPoints;
-            currentStake.lastUpdateTime = calculationTimestamp;
+            uint256 timeElapsed = calculationTimestamp > currentStake.lastUpdateTime ? 
+                calculationTimestamp - currentStake.lastUpdateTime : 0;
+            
+            if (timeElapsed > 0) {
+                // Convert time elapsed to days (division by SECONDS_PER_DAY)
+                UD60x18 timeElapsed_days = div(ud(timeElapsed), SECONDS_PER_DAY);
+                
+                // Calculate e^(growthRate * timeElapsedDays) - 1
+                UD60x18 growthFactor = sub(exp(mul(EXP_GROWTH_RATE, timeElapsed_days)), ud(1e18));
+                
+                // Calculate additional points based on current stake amount
+                UD60x18 basePoints = div(
+                    mul(ud(currentStake.amount), ud(currentStake.bonusMultiplier * 1e18)), 
+                    mul(PERCENTAGE_SCALE, POINTS_SCALE_DENOMINATOR)
+                );
+                
+                // Add only the new points accrued since lastUpdateTime
+                uint256 newPoints = mul(basePoints, growthFactor).intoUint256();
+                
+                currentStake.organicPoints = existingOrganicPoints + newPoints;
+                currentStake.lastUpdateTime = calculationTimestamp;
+            }
             
             updatedStakes[i] = currentStake;
         }
-        
-        // Then simulate burn distribution for all stakes
+
         for (uint256 i = 0; i < updatedStakes.length; i++) {
             Stake memory currentStake = updatedStakes[i];
             if (currentStake.amount == 0) continue;
             
-            // Calculate burn points
             uint256 burnRatioDiff = burnRatio - currentStake.burnRatioSnapshot;
             if (burnRatioDiff > 0) {
-                uint256 newBurnAccrual = (currentStake.organicPoints * burnRatioDiff) / GROWTH_DENOMINATOR;
+                uint256 newBurnAccrual = (currentStake.organicPoints * burnRatioDiff) / BURN_DISTRIBUTION_PRECISION;
                 currentStake.burnAccrued += newBurnAccrual;
             }
             
-            // Add to total points
             totalPoints += currentStake.organicPoints + currentStake.burnAccrued;
         }
         
@@ -763,6 +801,19 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         }
 
         return totalPoints;
+    }
+
+    /// @notice Returns the number of stakes for a given user address
+    /// @param user Address of the user
+    /// @return Number of stakes
+    function getUserStakeCount(address user) public view returns (uint256) {
+        return userStakes[user].length;
+    }
+
+    /// @notice Returns the total number of stakerAddresses
+    /// @return Total number of stakerAddresses
+    function getTotalStakerAddresses() public view returns (uint256) {
+        return stakerAddresses.length;
     }
 
     /// @dev Reserved storage space per auditor recommendation.
