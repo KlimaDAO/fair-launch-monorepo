@@ -15,4 +15,9 @@ remappings = [
 base = "https://mainnet.base.org"
 polygon = "https://polygon-rpc.com"
 
+# Etherscan API configuration for contract verification
+[etherscan]
+base = { key = "${BASESCAN_API_KEY}", url = "https://api.basescan.org/api" }
+polygon = { key = "${POLYGONSCAN_API_KEY}", url = "https://api.polygonscan.com/api" }
+
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
