@@ -47,6 +47,14 @@ export const KlimaXAllocationTable = <T extends Data>(props: Props) => {
     columns,
     getCoreRowModel: getCoreRowModel(),
     data: marketCapList.map((marketCap) => {
+
+      if (props.totalPoints === BigInt(0)) {
+        return {
+          marketCap,
+          projectedValue: 0,
+        };
+      }
+
       const fortyPercentMarketCap =
         (BigInt(marketCap) * BigInt(40)) / BigInt(100);
       const userShareValue =

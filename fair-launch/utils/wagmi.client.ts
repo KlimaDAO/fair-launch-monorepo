@@ -12,7 +12,7 @@ import {
   createStorage,
   http,
 } from "wagmi";
-import { base, baseSepolia } from "wagmi/chains";
+import { base } from "wagmi/chains";
 
 const connectors = connectorsForWallets(
   [
@@ -36,10 +36,9 @@ const connectors = connectorsForWallets(
 export const config: Config = createConfig({
   ssr: true,
   connectors,
-  chains: [baseSepolia, base],
+  chains: [base],
   storage: createStorage({ storage: cookieStorage }),
   transports: {
-    [baseSepolia.id]: http(),
     [base.id]: http(),
   },
 });
