@@ -10,6 +10,8 @@ export const IS_LOCAL_DEVELOPMENT =
 
 const IS_PREVIEW = !IS_PRODUCTION && !IS_LOCAL_DEVELOPMENT;
 
+export const QUICKNODE_RPC_URL = process.env.QUICKNODE_RPC_URL;
+
 export const ENVIRONMENT: Environment = IS_PRODUCTION
   ? 'production'
   : IS_PREVIEW
