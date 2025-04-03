@@ -23,7 +23,7 @@ export const content = css({
   transform: "translate(-50%, -20%)",
   width: "38.2rem",
   maxWidth: "38.2rem",
-  maxHeight: "85vh",
+  maxHeight: "95vh",
   overflowY: "auto",
   padding: "2rem",
   display: "flex",
