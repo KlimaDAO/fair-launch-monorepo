@@ -55,5 +55,7 @@ export const totalUserStakes = (stakes: { amount: bigint }[]): bigint =>
     BigInt(0)
   );
 
-export const calculateTokenPercentage = (tokens: number, totalSupply: number) =>
-  (tokens / totalSupply) * 100;
+export const calculateTokenPercentage = (tokens: number, totalSupply: number) => {
+  if (Number(tokens) === 0 || Number(totalSupply) === 0) return 0;
+  return (Number(tokens) / Number(totalSupply)) * 100;
+}
