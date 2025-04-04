@@ -17,7 +17,6 @@ import { formatUnits, parseUnits } from "viem";
 import {
   useAccount,
   useBalance,
-  useEstimateGas,
   useReadContract,
   useWaitForTransactionReceipt,
   useWriteContract,
@@ -46,7 +45,6 @@ export const StakeDialog: FC = () => {
     token: config.klimaTokenAddress,
   });
 
-  const { data: gasPrice } = useEstimateGas();
   const form = useForm({ defaultValues: { "stake-amount": "1" } });
   const klimaBalance = formatUnits(balance?.value ?? BigInt(0), 9);
 
@@ -125,7 +123,6 @@ export const StakeDialog: FC = () => {
       functionName: "stake",
       address: config.fairLaunchContractAddress,
       args: [parseUnits(stakeAmount, 9)],
-      gasPrice: gasPrice,
       chainId: config.chain,
     });
   };

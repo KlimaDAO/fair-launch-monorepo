@@ -10,7 +10,7 @@ import { formatUnits } from "viem";
 const calculateLeaderboard = async () => {
   const results = [];
   const config = getConfig();
-  const leaderboard = await fetchLeaderboard();
+  const leaderboard = await fetchLeaderboard(1000);
   for (const wallet of leaderboard.wallets || []) {
     try {
       const userStakesInfo = await Promise.all(
@@ -47,7 +47,9 @@ const calculateLeaderboard = async () => {
       results.push({ ...omit(wallet, "stakes"), totalPoints: null });
     }
   }
-  return results.sort((a, b) => Number(b.totalPoints) - Number(a.totalPoints));
+  return results
+    .sort((a, b) => Number(b.totalPoints) - Number(a.totalPoints))
+    .slice(0, 150);
 };
 
 export async function GET() {
@@ -55,7 +57,7 @@ export async function GET() {
   const response = NextResponse.json(leaderboardData);
   response.headers.set(
     "Cache-Control",
-    "public, max-age=120, stale-while-revalidate=1800"
+    "public, max-age=600, stale-while-revalidate=1800"
   );
   return response;
 }

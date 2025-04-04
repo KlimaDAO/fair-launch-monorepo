@@ -336,7 +336,8 @@ export const UnstakeDialog: FC<Props> = ({
               <strong>will not be able to re-stake it.</strong>
             </div>
             <div>
-              You will still get to keep the points and KlimaX you've accrued.
+              Unstaking will also reduce your points and KlimaX balance
+              proportionally, based on the amount of KLIMA you unstake.
             </div>
             <Link target="_blank" href={URLS.fairLaunchFaq}>
               Learn more about burning KLIMA.
