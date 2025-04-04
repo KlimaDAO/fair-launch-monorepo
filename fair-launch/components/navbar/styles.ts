@@ -9,6 +9,10 @@ export const navbar = css({
   alignItems: "center",
   justifyContent: "space-between",
 
+  '& img': {
+    width: '24rem',
+  },
+
   md: {
     display: "none",
   },
