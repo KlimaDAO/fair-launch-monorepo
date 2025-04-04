@@ -1,7 +1,7 @@
 "use client";
 
 import { IntroWalkthrough } from "@components/intro-walkthrough";
-import klimaLogo from "@public/kp-logo.svg";
+import klimaLogo from "@public/klima-logo.png";
 import { truncateAddress } from "@utils/formatting";
 import clsx from "clsx";
 import Image from "next/image";
