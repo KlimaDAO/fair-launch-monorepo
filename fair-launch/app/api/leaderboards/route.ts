@@ -47,7 +47,9 @@ const calculateLeaderboard = async () => {
       results.push({ ...omit(wallet, "stakes"), totalPoints: null });
     }
   }
-  return results.sort((a, b) => Number(b.totalPoints) - Number(a.totalPoints));
+  return results
+    .sort((a, b) => Number(b.totalPoints) - Number(a.totalPoints))
+    .slice(0, 150);
 };
 
 export async function GET() {
