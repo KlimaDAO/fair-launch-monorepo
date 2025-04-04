@@ -22,7 +22,7 @@ export interface Data {
   projectedValue: string | number;
 }
 
-const marketCapList = [225_000_000, 625_000_000, 1_500_000_000, 3_750_000_000];
+const marketCapList = [50_000_000, 125_000_000, 250_000_000, 500_000_000, 750_000_000, 1_000_000_000];
 
 export const KlimaXAllocationTable = <T extends Data>(props: Props) => {
   const columns: ColumnDef<T>[] = useMemo(
