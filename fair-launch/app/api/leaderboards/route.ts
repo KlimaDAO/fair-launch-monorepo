@@ -7,6 +7,18 @@ import { omit } from "lodash";
 import { NextResponse } from "next/server";
 import { formatUnits } from "viem";
 
+// @todo - fix types
+const readContractWithRetry = async (config: any, options: any, retries = 2) => {
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      return await readContract(config, options);
+    } catch (error) {
+      if (attempt === retries - 1) throw error;
+      console.warn(`Retrying readContract... Attempt ${attempt + 1}`);
+    }
+  }
+};
+
 const calculateLeaderboard = async () => {
   const results = [];
   const config = getConfig();
@@ -15,7 +27,7 @@ const calculateLeaderboard = async () => {
     try {
       const userStakesInfo = await Promise.all(
         (wallet?.stakes || []).map(async (_, index) => {
-          const [amount] = (await readContract(wagmiConfig, {
+          const [amount] = (await readContractWithRetry(wagmiConfig, {
             abi: klimaFairLaunchAbi,
             address: config.fairLaunchContractAddress,
             functionName: "userStakes",
@@ -30,7 +42,7 @@ const calculateLeaderboard = async () => {
         0
       );
 
-      const points = await readContract(wagmiConfig, {
+      const points = await readContractWithRetry(wagmiConfig, {
         args: [wallet.id],
         abi: klimaFairLaunchAbi,
         address: config.fairLaunchContractAddress,
