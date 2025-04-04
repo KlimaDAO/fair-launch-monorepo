@@ -10,6 +10,8 @@ export const IS_LOCAL_DEVELOPMENT =
 
 const IS_PREVIEW = !IS_PRODUCTION && !IS_LOCAL_DEVELOPMENT;
 
+export const QUICKNODE_RPC_URL = process.env.QUICKNODE_RPC_URL;
+
 export const ENVIRONMENT: Environment = IS_PRODUCTION
   ? 'production'
   : IS_PREVIEW
@@ -26,16 +28,16 @@ const CONFIG = {
     fairLaunchContractAddress: '0xea8a59D0bf9C05B437c6a5396cfB429F1A57B682',
   },
   preview: {
-    chain: baseSepolia.id,
-    subgraphUrl: 'https://api.studio.thegraph.com/query/28985/fair-launch-sepolia/version/latest',
-    klimaTokenAddress: '0x50Fbf1a671D6E3d4D68E19C646f1F6Bae138E5Ce',
-    fairLaunchContractAddress: '0x0CfF418D7028D32C2C5Ea6af2dA934E9F86eFa18',
+    chain: base.id,
+    subgraphUrl: 'https://api.studio.thegraph.com/query/28985/fair-launch-base/version/latest',
+    klimaTokenAddress: '0xDCEFd8C8fCc492630B943ABcaB3429F12Ea9Fea2',
+    fairLaunchContractAddress: '0xea8a59D0bf9C05B437c6a5396cfB429F1A57B682',
   },
   development: {
-    chain: baseSepolia.id,
-    subgraphUrl: 'https://api.studio.thegraph.com/query/28985/fair-launch-sepolia/version/latest',
-    klimaTokenAddress: '0x50Fbf1a671D6E3d4D68E19C646f1F6Bae138E5Ce',
-    fairLaunchContractAddress: '0x0CfF418D7028D32C2C5Ea6af2dA934E9F86eFa18',
+    chain: base.id,
+    subgraphUrl: 'https://api.studio.thegraph.com/query/28985/fair-launch-base/version/latest',
+    klimaTokenAddress: '0xDCEFd8C8fCc492630B943ABcaB3429F12Ea9Fea2',
+    fairLaunchContractAddress: '0xea8a59D0bf9C05B437c6a5396cfB429F1A57B682',
   },
 } as const;
 
