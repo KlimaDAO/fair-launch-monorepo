@@ -61,7 +61,7 @@ export async function GET() {
   const response = NextResponse.json(leaderboardData);
   response.headers.set(
     "Cache-Control",
-    "public, max-age=10, stale-while-revalidate=1800"
+    "public, max-age=600, stale-while-revalidate=1800"
   );
   return response;
 }
