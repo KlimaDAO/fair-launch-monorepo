@@ -7,6 +7,8 @@ import { omit } from "lodash";
 import { NextResponse } from "next/server";
 import { formatUnits } from "viem";
 
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 const calculateLeaderboard = async () => {
   const results = [];
   const config = getConfig();
@@ -15,6 +17,7 @@ const calculateLeaderboard = async () => {
     try {
       const userStakesInfo = await Promise.all(
         (wallet?.stakes || []).map(async (_, index) => {
+          await delay(8); // Delay to respect the 125 requests per second limit
           const [amount] = (await readContract(wagmiConfig, {
             abi: klimaFairLaunchAbi,
             address: config.fairLaunchContractAddress,
@@ -30,6 +33,7 @@ const calculateLeaderboard = async () => {
         0
       );
 
+      await delay(8); // Delay to respect the 125 requests per second limit
       const points = await readContract(wagmiConfig, {
         args: [wallet.id],
         abi: klimaFairLaunchAbi,

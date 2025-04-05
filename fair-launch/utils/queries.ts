@@ -18,31 +18,37 @@ export interface Wallet {
 }
 
 export const fetchLeaderboard = async (
-  limit: number = 100
+  limit: number = 100,
+  retries: number = 3,
+  delay: number = 1000
 ): Promise<{ wallets?: Wallet[]; error?: string }> => {
   const config = getConfig();
-  try {
-    const result = await request(
-      config.subgraphUrl,
-      `query ($limit: Int!) {
-        wallets(first: $limit, orderBy: totalStaked, orderDirection: desc) {
-          id
-          totalStaked,
-          stakes (first: 100) {
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      const result = await request(
+        config.subgraphUrl,
+        `query ($limit: Int!) {
+          wallets(first: $limit, orderBy: totalStaked, orderDirection: desc) {
             id
-            amount
-            startTimestamp
-            multiplier
+            totalStaked,
+            stakes (first: 100) {
+              id
+              amount
+              startTimestamp
+              multiplier
+            }
           }
-        }
-      }`,
-      { limit: limit }
-    );
-    // should we only be returning top 100 wallets after calculating points?
-    return result || { wallets: [] };
-  } catch (error: any) {
-    console.error("Error fetching user leaderboards:", error);
-    const errorMessage = "An error occurred while fetching leaderboards.";
-    return { wallets: [], error: errorMessage };
+        }`,
+        { limit: limit }
+      );
+      return result || { wallets: [] };
+    } catch (error: any) {
+      console.error(`Attempt ${attempt + 1} failed:`, error);
+      if (attempt < retries - 1) {
+        await new Promise(res => setTimeout(res, delay));
+      }
+    }
   }
+  const errorMessage = "An error occurred while fetching leaderboards after multiple attempts.";
+  return { wallets: [], error: errorMessage };
 };
