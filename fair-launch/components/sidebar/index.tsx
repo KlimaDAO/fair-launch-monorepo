@@ -7,7 +7,7 @@ import clsx from "clsx";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import type { FC } from "react";
+import { useEffect, useRef, type FC } from "react";
 import { IoTrophySharp } from "react-icons/io5";
 import { MdDashboard, MdLogout } from "react-icons/md";
 import { useAccount, useDisconnect } from "wagmi";
@@ -23,6 +23,15 @@ export const Sidebar: FC = () => {
   const pathname = usePathname();
   const { address } = useAccount();
   const { disconnect } = useDisconnect();
+  const currentConnectedAccount = useRef(address);
+
+  // Reload the page if the connected account changes
+  useEffect(() => {
+    if (!currentConnectedAccount.current) return;
+    if (currentConnectedAccount.current.toLowerCase() !== address?.toLowerCase()) {
+      window.location.reload();
+    }
+  }, [address]);
 
   const handleLogout = async () => {
     await disconnect();
