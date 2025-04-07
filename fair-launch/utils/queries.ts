@@ -18,7 +18,7 @@ export interface Wallet {
 }
 
 export const fetchLeaderboard = async (
-  limit: number = 100000,
+  limit: number = 1000,
   retries: number = 3,
   delay: number = 1000
 ): Promise<{ wallets?: Wallet[]; error?: string }> => {
