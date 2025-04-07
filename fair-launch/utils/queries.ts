@@ -18,30 +18,43 @@ export interface Wallet {
 }
 
 export const fetchLeaderboard = async (
-  limit: number = 100,
+  limit: number = 1000,
   retries: number = 3,
   delay: number = 1000
 ): Promise<{ wallets?: Wallet[]; error?: string }> => {
   const config = getConfig();
+  let allWallets: Wallet[] = [];
+  let page = 1;
+
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
-      const result = await request(
-        config.subgraphUrl,
-        `query ($limit: Int!) {
-          wallets(first: $limit, orderBy: totalStaked, orderDirection: desc) {
-            id
-            totalStaked,
-            stakes (first: 100) {
+      while (true) {
+        const result = await request(
+          config.subgraphUrl,
+          `query ($limit: Int!, $skip: Int!) {
+            wallets(first: $limit, skip: $skip, orderBy: totalStaked, orderDirection: desc) {
               id
-              amount
-              startTimestamp
-              multiplier
+              totalStaked,
+              stakes (first: 100) {
+                id
+                amount
+                startTimestamp
+                multiplier
+              }
             }
-          }
-        }`,
-        { limit: limit }
-      );
-      return result || { wallets: [] };
+          }`,
+          { limit: limit, skip: (page - 1) * limit }
+        ) as { wallets: Wallet[] };
+
+        if (!result.wallets || result.wallets.length === 0) {
+          break;
+        }
+
+        allWallets = allWallets.concat(result.wallets);
+        console.log(`Fetched ${result.wallets.length} wallets from page ${page}.`);
+        page++;
+      }
+      break;
     } catch (error: any) {
       console.error(`Attempt ${attempt + 1} failed:`, error);
       if (attempt < retries - 1) {
@@ -49,6 +62,5 @@ export const fetchLeaderboard = async (
       }
     }
   }
-  const errorMessage = "An error occurred while fetching leaderboards after multiple attempts.";
-  return { wallets: [], error: errorMessage };
+  return { wallets: allWallets };
 };

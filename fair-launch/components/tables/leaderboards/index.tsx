@@ -22,6 +22,7 @@ import clsx from "clsx";
 import { useMemo, useState } from "react";
 import { MdKeyboardArrowLeft, MdKeyboardArrowRight } from "react-icons/md";
 import { css } from "styled-system/css";
+import { concat, slice } from 'lodash';
 import { formatUnits } from "viem";
 import { useAccount } from "wagmi";
 import * as styles from "../styles";
@@ -29,6 +30,7 @@ import * as styles from "../styles";
 interface Props<T> {
   pageSize?: number;
   showPagination?: boolean;
+  showUserPosition?: boolean;
 }
 
 export interface Data {
@@ -45,12 +47,34 @@ const dropdownItems = [
   { value: "desc", label: "Points - low to high" },
 ];
 
-const fetchLeaderboard = async () => {
-  const response = await fetch("/api/leaderboards");
+const fetchLeaderboard = async (address: string, showUserPosition: boolean) => {
+  const response = await fetch(`/api/leaderboards`);
   if (!response.ok) {
     throw new Error("Network response was not ok");
   }
-  return response.json();
+
+  let data = await response.json();
+  data = data.map((item: any, index: number) => ({
+    ...item,
+    place: index + 1,
+  }));
+
+  const indexToInsert = 5;
+  // Determine user wallet position
+  const userWalletIndex = data.findIndex((item: any) =>
+    isUserWallet(item.id, address as string));
+  // Return data based on user position
+  if (showUserPosition) {
+    if (userWalletIndex > 4 && indexToInsert < data.length) {
+      return concat(
+        slice(data, 0, indexToInsert),
+        data[userWalletIndex],
+        slice(data, indexToInsert)
+      ).slice(0, 6);
+    }
+    return data.slice(0, 5);
+  }
+  return data.slice(0, 100);
 };
 
 export const LeaderboardsTable = <T extends Data>(props: Props<T>) => {
@@ -61,13 +85,13 @@ export const LeaderboardsTable = <T extends Data>(props: Props<T>) => {
     pageSize: props.pageSize ?? 10,
   });
 
-  const {
+  let {
     data = [],
     error,
     isLoading,
   } = useQuery({
-    queryKey: ["leaderboards"],
-    queryFn: fetchLeaderboard,
+    queryKey: ["leaderboards", address],
+    queryFn: () => fetchLeaderboard(address as string, props.showUserPosition ?? false),
     refetchInterval: 120000,
   });
 
@@ -75,12 +99,14 @@ export const LeaderboardsTable = <T extends Data>(props: Props<T>) => {
     () => [
       {
         id: "place",
+        accessorKey: "place",
         header: "Place",
-        cell: ({ row }) => {
+        cell: ({ row, getValue }) => {
+          const value = getValue() as string;
           const userWallet = isUserWallet(row.original.id, address as string);
           return (
             <div className={clsx({ [styles.userWalletText]: userWallet })}>
-              {row.index + 1}
+              {value}
             </div>
           );
         },
@@ -160,7 +186,9 @@ export const LeaderboardsTable = <T extends Data>(props: Props<T>) => {
 
   if (error) {
     return (
-      <div className={styles.tableCell}>Error loading leaderboard data</div>
+      <div className={styles.tableCell}>
+        An error occurred while loading leaderboard data. Please try again later.
+      </div>
     );
   }
 
@@ -175,7 +203,9 @@ export const LeaderboardsTable = <T extends Data>(props: Props<T>) => {
           })
         )}
       >
-        <div className={styles.title}>Leaderboard</div>
+        <div className={styles.title}>
+          {props.showUserPosition ? "Leaderboard" : "Top 100 Leaderboard"}
+        </div>
         {props.showPagination && (
           <div
             className={clsx(
@@ -360,7 +390,7 @@ export const LeaderboardsTable = <T extends Data>(props: Props<T>) => {
         ) : (
           <>
             {isLoading ? (
-              <p>Loading Leaderboards...</p>
+              <p>Fetching leaderboard data...</p>
             ) : (
               <div className={styles.tableCell}>
                 <i>No data to display yet</i>
@@ -428,7 +458,7 @@ export const LeaderboardsTable = <T extends Data>(props: Props<T>) => {
                 {isLoading ? (
                   <tr>
                     <td className={styles.tableCell} colSpan={4}>
-                      Loading Leaderboards...
+                      Fetching leaderboard data...
                     </td>
                   </tr>
                 ) : (
@@ -454,7 +484,7 @@ export const LeaderboardsTable = <T extends Data>(props: Props<T>) => {
                   to{" "}
                   {Math.min(
                     (table.getState().pagination.pageIndex + 1) *
-                      pagination.pageSize,
+                    pagination.pageSize,
                     table.getRowCount()
                   )}{" "}
                   of {table.getRowCount().toLocaleString()} results

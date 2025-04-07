@@ -12,7 +12,7 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 const calculateLeaderboard = async () => {
   const results = [];
   const config = getConfig();
-  const leaderboard = await fetchLeaderboard(1000);
+  const leaderboard = await fetchLeaderboard();
   for (const wallet of leaderboard.wallets || []) {
     try {
       const userStakesInfo = await Promise.all(
@@ -52,8 +52,7 @@ const calculateLeaderboard = async () => {
     }
   }
   return results
-    .sort((a, b) => Number(b.totalPoints) - Number(a.totalPoints))
-    .slice(0, 150);
+    .sort((a, b) => Number(b.totalPoints) - Number(a.totalPoints));
 };
 
 export async function GET() {

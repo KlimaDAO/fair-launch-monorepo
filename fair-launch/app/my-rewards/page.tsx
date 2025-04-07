@@ -36,7 +36,6 @@ import * as styles from "./styles";
 
 type StakeResult = [bigint, bigint, bigint, bigint, bigint, bigint, bigint];
 
-
 const Page = async () => {
   const config = getConfig();
   const headersList = await headers();
@@ -248,7 +247,7 @@ const Page = async () => {
 
       <div className={styles.twoCols}>
         <Card>
-          <LeaderboardsTable pageSize={5} />
+          <LeaderboardsTable pageSize={6} showUserPosition />
           <div className={styles.leaderboardFooter}>
             <div>Updated every 15 minutes</div>
             <Link className={styles.leaderboardLink} href="/protocol">
