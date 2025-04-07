@@ -458,7 +458,7 @@ export const LeaderboardsTable = <T extends Data>(props: Props<T>) => {
                 {isLoading ? (
                   <tr>
                     <td className={styles.tableCell} colSpan={4}>
-                      Loading Leaderboards...
+                      Fetching leaderboard data...
                     </td>
                   </tr>
                 ) : (
