@@ -242,8 +242,7 @@ export const StakeDialog: FC = () => {
             </div>
             <Alert variant="default">
               <strong>Note:</strong> It is best to leave this amount staked
-              until the end of the Fair Launch period. Unstaking your KLIMA
-              early will result in a penalty.
+              until the end of the Fair Launch period. <strong>Unstaking your KLIMA will always result in a penalty.</strong>
             </Alert>
             <div className={styles.actions}>
               <button
