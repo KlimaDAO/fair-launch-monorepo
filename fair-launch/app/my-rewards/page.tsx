@@ -36,7 +36,6 @@ import * as styles from "./styles";
 
 type StakeResult = [bigint, bigint, bigint, bigint, bigint, bigint, bigint];
 
-
 const Page = async () => {
   const config = getConfig();
   const headersList = await headers();

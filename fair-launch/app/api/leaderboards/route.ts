@@ -12,7 +12,7 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 const calculateLeaderboard = async () => {
   const results = [];
   const config = getConfig();
-  const leaderboard = await fetchLeaderboard(1000);
+  const leaderboard = await fetchLeaderboard();
   for (const wallet of leaderboard.wallets || []) {
     try {
       const userStakesInfo = await Promise.all(
