@@ -52,8 +52,7 @@ const calculateLeaderboard = async () => {
     }
   }
   return results
-    .sort((a, b) => Number(b.totalPoints) - Number(a.totalPoints))
-    .slice(0, 150);
+    .sort((a, b) => Number(b.totalPoints) - Number(a.totalPoints));
 };
 
 export async function GET() {
