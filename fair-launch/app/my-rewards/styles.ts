@@ -214,3 +214,19 @@ export const leaderboardFooter = css({
   fontWeight: 400,
   marginTop: "1.2rem",
 });
+
+export const links = css({
+  marginRight: "2.8rem",
+  display: "flex",
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "flex-end",
+  gap: "2.8rem",
+  color: "green.70",
+  fontWeight: 500,
+  height: "4rem",
+
+  '& a': {
+    textDecoration: "underline",
+  }
+});

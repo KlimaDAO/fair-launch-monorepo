@@ -29,7 +29,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { MdHelpOutline } from "react-icons/md";
 import { AbiFunction, formatUnits, parseUnits } from "viem";
-import { getConfig } from "@utils/constants";
+import { getConfig, URLS } from "@utils/constants";
 import { getTotalSupply } from "@actions/total-supply-action";
 import { cookieToInitialState } from "wagmi";
 import * as styles from "./styles";
@@ -162,6 +162,10 @@ const Page = async () => {
             prestakingWindow={Number(prestakingWindow.result)}
             startTimestamp={Number(startTimestamp.result)}
           />
+        </div>
+        <div className={styles.links}>
+          <Link target="_blank" href={URLS.faq}>FAQ</Link>
+          <Link target="_blank" href={URLS.guide}>Guide</Link>
         </div>
         <StakeDialog />
         {walletAddress && (

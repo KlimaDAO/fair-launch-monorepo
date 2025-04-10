@@ -56,6 +56,7 @@ export const getConfig = () => {
 
 export const URLS = {
   faq: "https://www.klimaprotocol.com/faq",
+  guide: "https://www.klimadao.finance/resources/how-to-join-the-klima-fair-launch-step-by-step-guide-for-klima-holders-and-future-ones",
   protocol: "https://www.klimaprotocol.com",
   resources: "https://www.klimadao.finance/resource-hub",
   disclaimer: "https://www.klimadao.finance/disclaimer",
