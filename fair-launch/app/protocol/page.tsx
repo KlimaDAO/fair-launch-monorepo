@@ -5,7 +5,8 @@ import klimav1Logo from "@public/tokens/klima-v1.svg";
 import { calculateTokenPercentage } from "@utils/contract";
 import { formatLargeNumber, formatNumber } from "@utils/formatting";
 import { config as wagmiConfig } from "@utils/wagmi.server";
-import { getConfig } from "@utils/constants";
+import Link from "next/link";
+import { getConfig, URLS } from "@utils/constants";
 import { readContract } from "@wagmi/core";
 import Image from "next/image";
 import { getTotalSupply } from "@actions/total-supply-action";
@@ -44,6 +45,10 @@ const Page: FC = async () => {
       <div className={styles.twoCols}>
         <div className={styles.titleContainer}>
           <h1 className={styles.title}>Protocol</h1>
+          <div className={styles.links}>
+            <Link target="_blank" href={URLS.faq}>FAQ</Link>
+            <Link target="_blank" href={URLS.guide}>Guide</Link>
+          </div>
         </div>
       </div>
       <div className={styles.card}>

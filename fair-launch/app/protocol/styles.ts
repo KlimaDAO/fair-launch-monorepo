@@ -37,17 +37,23 @@ export const titleContainer = css({
   alignItems: "center",
   flexDirection: "row",
   justifyContent: "space-between",
-
-  lg: {
-    justifyContent: "flex-start",
-  },
 });
 
 export const title = css({
   color: "void.80",
-  fontSize: "4xl",
+  fontSize: "xl",
   fontWeight: 700,
-  lineHeight: "4xl",
+  lineHeight: "xl",
+
+  sm: {
+    fontSize: "2xl",
+    lineHeight: "2xl",
+  },
+
+  lg: {
+    fontSize: "4xl",
+    lineHeight: "4xl",
+  },
 });
 
 export const twoCols = css({
@@ -156,4 +162,19 @@ export const leaderboardTable = css({
       width: "15rem",
     },
   },
+});
+
+export const links = css({
+  display: "flex",
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "flex-end",
+  gap: "2.8rem",
+  color: "green.70",
+  fontWeight: 500,
+  height: "4rem",
+
+  '& a': {
+    textDecoration: "underline",
+  }
 });
