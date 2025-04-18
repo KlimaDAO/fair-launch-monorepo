@@ -548,13 +548,9 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         }
     }
 
-    /// @notice Owner can transfer all KLIMA and KLIMA_X remaining from expired claims after claimDeadline
-    /// @dev Can only be called after claimDeadline (which is 365 days after finalization)
-    /// @dev Can only be called by the owner
+    /// @notice deprecated function
     function transferExpiredClaims() external onlyOwner {
-        require(block.timestamp >= claimDeadline, "Claim deadline has not passed");
-        require(IERC20(KLIMA).transfer(msg.sender, IERC20(KLIMA).balanceOf(address(this))), "KLIMA transfer failed");
-        require(IERC20(KLIMA_X).transfer(msg.sender, IERC20(KLIMA_X).balanceOf(address(this))), "KLIMA_X transfer failed");
+        revert("Function deprecated and no longer available");
     }
 
     /// @notice Sets the growth rate for point accrual
