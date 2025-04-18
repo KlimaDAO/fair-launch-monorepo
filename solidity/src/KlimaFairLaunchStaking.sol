@@ -540,10 +540,7 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
 
         // If we've processed all addresses, mark finalization as complete
         if (finalizeIndex == stakerAddresses.length) {
-            require(IERC20(KLIMA).balanceOf(address(this)) >= KLIMA_SUPPLY, "Insufficient KLIMA balance");
-            require(IERC20(KLIMA_X).balanceOf(address(this)) >= KLIMAX_SUPPLY, "Insufficient KLIMA_X balance");
             finalizationComplete = 1;
-            claimDeadline = block.timestamp + 365 days;
             emit FinalizationComplete(block.timestamp);
         }
     }
