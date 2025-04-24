@@ -2002,4 +2002,97 @@ contract KlimaFairLaunchStakingTest is Test {
     //     vm.stopPrank();
     // }
 
+    /// @notice Test the new manual freeze function using 0 as the parameter to set the freeze timestamp to the current timestamp
+    function test_ManualFreezeWithZeroInput() public {
+        // Setup staking
+        setupStaking();
+        
+        // Warp to official start
+        vm.warp(staking.startTimestamp());
+
+        // User1 stakes
+        createStake(user1, 100 * 1e9);
+
+        // warp ahead 32 days
+        vm.warp(staking.startTimestamp() + 32 days);
+
+        uint256 userPoints = staking.previewUserPoints(user1);
+        uint256 freezeTimestampBefore = staking.freezeTimestamp();
+
+        // Freeze
+        vm.startPrank(owner);
+        staking.manualFreeze(0);
+        vm.stopPrank();
+
+        // User1 should not be able to stake
+        vm.startPrank(user1);
+        vm.expectRevert("Staking period ended");
+        staking.stake(100 * 1e9);
+        vm.stopPrank();
+
+        uint256 freezeTimestampAfter = staking.freezeTimestamp();
+        //assert: new freeze time should be different from old freeze time
+        assertNotEq(freezeTimestampAfter, freezeTimestampBefore, "Freeze timestamp should change to current timestamp since input is 0");
+        // assert: Freeze timestamp should change to current timestamp since input is 0
+        assertEq(freezeTimestampAfter, block.timestamp, "Freeze timestamp should change to current timestamp since input is 0");
+
+        // warp ahead 1 day to make sure user has not gained any points
+        vm.warp(freezeTimestampAfter + 1 days);
+        uint256 userPointsAfter = staking.previewUserPoints(user1);
+        assertEq(userPointsAfter, userPoints, "User should not have gained any points");
+    }
+
+        /// @notice Test the new manual freeze function using a future timestamp as the parameter to set a new freeze timestamp
+    function test_ManualFreezeWithFutureTimestamp() public {
+        // Setup staking
+        setupStaking();
+        
+        // Warp to official start
+        vm.warp(staking.startTimestamp());
+
+        // User1 stakes
+        createStake(user1, 100 * 1e9);
+
+        // warp ahead 32 days
+        vm.warp(staking.startTimestamp() + 32 days);
+        uint256 freezeTimestampBefore = staking.freezeTimestamp();
+
+        // Freeze
+        vm.startPrank(owner);
+        uint256 newFreezeTimestamp = block.timestamp + 1 days;
+        staking.manualFreeze(newFreezeTimestamp);
+        vm.stopPrank();
+
+        // user can still stake because the freeze timestamp is in the future
+        createStake(user1, 100 * 1e9);
+        createStake(user2, 100 * 1e9);
+        createStake(user3, 66 * 1e9);
+
+        // warp to freeze timestamp
+        vm.warp(newFreezeTimestamp);
+        uint256 userPoints = staking.previewUserPoints(user1);
+
+        // warp ahead past new freeze timestamp
+        vm.warp(newFreezeTimestamp + 1);
+
+        // User1 should not be able to stake
+        vm.startPrank(user1);
+        vm.expectRevert("Staking period ended");
+        staking.stake(100 * 1e9);
+        vm.stopPrank();
+
+        uint256 freezeTimestampAfter = staking.freezeTimestamp();
+        //assert: new freeze time should be different from old freeze time
+        assertNotEq(freezeTimestampAfter, freezeTimestampBefore, "Freeze timestamp should change to specified timestamp");
+        // assert: Freeze timestamp should change to specified timestamp
+        assertEq(freezeTimestampAfter, newFreezeTimestamp, "Freeze timestamp should change to specified timestamp");
+
+        // warp ahead 1 day to make sure user has not gained any points
+        vm.warp(freezeTimestampAfter + 1 days);
+        uint256 userPointsAfter = staking.previewUserPoints(user1);
+        assertEq(userPointsAfter, userPoints, "User should not have gained any points");
+
+        // test finalization for good measure
+        finalizeStaking();
+    }
 } 
