@@ -289,65 +289,10 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         emit StakeBurned(msg.sender, totalBurnAmount, block.timestamp);
     }
 
-    /// @notice Claims KLIMA and KLIMA_X tokens after the freeze period
-    /// @dev Requires finalization to be complete
-    /// @dev Converts staked amount to KLIMA and points to KLIMA_X
-    /// @dev Burns the original KLIMA_V0 tokens when claiming
-    function _claim() internal nonReentrant {
-        require(block.timestamp >= freezeTimestamp, "Staking period not ended");
-        require(finalizationComplete == 1, "Finalization not complete");
-
-        uint256 totalUserStaked;
-        uint256 totalUserPoints;
-        bool hasUnclaimedStakes;
-
-        // Get direct reference to storage
-        Stake[] storage userStakesList = userStakes[msg.sender];
-        
-        // Process stakes directly
-        for (uint256 i = 0; i < userStakesList.length; i++) {
-            // Load stake into memory
-            Stake memory currentStake = userStakesList[i];
-            
-            // Skip already claimed stakes for calculations
-            if (currentStake.hasBeenClaimed == 1) {
-                continue;
-            }
-            
-            // Skip stakes with zero amount
-            if (currentStake.amount == 0) {
-                continue;
-            }
-            
-            // Add to totals
-            totalUserStaked += currentStake.amount;
-            totalUserPoints += currentStake.organicPoints + currentStake.burnAccrued;
-            hasUnclaimedStakes = true;
-            
-            // Mark as claimed
-            currentStake.hasBeenClaimed = 1;
-            
-            // Write back to storage
-            userStakesList[i] = currentStake;
-        }
-        
-        // Require at least one unclaimed stake
-        require(hasUnclaimedStakes, "No unclaimed stakes found");
-        
-        // Calculate allocations using the view functions
-        uint256 klimaAllocation = calculateKlimaAllocation(totalUserStaked);
-        uint256 klimaXAllocation = calculateKlimaXAllocation(totalUserPoints);
-        
-        // Transfer tokens to user
-        if (klimaAllocation > 0) {
-            require(IERC20(KLIMA).transfer(msg.sender, klimaAllocation), "KLIMA transfer failed");
-        }
-        
-        if (klimaXAllocation > 0) {
-            require(IERC20(KLIMA_X).transfer(msg.sender, klimaXAllocation), "KLIMA_X transfer failed");
-        }
-        
-        emit StakeClaimed(msg.sender, totalUserStaked, klimaAllocation, klimaXAllocation, block.timestamp);
+    /// @notice Claims are no longer processed in this contract
+    /// @dev This function will always revert as claims are handled by a separate contract
+    function _claim() internal {
+        revert("Claims are no longer processed in this contract");
     }
 
     /// @notice Updates a user's points and burn distribution
@@ -540,21 +485,14 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
 
         // If we've processed all addresses, mark finalization as complete
         if (finalizeIndex == stakerAddresses.length) {
-            require(IERC20(KLIMA).balanceOf(address(this)) >= KLIMA_SUPPLY, "Insufficient KLIMA balance");
-            require(IERC20(KLIMA_X).balanceOf(address(this)) >= KLIMAX_SUPPLY, "Insufficient KLIMA_X balance");
             finalizationComplete = 1;
-            claimDeadline = block.timestamp + 365 days;
             emit FinalizationComplete(block.timestamp);
         }
     }
 
-    /// @notice Owner can transfer all KLIMA and KLIMA_X remaining from expired claims after claimDeadline
-    /// @dev Can only be called after claimDeadline (which is 365 days after finalization)
-    /// @dev Can only be called by the owner
+    /// @notice deprecated function
     function transferExpiredClaims() external onlyOwner {
-        require(block.timestamp >= claimDeadline, "Claim deadline has not passed");
-        require(IERC20(KLIMA).transfer(msg.sender, IERC20(KLIMA).balanceOf(address(this))), "KLIMA transfer failed");
-        require(IERC20(KLIMA_X).transfer(msg.sender, IERC20(KLIMA_X).balanceOf(address(this))), "KLIMA_X transfer failed");
+        revert("Function deprecated and no longer available");
     }
 
     /// @notice Sets the growth rate for point accrual
@@ -630,6 +568,24 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         uint256 oldFreezeTimestamp = freezeTimestamp;
         freezeTimestamp = _newFreezeTimestamp;
         emit StakingExtended(oldFreezeTimestamp, _newFreezeTimestamp);
+    }
+
+    /// @notice Manually freezes the staking period
+    /// @param _newFreezeTimestamp New timestamp when staking ends
+    /// @dev Can only be called by the owner before finalization
+    /// @dev Can only be called after 30 days have passed since staking started
+    /// @dev Can only be called if the staking period is not already ended
+    /// @dev If the input is 0, the function will set the freeze timestamp to the current timestamp
+    function manualFreeze(uint256 _newFreezeTimestamp) external onlyOwner beforeFinalization {
+        require(startTimestamp > 0, "Staking not initialized");
+        require(block.timestamp < freezeTimestamp, "Staking period already ended");
+        require(block.timestamp >= startTimestamp + 30 days, "Must wait 30 days after start");
+        require(_newFreezeTimestamp == 0 || _newFreezeTimestamp > block.timestamp, "New timestamp must be in the future (use 0 for current timestamp)");
+        if (_newFreezeTimestamp == 0) {
+            freezeTimestamp = block.timestamp;
+        } else {
+            freezeTimestamp = _newFreezeTimestamp;
+        }
     }
 
     /// @notice Sets the pre-staking window

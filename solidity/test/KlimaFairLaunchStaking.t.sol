@@ -811,33 +811,35 @@ contract KlimaFairLaunchStakingTest is Test {
         vm.stopPrank();
     }
 
+    /// deprecated
     /// @notice Test successful claiming after freeze
-    function test_ClaimAfterFreeze() public {
-        // Setup
-        vm.startPrank(owner);
-        uint256 startTime = block.timestamp + 1 days;
-        staking.enableStaking(startTime);
-        vm.stopPrank();
+    // function test_ClaimAfterFreeze() public {
+    //     // Setup
+    //     vm.startPrank(owner);
+    //     uint256 startTime = block.timestamp + 1 days;
+    //     staking.enableStaking(startTime);
+    //     vm.stopPrank();
 
-        // Create stake
-        vm.warp(startTime);
-        uint256 stakeAmount = 100 * 1e9;
-        createStake(user1, stakeAmount);
+    //     // Create stake
+    //     vm.warp(startTime);
+    //     uint256 stakeAmount = 100 * 1e9;
+    //     createStake(user1, stakeAmount);
 
-        // Finalize
-        finalizeStaking();
+    //     // Finalize
+    //     finalizeStaking();
 
-        // Calculate expected amounts
-        uint256 klimaAmount = staking.calculateKlimaAllocation(stakeAmount);
-        uint256 klimaXAmount = staking.calculateKlimaXAllocation(staking.previewUserPoints(user1));
+    //     // Calculate expected amounts
+    //     uint256 klimaAmount = staking.calculateKlimaAllocation(stakeAmount);
+    //     uint256 klimaXAmount = staking.calculateKlimaXAllocation(staking.previewUserPoints(user1));
 
-        // Claim
-        vm.startPrank(user1);
-        emit StakeClaimed(user1, stakeAmount, klimaAmount, klimaXAmount, block.timestamp);
-        staking.unstake(0);
-        vm.stopPrank();
-    }
+    //     // Claim
+    //     vm.startPrank(user1);
+    //     emit StakeClaimed(user1, stakeAmount, klimaAmount, klimaXAmount, block.timestamp);
+    //     staking.unstake(0);
+    //     vm.stopPrank();
+    // }
 
+    /// fixed for deprecated function
     /// @notice Test claiming before finalization fails
     function test_RevertWhen_ClaimingBeforeFinalization() public {
         // Setup staking period
@@ -853,7 +855,7 @@ contract KlimaFairLaunchStakingTest is Test {
 
         // Try to claim before finalization
         vm.warp(startTime + 91 days);
-        vm.expectRevert("Finalization not complete");
+        vm.expectRevert("Claims are no longer processed in this contract");
         staking.unstake(0);
         vm.stopPrank();
     }
@@ -1118,13 +1120,6 @@ contract KlimaFairLaunchStakingTest is Test {
         vm.prank(owner);
         staking.storeTotalPoints(1);
         assertEq(staking.finalizationComplete(), 1);
-
-        // Claim phase
-        vm.startPrank(user1);
-        staking.unstake(0);
-        (,,,,,,,uint256 claimed) = staking.userStakes(user1, 0);
-        assertEq(claimed, 1);
-        vm.stopPrank();
     }
 
     /// @notice Test multiple users with multiple stakes
@@ -1152,38 +1147,6 @@ contract KlimaFairLaunchStakingTest is Test {
         uint256 user1Points = staking.previewUserPoints(user1);
         uint256 user2Points = staking.previewUserPoints(user2);
         assertGt(user1Points, user2Points);
-    }
-
-    /// @notice Test mixed unstaking and claiming scenario
-    function test_MixedUnstakingAndClaiming() public {
-        // --- 1. SET UP STAKING ---
-        setupStaking();
-        uint256 stakeAmount = 100 * 1e9; // Example stake amount
-
-        // Create a stake for user1
-        createStake(user1, stakeAmount);
-
-        // --- 2. ADVANCE TIME FOR STAKE ACCUMULATION ---
-        // Advance time to after the staking period (i.e., past freezeTimestamp).
-        uint256 freezeTime = staking.freezeTimestamp();
-        vm.warp(freezeTime + 1 days);  // Ensure block.timestamp >= freezeTimestamp
-
-        // --- 3. PROCESS FINALIZATION ---
-        // As the owner, process all staker addresses.
-        vm.prank(owner);
-        staking.storeTotalPoints(1); // Assuming only one staker for simplicity
-
-        // Verify finalization is complete and finalTotalPoints is nonzero.
-        uint256 finalPoints = staking.finalTotalPoints();
-        assert(finalPoints > 0);  // Organic points have now been accumulated.
-        assertEq(staking.finalizationComplete(), 1); // Finalization flag is set
-
-        // --- 4. UNSTAKE ---
-        // Now a staker can safely call unstake() knowing organic points are in place.
-        vm.prank(user1);
-        staking.unstake(stakeAmount);
-        
-        // Further assertions on claimed rewards can follow here...
     }
 
     function test_MaximumBurn() public {
@@ -1965,75 +1928,274 @@ contract KlimaFairLaunchStakingTest is Test {
         );
     }
 
+    /// deprecated
     /// @notice Test expired claims can be transferred after claimDeadline
-    function test_ExpiredClaimsCanBeTransferredAfterClaimDeadline() public {
+    // function test_ExpiredClaimsCanBeTransferredAfterClaimDeadline() public {
+    //     // Setup staking
+    //     setupStaking();
+    //     createStake(user1, 100 * 1e9);
+    //     createStake(user2, 100 * 1e9);
+    //     finalizeStaking();
+
+    //     // only user 1 claims their allocation before claimDeadline
+    //     vm.startPrank(user1);
+    //     staking.unstake(0);
+    //     vm.stopPrank();
+
+    //     vm.warp(staking.claimDeadline() + 1 days);
+    //     vm.startPrank(owner);
+    //     staking.transferExpiredClaims();
+    //     vm.stopPrank();
+
+    //     uint256 klimaSupply = staking.KLIMA_SUPPLY();
+    //     uint256 klimaXSupply = staking.KLIMAX_SUPPLY();
+
+    //     // user 1 should have received their allocation
+    //     assertEq(IERC20(staking.KLIMA()).balanceOf(user1), klimaSupply/2, "User 1 should have received their allocation");
+    //     assertEq(IERC20(staking.KLIMA_X()).balanceOf(user1), klimaXSupply/2, "User 1 should have received their allocation");
+
+    //     // remaining KLIMA should be transferred to owner
+    //     assertEq(IERC20(staking.KLIMA()).balanceOf(owner), klimaSupply/2, "remaining KLIMA should be transferred to owner");
+    //     // remaining KLIMA_X should be transferred to owner
+    //     assertEq(IERC20(staking.KLIMA_X()).balanceOf(owner), klimaXSupply/2, "remaining KLIMA_X should be transferred to owner");
+    // }
+
+    /// deprecated
+    /// @notice Test expired claims cannot be transferred before claimDeadline
+    // function test_RevertWhen_ExpiredClaimsCannotBeTransferredBeforeClaimDeadline() public {
+    //             // Setup staking
+    //     setupStaking();
+    //     createStake(user1, 100 * 1e9);
+    //     createStake(user2, 100 * 1e9);
+    //     finalizeStaking();
+
+    //     // only user 1 claims their allocation before claimDeadline
+    //     vm.startPrank(user1);
+    //     staking.unstake(0);
+    //     vm.stopPrank();
+
+    //     vm.warp(staking.claimDeadline() - 1 days);
+    //     vm.startPrank(owner);
+    //     vm.expectRevert("Claim deadline has not passed");
+    //     staking.transferExpiredClaims();
+    //     vm.stopPrank();
+    // }
+
+    /// deprecated
+    /// @notice Test revert when non-owner calls transferExpiredClaims
+    // function test_RevertWhen_NotOwnerCallsTransferExpiredClaims() public {
+    //             // Setup staking
+    //     setupStaking();
+    //     createStake(user1, 100 * 1e9);
+    //     createStake(user2, 100 * 1e9);
+    //     finalizeStaking();
+
+    //     // only user 1 claims their allocation before claimDeadline
+    //     vm.startPrank(user1);
+    //     staking.unstake(0);
+    //     vm.stopPrank();
+
+    //     vm.warp(staking.claimDeadline() - 1 days);
+    //     vm.startPrank(user1);
+    //     vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, user1));
+    //     staking.transferExpiredClaims();
+    //     vm.stopPrank();
+    // }
+
+    /// @notice Test the new manual freeze function using 0 as the parameter to set the freeze timestamp to the current timestamp
+    function test_ManualFreezeWithZeroInput() public {
         // Setup staking
         setupStaking();
+        
+        // Warp to official start
+        vm.warp(staking.startTimestamp());
+
+        // User1 stakes
         createStake(user1, 100 * 1e9);
-        createStake(user2, 100 * 1e9);
-        finalizeStaking();
 
-        // only user 1 claims their allocation before claimDeadline
-        vm.startPrank(user1);
-        staking.unstake(0);
-        vm.stopPrank();
+        // warp ahead 32 days
+        vm.warp(staking.startTimestamp() + 32 days);
 
-        vm.warp(staking.claimDeadline() + 1 days);
+        uint256 userPoints = staking.previewUserPoints(user1);
+        uint256 freezeTimestampBefore = staking.freezeTimestamp();
+
+        // Freeze
         vm.startPrank(owner);
-        staking.transferExpiredClaims();
+        staking.manualFreeze(0);
         vm.stopPrank();
 
-        uint256 klimaSupply = staking.KLIMA_SUPPLY();
-        uint256 klimaXSupply = staking.KLIMAX_SUPPLY();
+        // User1 should not be able to stake
+        vm.startPrank(user1);
+        vm.expectRevert("Staking period ended");
+        staking.stake(100 * 1e9);
+        vm.stopPrank();
 
-        // user 1 should have received their allocation
-        assertEq(IERC20(staking.KLIMA()).balanceOf(user1), klimaSupply/2, "User 1 should have received their allocation");
-        assertEq(IERC20(staking.KLIMA_X()).balanceOf(user1), klimaXSupply/2, "User 1 should have received their allocation");
+        uint256 freezeTimestampAfter = staking.freezeTimestamp();
+        //assert: new freeze time should be different from old freeze time
+        assertNotEq(freezeTimestampAfter, freezeTimestampBefore, "Freeze timestamp should change to current timestamp since input is 0");
+        // assert: Freeze timestamp should change to current timestamp since input is 0
+        assertEq(freezeTimestampAfter, block.timestamp, "Freeze timestamp should change to current timestamp since input is 0");
 
-        // remaining KLIMA should be transferred to owner
-        assertEq(IERC20(staking.KLIMA()).balanceOf(owner), klimaSupply/2, "remaining KLIMA should be transferred to owner");
-        // remaining KLIMA_X should be transferred to owner
-        assertEq(IERC20(staking.KLIMA_X()).balanceOf(owner), klimaXSupply/2, "remaining KLIMA_X should be transferred to owner");
+        // warp ahead 1 day to make sure user has not gained any points
+        vm.warp(freezeTimestampAfter + 1 days);
+        uint256 userPointsAfter = staking.previewUserPoints(user1);
+        assertEq(userPointsAfter, userPoints, "User should not have gained any points");
     }
 
-    /// @notice Test expired claims cannot be transferred before claimDeadline
-    function test_RevertWhen_ExpiredClaimsCannotBeTransferredBeforeClaimDeadline() public {
-                // Setup staking
+        /// @notice Test the new manual freeze function using a future timestamp as the parameter to set a new freeze timestamp
+    function test_ManualFreezeWithFutureTimestamp() public {
+        // Setup staking
         setupStaking();
-        createStake(user1, 100 * 1e9);
-        createStake(user2, 100 * 1e9);
-        finalizeStaking();
+        
+        // Warp to official start
+        vm.warp(staking.startTimestamp());
 
-        // only user 1 claims their allocation before claimDeadline
-        vm.startPrank(user1);
-        staking.unstake(0);
+        // User1 stakes
+        createStake(user1, 100 * 1e9);
+
+        // warp ahead 32 days
+        vm.warp(staking.startTimestamp() + 32 days);
+        uint256 freezeTimestampBefore = staking.freezeTimestamp();
+
+        // Freeze
+        vm.startPrank(owner);
+        uint256 newFreezeTimestamp = block.timestamp + 1 days;
+        staking.manualFreeze(newFreezeTimestamp);
         vm.stopPrank();
 
-        vm.warp(staking.claimDeadline() - 1 days);
+        // user can still stake because the freeze timestamp is in the future
+        createStake(user1, 100 * 1e9);
+        createStake(user2, 100 * 1e9);
+        createStake(user3, 66 * 1e9);
+
+        // warp to freeze timestamp
+        vm.warp(newFreezeTimestamp);
+        uint256 userPoints = staking.previewUserPoints(user1);
+
+        // warp ahead past new freeze timestamp
+        vm.warp(newFreezeTimestamp + 1);
+
+        // User1 should not be able to stake
+        vm.startPrank(user1);
+        vm.expectRevert("Staking period ended");
+        staking.stake(100 * 1e9);
+        vm.stopPrank();
+
+        uint256 freezeTimestampAfter = staking.freezeTimestamp();
+        //assert: new freeze time should be different from old freeze time
+        assertNotEq(freezeTimestampAfter, freezeTimestampBefore, "Freeze timestamp should change to specified timestamp");
+        // assert: Freeze timestamp should change to specified timestamp
+        assertEq(freezeTimestampAfter, newFreezeTimestamp, "Freeze timestamp should change to specified timestamp");
+
+        // warp ahead 1 day to make sure user has not gained any points
+        vm.warp(freezeTimestampAfter + 1 days);
+        uint256 userPointsAfter = staking.previewUserPoints(user1);
+        assertEq(userPointsAfter, userPoints, "User should not have gained any points");
+
+        // test finalization for good measure
+        finalizeStaking();
+    }
+
+    /// @notice revert when the new manual freeze function is called with a past timestamp
+    function test_RevertWhen_ManualFreezeWithPastTimestamp() public {
+        // Setup staking
+        setupStaking();
+
+        // Warp to official start
+        vm.warp(staking.startTimestamp());
+
+        // User1 stakes
+        createStake(user1, 100 * 1e9);
+
+        // warp ahead 32 days
+        vm.warp(staking.startTimestamp() + 32 days);
+
+        // Freeze
         vm.startPrank(owner);
-        vm.expectRevert("Claim deadline has not passed");
-        staking.transferExpiredClaims();
+        vm.expectRevert("New timestamp must be in the future (use 0 for current timestamp)");
+        staking.manualFreeze(block.timestamp - 1 days);
         vm.stopPrank();
     }
 
-    /// @notice Test revert when non-owner calls transferExpiredClaims
-    function test_RevertWhen_NotOwnerCallsTransferExpiredClaims() public {
-                // Setup staking
+    /// @notice Test revert when non-owner calls manualFreeze function
+    function test_RevertWhen_NonOwnerCallsManualFreeze() public {
+        // Setup staking
         setupStaking();
+
+        // Warp to official start
+        vm.warp(staking.startTimestamp());
+
+        // User1 stakes
         createStake(user1, 100 * 1e9);
-        createStake(user2, 100 * 1e9);
-        finalizeStaking();
 
-        // only user 1 claims their allocation before claimDeadline
-        vm.startPrank(user1);
-        staking.unstake(0);
-        vm.stopPrank();
+        // warp ahead 32 days
+        vm.warp(staking.startTimestamp() + 32 days);
 
-        vm.warp(staking.claimDeadline() - 1 days);
+        // Non-owner tries to freeze
         vm.startPrank(user1);
         vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, user1));
-        staking.transferExpiredClaims();
+        staking.manualFreeze(block.timestamp + 1 days);
         vm.stopPrank();
     }
 
+    /// @notice Test revert when manualFreeze is called after finalization
+    function test_RevertWhen_ManualFreezeAfterFinalization() public {
+        // Setup staking
+        setupStaking();
+
+        // Create stake
+        createStake(user1, 100 * 1e9);
+
+        // Finalize staking
+        finalizeStaking();
+
+        // Try to call manualFreeze after finalization
+        vm.startPrank(owner);
+        vm.expectRevert("Finalization already complete");
+        staking.manualFreeze(block.timestamp + 1 days);
+        vm.stopPrank();
+    }
+
+    /// @notice Test revert when manualFreeze is called before staking is initialized
+    function test_RevertWhen_ManualFreezeBeforeStakingInitialized() public {
+        // Deploy a fresh instance of staking contract without initializing staking period
+        KlimaFairLaunchStaking implementation = new KlimaFairLaunchStaking();
+        KlimaFairLaunchStaking newStaking = KlimaFairLaunchStaking(deployProxy(address(implementation)));
+        
+        // Try to call manualFreeze before staking is initialized
+        vm.startPrank(owner);
+        vm.expectRevert("Staking not initialized");
+        newStaking.manualFreeze(block.timestamp + 1 days);
+        vm.stopPrank();
+    }
+
+    /// @notice Test revert when manualFreeze is called after staking period has ended
+    function test_RevertWhen_ManualFreezeAfterStakingEnded() public {
+        // Setup staking
+        setupStaking();
+
+        // Warp to after freeze timestamp
+        vm.warp(staking.freezeTimestamp() + 1);
+
+        // Try to call manualFreeze after staking period has ended
+        vm.startPrank(owner);
+        vm.expectRevert("Staking period already ended");
+        staking.manualFreeze(block.timestamp + 1 days);
+        vm.stopPrank();
+    }
+
+    /// @notice Test revert when manualFreeze is called before 30 days after start
+    function test_RevertWhen_ManualFreezeBefore30Days() public {
+        // Setup staking
+        setupStaking();
+
+        // Warp to official start + 29 days (just before 30 days requirement)
+        vm.warp(staking.startTimestamp() + 29 days);
+
+        // Try to call manualFreeze before 30 days have passed
+        vm.startPrank(owner);
+        vm.expectRevert("Must wait 30 days after start");
+        staking.manualFreeze(block.timestamp + 1 days);
+        vm.stopPrank();
+    }
 } 
