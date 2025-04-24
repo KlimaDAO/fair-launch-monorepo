@@ -2095,4 +2095,107 @@ contract KlimaFairLaunchStakingTest is Test {
         // test finalization for good measure
         finalizeStaking();
     }
+
+    /// @notice revert when the new manual freeze function is called with a past timestamp
+    function test_RevertWhen_ManualFreezeWithPastTimestamp() public {
+        // Setup staking
+        setupStaking();
+
+        // Warp to official start
+        vm.warp(staking.startTimestamp());
+
+        // User1 stakes
+        createStake(user1, 100 * 1e9);
+
+        // warp ahead 32 days
+        vm.warp(staking.startTimestamp() + 32 days);
+
+        // Freeze
+        vm.startPrank(owner);
+        vm.expectRevert("New timestamp must be in the future (use 0 for current timestamp)");
+        staking.manualFreeze(block.timestamp - 1 days);
+        vm.stopPrank();
+    }
+
+    /// @notice Test revert when non-owner calls manualFreeze function
+    function test_RevertWhen_NonOwnerCallsManualFreeze() public {
+        // Setup staking
+        setupStaking();
+
+        // Warp to official start
+        vm.warp(staking.startTimestamp());
+
+        // User1 stakes
+        createStake(user1, 100 * 1e9);
+
+        // warp ahead 32 days
+        vm.warp(staking.startTimestamp() + 32 days);
+
+        // Non-owner tries to freeze
+        vm.startPrank(user1);
+        vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, user1));
+        staking.manualFreeze(block.timestamp + 1 days);
+        vm.stopPrank();
+    }
+
+    /// @notice Test revert when manualFreeze is called after finalization
+    function test_RevertWhen_ManualFreezeAfterFinalization() public {
+        // Setup staking
+        setupStaking();
+
+        // Create stake
+        createStake(user1, 100 * 1e9);
+
+        // Finalize staking
+        finalizeStaking();
+
+        // Try to call manualFreeze after finalization
+        vm.startPrank(owner);
+        vm.expectRevert("Finalization already complete");
+        staking.manualFreeze(block.timestamp + 1 days);
+        vm.stopPrank();
+    }
+
+    /// @notice Test revert when manualFreeze is called before staking is initialized
+    function test_RevertWhen_ManualFreezeBeforeStakingInitialized() public {
+        // Deploy a fresh instance of staking contract without initializing staking period
+        KlimaFairLaunchStaking implementation = new KlimaFairLaunchStaking();
+        KlimaFairLaunchStaking newStaking = KlimaFairLaunchStaking(deployProxy(address(implementation)));
+        
+        // Try to call manualFreeze before staking is initialized
+        vm.startPrank(owner);
+        vm.expectRevert("Staking not initialized");
+        newStaking.manualFreeze(block.timestamp + 1 days);
+        vm.stopPrank();
+    }
+
+    /// @notice Test revert when manualFreeze is called after staking period has ended
+    function test_RevertWhen_ManualFreezeAfterStakingEnded() public {
+        // Setup staking
+        setupStaking();
+
+        // Warp to after freeze timestamp
+        vm.warp(staking.freezeTimestamp() + 1);
+
+        // Try to call manualFreeze after staking period has ended
+        vm.startPrank(owner);
+        vm.expectRevert("Staking period already ended");
+        staking.manualFreeze(block.timestamp + 1 days);
+        vm.stopPrank();
+    }
+
+    /// @notice Test revert when manualFreeze is called before 30 days after start
+    function test_RevertWhen_ManualFreezeBefore30Days() public {
+        // Setup staking
+        setupStaking();
+
+        // Warp to official start + 29 days (just before 30 days requirement)
+        vm.warp(staking.startTimestamp() + 29 days);
+
+        // Try to call manualFreeze before 30 days have passed
+        vm.startPrank(owner);
+        vm.expectRevert("Must wait 30 days after start");
+        staking.manualFreeze(block.timestamp + 1 days);
+        vm.stopPrank();
+    }
 } 
