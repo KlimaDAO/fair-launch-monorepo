@@ -811,16 +811,7 @@ contract KlimaFairLaunchStakingPointsCalculationsTest is Test {
         console.log("KLIMAX supply:", klimaxSupply);
         console.log("Expected KLIMAX allocation:", expectedKlimaXAllocation);
 
-        // Claim phase
-        vm.startPrank(user1);
-        staking.unstake(0); // Claim using index 0
-        (,,,,,,,uint256 claimed) = staking.userStakes(user1, 0);
-        assertEq(claimed, 1, "Stake should be marked as claimed");
-        vm.stopPrank();
-        
-        // Verify token balances
-        assertEq(IERC20(staking.KLIMA()).balanceOf(user1), expectedKlimaAllocation, "User should receive exact KLIMA allocation");
-        assertEq(IERC20(staking.KLIMA_X()).balanceOf(user1), expectedKlimaXAllocation, "User should receive exact KLIMA_X allocation");
+        // fixed for deprecated function
     }
 
     /// @notice Test multiple users with multiple stakes
@@ -848,38 +839,6 @@ contract KlimaFairLaunchStakingPointsCalculationsTest is Test {
         uint256 user1Points = staking.previewUserPoints(user1);
         uint256 user2Points = staking.previewUserPoints(user2);
         assertGt(user1Points, user2Points);
-    }
-
-    /// @notice Test mixed unstaking and claiming scenario
-    function test_MixedUnstakingAndClaiming() public {
-        // --- 1. SET UP STAKING ---
-        setupStaking();
-        uint256 stakeAmount = 100 * 1e9; // Example stake amount
-
-        // Create a stake for user1
-        createStake(user1, stakeAmount);
-
-        // --- 2. ADVANCE TIME FOR STAKE ACCUMULATION ---
-        // Advance time to after the staking period (i.e., past freezeTimestamp).
-        uint256 freezeTime = staking.freezeTimestamp();
-        vm.warp(freezeTime + 1 days);  // Ensure block.timestamp >= freezeTimestamp
-
-        // --- 3. PROCESS FINALIZATION ---
-        // As the owner, process all staker addresses.
-        vm.prank(owner);
-        staking.storeTotalPoints(1); // Assuming only one staker for simplicity
-
-        // Verify finalization is complete and finalTotalPoints is nonzero.
-        uint256 finalPoints = staking.finalTotalPoints();
-        assert(finalPoints > 0);  // Organic points have now been accumulated.
-        assertEq(staking.finalizationComplete(), 1); // Finalization flag is set
-
-        // --- 4. UNSTAKE ---
-        // Now a staker can safely call unstake() knowing organic points are in place.
-        vm.prank(user1);
-        staking.unstake(stakeAmount);
-        
-        // Further assertions on claimed rewards can follow here...
     }
 
     function test_UnstakeMultipleStakes() public {
