@@ -571,14 +571,21 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
     }
 
     /// @notice Manually freezes the staking period
+    /// @param _newFreezeTimestamp New timestamp when staking ends
     /// @dev Can only be called by the owner before finalization
     /// @dev Can only be called after 30 days have passed since staking started
     /// @dev Can only be called if the staking period is not already ended
-    function manualFreeze() external onlyOwner beforeFinalization {
+    /// @dev If the input is 0, the function will set the freeze timestamp to the current timestamp
+    function manualFreeze(uint256 _newFreezeTimestamp) external onlyOwner beforeFinalization {
         require(startTimestamp > 0, "Staking not initialized");
         require(block.timestamp < freezeTimestamp, "Staking period already ended");
         require(block.timestamp >= startTimestamp + 30 days, "Must wait 30 days after start");
-        freezeTimestamp = block.timestamp;
+        require(_newFreezeTimestamp == 0 || _newFreezeTimestamp > block.timestamp, "New timestamp must be in the future (use 0 for current timestamp)");
+        if (_newFreezeTimestamp == 0) {
+            freezeTimestamp = block.timestamp;
+        } else {
+            freezeTimestamp = _newFreezeTimestamp;
+        }
     }
 
     /// @notice Sets the pre-staking window
