@@ -289,65 +289,10 @@ contract KlimaFairLaunchStaking is Initializable, UUPSUpgradeable, OwnableUpgrad
         emit StakeBurned(msg.sender, totalBurnAmount, block.timestamp);
     }
 
-    /// @notice Claims KLIMA and KLIMA_X tokens after the freeze period
-    /// @dev Requires finalization to be complete
-    /// @dev Converts staked amount to KLIMA and points to KLIMA_X
-    /// @dev Burns the original KLIMA_V0 tokens when claiming
-    function _claim() internal nonReentrant {
-        require(block.timestamp >= freezeTimestamp, "Staking period not ended");
-        require(finalizationComplete == 1, "Finalization not complete");
-
-        uint256 totalUserStaked;
-        uint256 totalUserPoints;
-        bool hasUnclaimedStakes;
-
-        // Get direct reference to storage
-        Stake[] storage userStakesList = userStakes[msg.sender];
-        
-        // Process stakes directly
-        for (uint256 i = 0; i < userStakesList.length; i++) {
-            // Load stake into memory
-            Stake memory currentStake = userStakesList[i];
-            
-            // Skip already claimed stakes for calculations
-            if (currentStake.hasBeenClaimed == 1) {
-                continue;
-            }
-            
-            // Skip stakes with zero amount
-            if (currentStake.amount == 0) {
-                continue;
-            }
-            
-            // Add to totals
-            totalUserStaked += currentStake.amount;
-            totalUserPoints += currentStake.organicPoints + currentStake.burnAccrued;
-            hasUnclaimedStakes = true;
-            
-            // Mark as claimed
-            currentStake.hasBeenClaimed = 1;
-            
-            // Write back to storage
-            userStakesList[i] = currentStake;
-        }
-        
-        // Require at least one unclaimed stake
-        require(hasUnclaimedStakes, "No unclaimed stakes found");
-        
-        // Calculate allocations using the view functions
-        uint256 klimaAllocation = calculateKlimaAllocation(totalUserStaked);
-        uint256 klimaXAllocation = calculateKlimaXAllocation(totalUserPoints);
-        
-        // Transfer tokens to user
-        if (klimaAllocation > 0) {
-            require(IERC20(KLIMA).transfer(msg.sender, klimaAllocation), "KLIMA transfer failed");
-        }
-        
-        if (klimaXAllocation > 0) {
-            require(IERC20(KLIMA_X).transfer(msg.sender, klimaXAllocation), "KLIMA_X transfer failed");
-        }
-        
-        emit StakeClaimed(msg.sender, totalUserStaked, klimaAllocation, klimaXAllocation, block.timestamp);
+    /// @notice Claims are no longer processed in this contract
+    /// @dev This function will always revert as claims are handled by a separate contract
+    function _claim() internal {
+        revert("Claims are no longer processed in this contract");
     }
 
     /// @notice Updates a user's points and burn distribution
