@@ -13,22 +13,22 @@ import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.s
 contract UpgradeStakingTest is Test {
     // Existing proxy address on Base
     address public constant STAKING_PROXY = 0xea8a59D0bf9C05B437c6a5396cfB429F1A57B682;
-    
+
     // Contract instances
     KlimaFairLaunchStaking public proxy;
     KlimaFairLaunchStaking public newImplementation;
-    
+
     // Storage for test data to avoid stack depth issues
     uint256 public beforeValue;
     uint256 public afterValue;
     address public beforeAddress;
     address public afterAddress;
-    
+
     // Storage for random staker selection
     uint256 public selectedStakerIndex;
     address public selectedStaker;
     uint256 public selectedStakeIndex;
-    
+
     // Storage for stake data
     uint256 public beforeStakeAmount;
     uint256 public afterStakeAmount;
@@ -46,17 +46,17 @@ contract UpgradeStakingTest is Test {
     uint256 public afterBurnAccrued;
     uint256 public beforeHasBeenClaimed;
     uint256 public afterHasBeenClaimed;
-    
+
     function setUp() public {
         // Fork Base mainnet
         vm.createSelectFork(vm.envString("BASE_RPC_URL"));
-        
+
         // Get proxy instance
         proxy = KlimaFairLaunchStaking(STAKING_PROXY);
-        
+
         // Deploy new implementation
         newImplementation = new KlimaFairLaunchStaking();
-        
+
         // Select a random staker if any exist
         uint256 stakerCount = proxy.getTotalStakerAddresses();
         if (stakerCount > 0) {
@@ -64,7 +64,7 @@ contract UpgradeStakingTest is Test {
             uint256 randomSeed = uint256(keccak256(abi.encodePacked(block.timestamp, block.number)));
             selectedStakerIndex = randomSeed % stakerCount;
             selectedStaker = proxy.stakerAddresses(selectedStakerIndex);
-            
+
             // Also select a random stake if this staker has any
             uint256 stakeCount = proxy.getUserStakeCount(selectedStaker);
             if (stakeCount > 0) {
@@ -72,7 +72,7 @@ contract UpgradeStakingTest is Test {
             }
         }
     }
-    
+
     function upgradeProxy() internal {
         vm.prank(proxy.owner());
         console.log("Upgrading proxy to new implementation");
@@ -92,437 +92,441 @@ contract UpgradeStakingTest is Test {
         proxy.transferExpiredClaims();
         vm.stopPrank();
     }
-    
+
     // Test total staked preservation
     function test_PreservesTotalStaked() public {
         beforeValue = proxy.totalStaked();
         upgradeProxy();
         afterValue = proxy.totalStaked();
-        
+
         console.log("=== Total Staked ===");
         console.log("Before:", beforeValue);
         console.log("After:", afterValue);
-        
+
         assertEq(afterValue, beforeValue, "totalStaked changed");
     }
-    
+
     // Test total organic points preservation
     function test_PreservesTotalOrganicPoints() public {
         beforeValue = proxy.totalOrganicPoints();
         upgradeProxy();
         afterValue = proxy.totalOrganicPoints();
-        
+
         console.log("=== Total Organic Points ===");
         console.log("Before:", beforeValue);
         console.log("After:", afterValue);
-        
+
         assertEq(afterValue, beforeValue, "totalOrganicPoints changed");
     }
-    
+
     // Test total burned preservation
     function test_PreservesTotalBurned() public {
         beforeValue = proxy.totalBurned();
         upgradeProxy();
         afterValue = proxy.totalBurned();
-        
+
         console.log("=== Total Burned ===");
         console.log("Before:", beforeValue);
         console.log("After:", afterValue);
-        
+
         assertEq(afterValue, beforeValue, "totalBurned changed");
     }
-    
+
     // Test burn ratio preservation
     function test_PreservesBurnRatio() public {
         beforeValue = proxy.burnRatio();
         upgradeProxy();
         afterValue = proxy.burnRatio();
-        
+
         console.log("=== Burn Ratio ===");
         console.log("Before:", beforeValue);
         console.log("After:", afterValue);
-        
+
         assertEq(afterValue, beforeValue, "burnRatio changed");
     }
-    
+
     // Test start timestamp preservation
     function test_PreservesStartTimestamp() public {
         beforeValue = proxy.startTimestamp();
         upgradeProxy();
         afterValue = proxy.startTimestamp();
-        
+
         console.log("=== Start Timestamp ===");
         console.log("Before:", beforeValue);
         console.log("After:", afterValue);
-        
+
         assertEq(afterValue, beforeValue, "startTimestamp changed");
     }
-    
+
     // Test freeze timestamp preservation
     function test_PreservesFreezeTimestamp() public {
         beforeValue = proxy.freezeTimestamp();
         upgradeProxy();
         afterValue = proxy.freezeTimestamp();
-        
+
         console.log("=== Freeze Timestamp ===");
         console.log("Before:", beforeValue);
         console.log("After:", afterValue);
-        
+
         assertEq(afterValue, beforeValue, "freezeTimestamp changed");
     }
-    
+
     // Test pre-staking window preservation
     function test_PreservesPreStakingWindow() public {
         beforeValue = proxy.preStakingWindow();
         upgradeProxy();
         afterValue = proxy.preStakingWindow();
-        
+
         console.log("=== Pre-Staking Window ===");
         console.log("Before:", beforeValue);
         console.log("After:", afterValue);
-        
+
         assertEq(afterValue, beforeValue, "preStakingWindow changed");
     }
-    
+
     // Test min stake amount preservation
     function test_PreservesMinStakeAmount() public {
         beforeValue = proxy.minStakeAmount();
         upgradeProxy();
         afterValue = proxy.minStakeAmount();
-        
+
         console.log("=== Min Stake Amount ===");
         console.log("Before:", beforeValue);
         console.log("After:", afterValue);
-        
+
         assertEq(afterValue, beforeValue, "minStakeAmount changed");
     }
-    
+
     // Test max total stakes per user preservation
     function test_PreservesMaxTotalStakesPerUser() public {
         beforeValue = proxy.maxTotalStakesPerUser();
         upgradeProxy();
         afterValue = proxy.maxTotalStakesPerUser();
-        
+
         console.log("=== Max Total Stakes Per User ===");
         console.log("Before:", beforeValue);
         console.log("After:", afterValue);
-        
+
         assertEq(afterValue, beforeValue, "maxTotalStakesPerUser changed");
     }
-    
+
     // Test burn vault address preservation
     function test_PreservesBurnVault() public {
         beforeAddress = proxy.burnVault();
         upgradeProxy();
         afterAddress = proxy.burnVault();
-        
+
         console.log("=== Burn Vault Address ===");
         console.log("Before:", beforeAddress);
         console.log("After:", afterAddress);
-        
+
         assertEq(afterAddress, beforeAddress, "burnVault changed");
     }
-    
+
     // Test KLIMA address preservation
     function test_PreservesKlimaAddress() public {
         beforeAddress = proxy.KLIMA();
         upgradeProxy();
         afterAddress = proxy.KLIMA();
-        
+
         console.log("=== KLIMA Address ===");
         console.log("Before:", beforeAddress);
         console.log("After:", afterAddress);
-        
+
         assertEq(afterAddress, beforeAddress, "KLIMA address changed");
     }
-    
+
     // Test KLIMA_X address preservation
     function test_PreservesKlimaXAddress() public {
         beforeAddress = proxy.KLIMA_X();
         upgradeProxy();
         afterAddress = proxy.KLIMA_X();
-        
+
         console.log("=== KLIMA_X Address ===");
         console.log("Before:", beforeAddress);
         console.log("After:", afterAddress);
-        
+
         assertEq(afterAddress, beforeAddress, "KLIMA_X address changed");
     }
-    
+
     // Test KLIMA supply preservation
     function test_PreservesKlimaSupply() public {
         beforeValue = proxy.KLIMA_SUPPLY();
         upgradeProxy();
         afterValue = proxy.KLIMA_SUPPLY();
-        
+
         console.log("=== KLIMA Supply ===");
         console.log("Before:", beforeValue);
         console.log("After:", afterValue);
-        
+
         assertEq(afterValue, beforeValue, "KLIMA_SUPPLY changed");
     }
-    
+
     // Test KLIMA_X supply preservation
     function test_PreservesKlimaXSupply() public {
         beforeValue = proxy.KLIMAX_SUPPLY();
         upgradeProxy();
         afterValue = proxy.KLIMAX_SUPPLY();
-        
+
         console.log("=== KLIMA_X Supply ===");
         console.log("Before:", beforeValue);
         console.log("After:", afterValue);
-        
+
         assertEq(afterValue, beforeValue, "KLIMAX_SUPPLY changed");
     }
-    
+
     // Test KLIMA_V0 address preservation
     function test_PreservesKlimaV0Address() public {
         beforeAddress = proxy.KLIMA_V0();
         upgradeProxy();
         afterAddress = proxy.KLIMA_V0();
-        
+
         console.log("=== KLIMA_V0 Address ===");
         console.log("Before:", beforeAddress);
         console.log("After:", afterAddress);
-        
+
         assertEq(afterAddress, beforeAddress, "KLIMA_V0 address changed");
     }
-    
+
     // Test burn distribution precision preservation
     function test_PreservesBurnDistributionPrecision() public {
         beforeValue = proxy.BURN_DISTRIBUTION_PRECISION();
         upgradeProxy();
         afterValue = proxy.BURN_DISTRIBUTION_PRECISION();
-        
+
         console.log("=== Burn Distribution Precision ===");
         console.log("Before:", beforeValue);
         console.log("After:", afterValue);
-        
+
         assertEq(afterValue, beforeValue, "BURN_DISTRIBUTION_PRECISION changed");
     }
-    
+
     // Test staker count preservation
     function test_PreservesStakerCount() public {
         beforeValue = proxy.getTotalStakerAddresses();
         upgradeProxy();
         afterValue = proxy.getTotalStakerAddresses();
-        
+
         console.log("=== Total Staker Count ===");
         console.log("Before:", beforeValue);
         console.log("After:", afterValue);
-        
+
         assertEq(afterValue, beforeValue, "Total staker addresses count changed");
     }
-    
+
     // Test selected staker preservation
     function test_PreservesSelectedStaker() public {
         // Skip if no stakers
         uint256 stakerCount = proxy.getTotalStakerAddresses();
         if (stakerCount == 0) return;
-        
+
         beforeAddress = proxy.stakerAddresses(selectedStakerIndex);
         upgradeProxy();
         afterAddress = proxy.stakerAddresses(selectedStakerIndex);
-        
+
         console.log("=== Selected Staker Address ===");
         console.log("Staker Index:", selectedStakerIndex);
         console.log("Before:", beforeAddress);
         console.log("After:", afterAddress);
-        
+
         assertEq(afterAddress, beforeAddress, "Selected staker address changed");
     }
-    
+
     // Test selected staker's stake count preservation
     function test_PreservesSelectedStakerStakeCount() public {
         // Skip if no stakers
         if (selectedStaker == address(0)) return;
-        
+
         beforeValue = proxy.getUserStakeCount(selectedStaker);
         upgradeProxy();
         afterValue = proxy.getUserStakeCount(selectedStaker);
-        
+
         console.log("=== Selected Staker's Stake Count ===");
         console.log("Staker:", selectedStaker);
         console.log("Before:", beforeValue);
         console.log("After:", afterValue);
-        
+
         assertEq(afterValue, beforeValue, "Selected staker stake count changed");
     }
-    
+
     // Helper function to check if we have stakers with stakes
     function _hasStakesToTest() internal view returns (bool) {
         return selectedStaker != address(0) && proxy.getUserStakeCount(selectedStaker) > 0;
     }
-    
+
     // Load stake data fields into storage variables
     function _loadStakeData() internal {
         // We split getting the stake data into multiple calls to avoid stack issues
-        (beforeStakeAmount, beforeStakeStartTime, beforeLastUpdateTime, beforeBonusMultiplier, , , , ) = proxy.userStakes(selectedStaker, selectedStakeIndex);
-        
+        (beforeStakeAmount, beforeStakeStartTime, beforeLastUpdateTime, beforeBonusMultiplier,,,,) =
+            proxy.userStakes(selectedStaker, selectedStakeIndex);
+
         // Get the remaining fields in a separate call
-        (, , , , beforeOrganicPoints, beforeBurnRatioSnapshot, beforeBurnAccrued, beforeHasBeenClaimed) = proxy.userStakes(selectedStaker, selectedStakeIndex);
+        (,,,, beforeOrganicPoints, beforeBurnRatioSnapshot, beforeBurnAccrued, beforeHasBeenClaimed) =
+            proxy.userStakes(selectedStaker, selectedStakeIndex);
     }
-    
+
     // Load post-upgrade stake data fields into storage variables
     function _loadPostUpgradeStakeData() internal {
         // We split getting the stake data into multiple calls to avoid stack issues
-        (afterStakeAmount, afterStakeStartTime, afterLastUpdateTime, afterBonusMultiplier, , , , ) = proxy.userStakes(selectedStaker, selectedStakeIndex);
-        
+        (afterStakeAmount, afterStakeStartTime, afterLastUpdateTime, afterBonusMultiplier,,,,) =
+            proxy.userStakes(selectedStaker, selectedStakeIndex);
+
         // Get the remaining fields in a separate call
-        (, , , , afterOrganicPoints, afterBurnRatioSnapshot, afterBurnAccrued, afterHasBeenClaimed) = proxy.userStakes(selectedStaker, selectedStakeIndex);
+        (,,,, afterOrganicPoints, afterBurnRatioSnapshot, afterBurnAccrued, afterHasBeenClaimed) =
+            proxy.userStakes(selectedStaker, selectedStakeIndex);
     }
-    
+
     // Test selected staker's selected stake amount
     function test_PreservesStakeAmount() public {
         if (!_hasStakesToTest()) return;
-        
+
         _loadStakeData();
         upgradeProxy();
         _loadPostUpgradeStakeData();
-        
+
         console.log("=== Stake Amount ===");
         console.log("Staker:", selectedStaker);
         console.log("Stake Index:", selectedStakeIndex);
         console.log("Before:", beforeStakeAmount);
         console.log("After:", afterStakeAmount);
-        
+
         assertEq(afterStakeAmount, beforeStakeAmount, "Stake amount changed");
     }
-    
+
     // Test selected staker's selected stake start time
     function test_PreservesStakeStartTime() public {
         if (!_hasStakesToTest()) return;
-        
+
         _loadStakeData();
         upgradeProxy();
         _loadPostUpgradeStakeData();
-        
+
         console.log("=== Stake Start Time ===");
         console.log("Staker:", selectedStaker);
         console.log("Stake Index:", selectedStakeIndex);
         console.log("Before:", beforeStakeStartTime);
         console.log("After:", afterStakeStartTime);
-        
+
         assertEq(afterStakeStartTime, beforeStakeStartTime, "Stake start time changed");
     }
-    
+
     // Test selected staker's selected stake last update time
     function test_PreservesLastUpdateTime() public {
         if (!_hasStakesToTest()) return;
-        
+
         _loadStakeData();
         upgradeProxy();
         _loadPostUpgradeStakeData();
-        
+
         console.log("=== Stake Last Update Time ===");
         console.log("Staker:", selectedStaker);
         console.log("Stake Index:", selectedStakeIndex);
         console.log("Before:", beforeLastUpdateTime);
         console.log("After:", afterLastUpdateTime);
-        
+
         assertEq(afterLastUpdateTime, beforeLastUpdateTime, "Last update time changed");
     }
-    
+
     // Test selected staker's selected stake bonus multiplier
     function test_PreservesBonusMultiplier() public {
         if (!_hasStakesToTest()) return;
-        
+
         _loadStakeData();
         upgradeProxy();
         _loadPostUpgradeStakeData();
-        
+
         console.log("=== Stake Bonus Multiplier ===");
         console.log("Staker:", selectedStaker);
         console.log("Stake Index:", selectedStakeIndex);
         console.log("Before:", beforeBonusMultiplier);
         console.log("After:", afterBonusMultiplier);
-        
+
         assertEq(afterBonusMultiplier, beforeBonusMultiplier, "Bonus multiplier changed");
     }
-    
+
     // Test selected staker's selected stake organic points
     function test_PreservesOrganicPoints() public {
         if (!_hasStakesToTest()) return;
-        
+
         _loadStakeData();
         upgradeProxy();
         _loadPostUpgradeStakeData();
-        
+
         console.log("=== Stake Organic Points ===");
         console.log("Staker:", selectedStaker);
         console.log("Stake Index:", selectedStakeIndex);
         console.log("Before:", beforeOrganicPoints);
         console.log("After:", afterOrganicPoints);
-        
+
         assertEq(afterOrganicPoints, beforeOrganicPoints, "Organic points changed");
     }
-    
+
     // Test selected staker's selected stake burn ratio snapshot
     function test_PreservesBurnRatioSnapshot() public {
         if (!_hasStakesToTest()) return;
-        
+
         _loadStakeData();
         upgradeProxy();
         _loadPostUpgradeStakeData();
-        
+
         console.log("=== Stake Burn Ratio Snapshot ===");
         console.log("Staker:", selectedStaker);
         console.log("Stake Index:", selectedStakeIndex);
         console.log("Before:", beforeBurnRatioSnapshot);
         console.log("After:", afterBurnRatioSnapshot);
-        
+
         assertEq(afterBurnRatioSnapshot, beforeBurnRatioSnapshot, "Burn ratio snapshot changed");
     }
-    
+
     // Test selected staker's selected stake burn accrued
     function test_PreservesBurnAccrued() public {
         if (!_hasStakesToTest()) return;
-        
+
         _loadStakeData();
         upgradeProxy();
         _loadPostUpgradeStakeData();
-        
+
         console.log("=== Stake Burn Accrued ===");
         console.log("Staker:", selectedStaker);
         console.log("Stake Index:", selectedStakeIndex);
         console.log("Before:", beforeBurnAccrued);
         console.log("After:", afterBurnAccrued);
-        
+
         assertEq(afterBurnAccrued, beforeBurnAccrued, "Burn accrued changed");
     }
-    
+
     // Test selected staker's selected stake has been claimed
     function test_PreservesHasBeenClaimed() public {
         if (!_hasStakesToTest()) return;
-        
+
         _loadStakeData();
         upgradeProxy();
         _loadPostUpgradeStakeData();
-        
+
         console.log("=== Stake Has Been Claimed ===");
         console.log("Staker:", selectedStaker);
         console.log("Stake Index:", selectedStakeIndex);
         console.log("Before:", beforeHasBeenClaimed);
         console.log("After:", afterHasBeenClaimed);
-        
+
         assertEq(afterHasBeenClaimed, beforeHasBeenClaimed, "Has been claimed changed");
     }
-    
+
     // Add logging function to show which staker and stake are being tested
     function test_LogSelectedStakerAndStake() public {
         if (!_hasStakesToTest()) {
             console.log("No stakers with stakes to test");
             return;
         }
-        
+
         console.log("=== Selected Staker and Stake Summary ===");
         console.log("Testing staker at index:", selectedStakerIndex);
         console.log("Staker address:", selectedStaker);
         console.log("Testing stake at index:", selectedStakeIndex);
-        
+
         // Load stake data to see what we're testing
         _loadStakeData();
-        
+
         console.log("Stake amount:", beforeStakeAmount);
         console.log("Stake start time:", beforeStakeStartTime);
         console.log("Last update time:", beforeLastUpdateTime);
@@ -532,4 +536,4 @@ contract UpgradeStakingTest is Test {
         console.log("Burn accrued:", beforeBurnAccrued);
         console.log("Has been claimed:", beforeHasBeenClaimed);
     }
-} 
+}

@@ -15,7 +15,7 @@ import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
 contract MockKlimaV0 is ERC20 {
     constructor() ERC20("KLIMA", "KLIMA") {
-        _mint(msg.sender, 1_000_000 * 10**decimals());
+        _mint(msg.sender, 1_000_000 * 10 ** decimals());
     }
 
     function decimals() public pure override returns (uint8) {
@@ -25,7 +25,7 @@ contract MockKlimaV0 is ERC20 {
 
 contract MockKlima is ERC20 {
     constructor() ERC20("KLIMA", "KLIMA") {
-        _mint(msg.sender, 50_000_000 * 10**decimals());
+        _mint(msg.sender, 50_000_000 * 10 ** decimals());
     }
 
     function decimals() public pure override returns (uint8) {
@@ -35,7 +35,7 @@ contract MockKlima is ERC20 {
 
 contract MockKlimaX is ERC20 {
     constructor() ERC20("KLIMA-X", "KLIMA-X") {
-        _mint(msg.sender, 50_000_000 * 10**decimals());
+        _mint(msg.sender, 50_000_000 * 10 ** decimals());
     }
 
     function decimals() public pure override returns (uint8) {
@@ -65,9 +65,17 @@ contract BurnCalculationTests is Test {
     address constant KLIMA_V0_ADDR = 0xDCEFd8C8fCc492630B943ABcaB3429F12Ea9Fea2;
 
     // Events
-    event StakeCreated(address indexed user, uint256 indexed amountKlimaV0Staked, uint256 multiplier, uint256 indexed startTimestamp);
+    event StakeCreated(
+        address indexed user, uint256 indexed amountKlimaV0Staked, uint256 multiplier, uint256 indexed startTimestamp
+    );
     event StakeBurned(address indexed user, uint256 indexed amountKlimaV0Burned, uint256 indexed timestamp);
-    event StakeClaimed(address indexed user, uint256 totalUserStaked, uint256 indexed klimaAllocation, uint256 indexed klimaXAllocation, uint256 timestamp);
+    event StakeClaimed(
+        address indexed user,
+        uint256 totalUserStaked,
+        uint256 indexed klimaAllocation,
+        uint256 indexed klimaXAllocation,
+        uint256 timestamp
+    );
     event FinalizationComplete(uint256 indexed finalizationTimestamp);
     event TokenAddressesSet(address indexed klima, address indexed klimax);
     event StakingEnabled(uint256 indexed startTimestamp, uint256 indexed freezeTimestamp);
@@ -83,7 +91,7 @@ contract BurnCalculationTests is Test {
         // Create and select Base fork
         uint256 baseFork = vm.createFork("base");
         vm.selectFork(baseFork);
-        
+
         owner = makeAddr("owner");
         user1 = makeAddr("user1");
         user2 = makeAddr("user2");
@@ -95,24 +103,24 @@ contract BurnCalculationTests is Test {
         klimaV0 = new MockKlimaV0();
         klimaToken = new MockKlima();
         klimaXToken = new MockKlimaX();
-        
+
         // Store addresses
         mockKlima = address(klimaToken);
         mockKlimaX = address(klimaXToken);
 
         // Deploy implementation contract
         KlimaFairLaunchStaking implementation = new KlimaFairLaunchStaking();
-        
+
         // Deploy proxy pointing to implementation
         staking = KlimaFairLaunchStaking(deployProxy(address(implementation)));
 
         // Deploy burn vault
         setupBurnVault();
-        
+
         // Replace the hardcoded KLIMA_V0 address with our mock
         bytes memory code = address(klimaV0).code;
         vm.etch(KLIMA_V0_ADDR, code);
-        
+
         // Give users some tokens
         deal(KLIMA_V0_ADDR, user1, INITIAL_BALANCE);
         deal(KLIMA_V0_ADDR, user2, INITIAL_BALANCE);
@@ -138,17 +146,14 @@ contract BurnCalculationTests is Test {
     }
 
     function deployProxy(address impl) internal returns (address) {
-        bytes memory initData = abi.encodeWithSelector(
-            KlimaFairLaunchStaking.initialize.selector,
-            owner
-        );
+        bytes memory initData = abi.encodeWithSelector(KlimaFairLaunchStaking.initialize.selector, owner);
         return address(new ERC1967Proxy(impl, initData));
     }
 
     function setupBurnVault() internal {
         // Deploy burn vault implementation
         KlimaFairLaunchBurnVault implementation = new KlimaFairLaunchBurnVault();
-        
+
         // Deploy burn vault proxy with interchain token service
         bytes memory vaultInitData = abi.encodeWithSelector(
             KlimaFairLaunchBurnVault.initialize.selector,
@@ -157,7 +162,7 @@ contract BurnCalculationTests is Test {
         );
         address proxyAddress = address(new ERC1967Proxy(address(implementation), vaultInitData));
         burnVault = KlimaFairLaunchBurnVault(proxyAddress);
-        
+
         // Set the staking contract in the burn vault
         vm.prank(owner);
         burnVault.setKlimaFairLaunchStaking(address(staking));
@@ -170,7 +175,7 @@ contract BurnCalculationTests is Test {
             vm.prank(owner);
             uint256 startTime = block.timestamp + 1 days;
             staking.enableStaking(startTime);
-            
+
             // Warp to start of staking
             vm.warp(startTime);
         }
@@ -192,12 +197,12 @@ contract BurnCalculationTests is Test {
         warpToFinalization();
         vm.startPrank(owner);
         uint256 batchSize = 100;
-        
+
         while (staking.finalizationComplete() == 0) {
             staking.storeTotalPoints(batchSize);
         }
         vm.stopPrank();
-        
+
         // Verify finalization is complete
         require(staking.finalizationComplete() == 1, "Finalization failed");
     }
@@ -224,7 +229,7 @@ contract BurnCalculationTests is Test {
         staking.enableStaking(startTime);
         staking.setFreezeTimestamp(startTime + 367 days);
         vm.stopPrank();
-        
+
         vm.warp(startTime);
         deal(KLIMA_V0_ADDR, user1, 100e9);
         vm.startPrank(user1);
@@ -259,5 +264,4 @@ contract BurnCalculationTests is Test {
         assertEq(IERC20(KLIMA_V0_ADDR).balanceOf(user1), 0);
         vm.stopPrank();
     }
-
 }

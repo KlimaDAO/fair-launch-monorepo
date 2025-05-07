@@ -24,7 +24,6 @@ interface IInterchainTokenService {
 // this contract is used to burn the KLIMA_V0 tokens after finalization. Before finalization, the KLIMA_V0 tokens are stored pending burn.
 
 contract KlimaFairLaunchBurnVault is Initializable, UUPSUpgradeable, OwnableUpgradeable {
-    
     address public klimaFairLaunchStaking;
 
     mapping(address => uint256) public klimaAmountToBurn;
@@ -57,17 +56,14 @@ contract KlimaFairLaunchBurnVault is Initializable, UUPSUpgradeable, OwnableUpgr
     /// @notice Initializes the contract with the initial owner and interchain token service
     /// @param initialOwner Address that will be granted owner role
     /// @param _interchainTokenService Address of the interchain token service
-    function initialize(
-        address initialOwner,
-        address _interchainTokenService
-    ) external initializer {
+    function initialize(address initialOwner, address _interchainTokenService) external initializer {
         __Ownable_init(initialOwner);
         __UUPSUpgradeable_init();
-        
+
         require(_interchainTokenService != address(0), "Interchain token service cannot be zero address");
         interchainTokenService = _interchainTokenService;
         emit InterchainTokenServiceSet(_interchainTokenService);
-        
+
         emergencyWithdrawalEnabled = false;
     }
 
@@ -83,22 +79,17 @@ contract KlimaFairLaunchBurnVault is Initializable, UUPSUpgradeable, OwnableUpgr
         require(helperContractOnPolygon != address(0), "Helper contract not set");
         require(interchainTokenService != address(0), "Interchain token service not set");
         require(amount > 0, "Amount must be greater than 0");
-        
+
         // Approve the Interchain Token Service to spend our tokens
         IERC20(KLIMA_V0).approve(interchainTokenService, amount);
-        
+
         // Format the data according to Axelar's expected format
         // The first 4 bytes should be the metadata version (0)
         bytes memory metadata = abi.encodePacked(bytes4(0), abi.encode(amount, address(this)));
-        
+
         // Call the Axelar Interchain Token Service with the updated interface
         try IInterchainTokenService(interchainTokenService).interchainTransfer{value: msg.value}(
-            TOKEN_ID,
-            DESTINATION_CHAIN,
-            abi.encodePacked(helperContractOnPolygon),
-            amount,
-            metadata,
-            msg.value
+            TOKEN_ID, DESTINATION_CHAIN, abi.encodePacked(helperContractOnPolygon), amount, metadata, msg.value
         ) {
             // Success case
         } catch Error(string memory reason) {
@@ -131,7 +122,10 @@ contract KlimaFairLaunchBurnVault is Initializable, UUPSUpgradeable, OwnableUpgr
     function enableEmergencyWithdrawal() external onlyOwner {
         require(!emergencyWithdrawalEnabled, "Emergency withdrawal already enabled");
         require(klimaFairLaunchStaking != address(0), "Staking contract not set");
-        require(IKlimaFairLaunchStaking(klimaFairLaunchStaking).finalizationComplete() == 0, "Staking contract already finalized");
+        require(
+            IKlimaFairLaunchStaking(klimaFairLaunchStaking).finalizationComplete() == 0,
+            "Staking contract already finalized"
+        );
         emergencyWithdrawalEnabled = true;
         emit EmergencyWithdrawalEnabled(block.timestamp);
     }
@@ -148,7 +142,10 @@ contract KlimaFairLaunchBurnVault is Initializable, UUPSUpgradeable, OwnableUpgr
     function initiateFinalBurn() external payable onlyOwner {
         require(!emergencyWithdrawalEnabled, "Emergency withdrawal is enabled");
         require(klimaFairLaunchStaking != address(0), "Staking contract not set");
-        require(IKlimaFairLaunchStaking(klimaFairLaunchStaking).finalizationComplete() == 1, "Staking contract not finalized");
+        require(
+            IKlimaFairLaunchStaking(klimaFairLaunchStaking).finalizationComplete() == 1,
+            "Staking contract not finalized"
+        );
         _AxelarBurn(totalKlimaToBurn);
         emit FinalBurnInitiated(totalKlimaToBurn);
     }
