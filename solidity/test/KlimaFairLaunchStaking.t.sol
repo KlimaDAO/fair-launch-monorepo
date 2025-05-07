@@ -804,34 +804,6 @@ contract KlimaFairLaunchStakingTest is Test {
         vm.stopPrank();
     }
 
-    /// deprecated
-    /// @notice Test successful claiming after freeze
-    // function test_ClaimAfterFreeze() public {
-    //     // Setup
-    //     vm.startPrank(owner);
-    //     uint256 startTime = block.timestamp + 1 days;
-    //     staking.enableStaking(startTime);
-    //     vm.stopPrank();
-
-    //     // Create stake
-    //     vm.warp(startTime);
-    //     uint256 stakeAmount = 100 * 1e9;
-    //     createStake(user1, stakeAmount);
-
-    //     // Finalize
-    //     finalizeStaking();
-
-    //     // Calculate expected amounts
-    //     uint256 klimaAmount = staking.calculateKlimaAllocation(stakeAmount);
-    //     uint256 klimaXAmount = staking.calculateKlimaXAllocation(staking.previewUserPoints(user1));
-
-    //     // Claim
-    //     vm.startPrank(user1);
-    //     emit StakeClaimed(user1, stakeAmount, klimaAmount, klimaXAmount, block.timestamp);
-    //     staking.unstake(0);
-    //     vm.stopPrank();
-    // }
-
     /// fixed for deprecated function
     /// @notice Test claiming before finalization fails
     function test_RevertWhen_ClaimingBeforeFinalization() public {
@@ -1917,80 +1889,6 @@ contract KlimaFairLaunchStakingTest is Test {
             "User should receive stake amount minus burn amount"
         );
     }
-
-    /// deprecated
-    /// @notice Test expired claims can be transferred after claimDeadline
-    // function test_ExpiredClaimsCanBeTransferredAfterClaimDeadline() public {
-    //     // Setup staking
-    //     setupStaking();
-    //     createStake(user1, 100 * 1e9);
-    //     createStake(user2, 100 * 1e9);
-    //     finalizeStaking();
-
-    //     // only user 1 claims their allocation before claimDeadline
-    //     vm.startPrank(user1);
-    //     staking.unstake(0);
-    //     vm.stopPrank();
-
-    //     vm.warp(staking.claimDeadline() + 1 days);
-    //     vm.startPrank(owner);
-    //     staking.transferExpiredClaims();
-    //     vm.stopPrank();
-
-    //     uint256 klimaSupply = staking.KLIMA_SUPPLY();
-    //     uint256 klimaXSupply = staking.KLIMAX_SUPPLY();
-
-    //     // user 1 should have received their allocation
-    //     assertEq(IERC20(staking.KLIMA()).balanceOf(user1), klimaSupply/2, "User 1 should have received their allocation");
-    //     assertEq(IERC20(staking.KLIMA_X()).balanceOf(user1), klimaXSupply/2, "User 1 should have received their allocation");
-
-    //     // remaining KLIMA should be transferred to owner
-    //     assertEq(IERC20(staking.KLIMA()).balanceOf(owner), klimaSupply/2, "remaining KLIMA should be transferred to owner");
-    //     // remaining KLIMA_X should be transferred to owner
-    //     assertEq(IERC20(staking.KLIMA_X()).balanceOf(owner), klimaXSupply/2, "remaining KLIMA_X should be transferred to owner");
-    // }
-
-    /// deprecated
-    /// @notice Test expired claims cannot be transferred before claimDeadline
-    // function test_RevertWhen_ExpiredClaimsCannotBeTransferredBeforeClaimDeadline() public {
-    //             // Setup staking
-    //     setupStaking();
-    //     createStake(user1, 100 * 1e9);
-    //     createStake(user2, 100 * 1e9);
-    //     finalizeStaking();
-
-    //     // only user 1 claims their allocation before claimDeadline
-    //     vm.startPrank(user1);
-    //     staking.unstake(0);
-    //     vm.stopPrank();
-
-    //     vm.warp(staking.claimDeadline() - 1 days);
-    //     vm.startPrank(owner);
-    //     vm.expectRevert("Claim deadline has not passed");
-    //     staking.transferExpiredClaims();
-    //     vm.stopPrank();
-    // }
-
-    /// deprecated
-    /// @notice Test revert when non-owner calls transferExpiredClaims
-    // function test_RevertWhen_NotOwnerCallsTransferExpiredClaims() public {
-    //             // Setup staking
-    //     setupStaking();
-    //     createStake(user1, 100 * 1e9);
-    //     createStake(user2, 100 * 1e9);
-    //     finalizeStaking();
-
-    //     // only user 1 claims their allocation before claimDeadline
-    //     vm.startPrank(user1);
-    //     staking.unstake(0);
-    //     vm.stopPrank();
-
-    //     vm.warp(staking.claimDeadline() - 1 days);
-    //     vm.startPrank(user1);
-    //     vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, user1));
-    //     staking.transferExpiredClaims();
-    //     vm.stopPrank();
-    // }
 
     /// @notice Test the new manual freeze function using 0 as the parameter to set the freeze timestamp to the current timestamp
     function test_ManualFreezeWithZeroInput() public {
