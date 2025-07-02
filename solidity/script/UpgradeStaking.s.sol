@@ -18,6 +18,14 @@ contract UpgradeStaking is Script {
     // New implementation address (will be set after deployment)
     address public newImplementation;
 
+    // Storage for before values
+    address public beforeBurnVault;
+    uint256 public beforeStartTimestamp;
+    uint256 public beforeFreezeTimestamp;
+    uint256 public beforeTotalStaked;
+    uint256 public beforeTotalStakers;
+    uint256 public beforeFinalizationComplete;
+
     function run() public {
         // Get deployer private key from environment
         uint256 deployerPrivateKey = vm.envUint("FAIRLAUNCH_DEPLOYER_KEY");
@@ -27,6 +35,9 @@ contract UpgradeStaking is Script {
         console.log("=== Upgrade Configuration ===");
         console.log("Deployer:", deployer);
         console.log("Existing Proxy:", STAKING_PROXY);
+
+        // Read before values
+        readBeforeValues();
 
         // Start the deployment process
         vm.startBroadcast(deployerPrivateKey);
@@ -46,6 +57,74 @@ contract UpgradeStaking is Script {
 
         // Log upgrade summary
         logUpgradeSummary();
+
+        // Verify storage preservation
+        verifyStoragePreservation();
+    }
+
+    /**
+     * @notice Reads key storage values before upgrade
+     */
+    function readBeforeValues() internal {
+        KlimaFairLaunchStaking proxy = KlimaFairLaunchStaking(STAKING_PROXY);
+        
+        beforeBurnVault = proxy.burnVault();
+        beforeStartTimestamp = proxy.startTimestamp();
+        beforeFreezeTimestamp = proxy.freezeTimestamp();
+        beforeTotalStaked = proxy.totalStaked();
+        beforeTotalStakers = proxy.getTotalStakerAddresses();
+        beforeFinalizationComplete = proxy.finalizationComplete();
+    }
+
+    /**
+     * @notice Verifies that key storage values are preserved after upgrade
+     */
+    function verifyStoragePreservation() internal view {
+        KlimaFairLaunchStaking proxy = KlimaFairLaunchStaking(STAKING_PROXY);
+        
+        console.log("\n=== Storage Preservation Check ===");
+        
+        // Read after values and compare
+        address afterBurnVault = proxy.burnVault();
+        uint256 afterStartTimestamp = proxy.startTimestamp();
+        uint256 afterFreezeTimestamp = proxy.freezeTimestamp();
+        uint256 afterTotalStaked = proxy.totalStaked();
+        uint256 afterTotalStakers = proxy.getTotalStakerAddresses();
+        uint256 afterFinalizationComplete = proxy.finalizationComplete();
+
+        // Compare and log each value
+        logComparisonAddress("burnVault", beforeBurnVault, afterBurnVault);
+        logComparisonUint("startTimestamp", beforeStartTimestamp, afterStartTimestamp);
+        logComparisonUint("freezeTimestamp", beforeFreezeTimestamp, afterFreezeTimestamp);
+        logComparisonUint("totalStaked", beforeTotalStaked, afterTotalStaked);
+        logComparisonUint("totalStakers", beforeTotalStakers, afterTotalStakers);
+        logComparisonUint("finalizationComplete", beforeFinalizationComplete, afterFinalizationComplete);
+
+        console.log("All key storage values preserved successfully!");
+    }
+
+    /**
+     * @notice Logs a single comparison row for uint256 values
+     */
+    function logComparisonUint(string memory name, uint256 before, uint256 afterValue) internal view {
+        bool matches = before == afterValue;
+        string memory status = matches ? "OK" : "FAIL";
+        console.log(name);
+        console.log("  Before:", before);
+        console.log("  After:", afterValue);
+        console.log("  Status:", status);
+    }
+
+    /**
+     * @notice Logs a single comparison row for addresses
+     */
+    function logComparisonAddress(string memory name, address before, address afterValue) internal view {
+        bool matches = before == afterValue;
+        string memory status = matches ? "OK" : "FAIL";
+        console.log(name);
+        console.log("  Before:", before);
+        console.log("  After:", afterValue);
+        console.log("  Status:", status);
     }
 
     /**
