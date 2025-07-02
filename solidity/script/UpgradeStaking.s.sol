@@ -67,7 +67,7 @@ contract UpgradeStaking is Script {
      */
     function readBeforeValues() internal {
         KlimaFairLaunchStaking proxy = KlimaFairLaunchStaking(STAKING_PROXY);
-        
+
         beforeBurnVault = proxy.burnVault();
         beforeStartTimestamp = proxy.startTimestamp();
         beforeFreezeTimestamp = proxy.freezeTimestamp();
@@ -81,9 +81,9 @@ contract UpgradeStaking is Script {
      */
     function verifyStoragePreservation() internal view {
         KlimaFairLaunchStaking proxy = KlimaFairLaunchStaking(STAKING_PROXY);
-        
+
         console.log("\n=== Storage Preservation Check ===");
-        
+
         // Read after values and compare
         address afterBurnVault = proxy.burnVault();
         uint256 afterStartTimestamp = proxy.startTimestamp();
