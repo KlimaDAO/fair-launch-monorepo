@@ -1,0 +1,143 @@
+"use client";
+
+import { TourDialog } from "@components/dialogs/tour-dialog";
+import { driver } from "driver.js";
+import type { FC } from "react";
+import { useEffect } from "react";
+
+interface Props {
+  onOpen?: (open: boolean) => void;
+  startWalkthrough?: boolean;
+}
+
+export const IntroWalkthrough: FC<Props> = (props) => {
+  useEffect(() => {
+    if (props.startWalkthrough) {
+      handleWalkthrough();
+    }
+  }, [props.startWalkthrough]);
+
+  const handleWalkthrough = () => {
+    const driverObj = driver({
+      showProgress: true,
+      overlayOpacity: 0,
+      allowClose: false,
+      steps: [
+        {
+          element: "#step1",
+          popover: {
+            side: "bottom",
+            align: "end",
+            showButtons: ["next", "close"],
+            progressText: `Step 2/6`,
+            nextBtnText: "Next",
+            description: `
+              <div style="display:flex;flex-direction:column;gap:10px;color:#fff;font-family:var(--font-inter);">
+                <div style="font-size:12px;font-weight:400;">
+                  Here’s where you can view your total KLIMA deposited. Depositing KLIMA is what we call "Staking."
+                </div>
+                <div style="font-size:12px;font-weight:400;">
+                  Staking is the only way to acquire KlimaX, which we’ll explain in a moment.
+                </div>
+              </div>
+            `,
+          },
+        },
+        {
+          element: "#step2",
+          popover: {
+            side: "bottom",
+            align: "end",
+            showButtons: ["previous", "next", "close"],
+            progressText: `Step 3/6`,
+            nextBtnText: "Next",
+            prevBtnText: "Back",
+            description: `
+                <div style="display:flex;flex-direction:column;gap:10px;color:#fff;font-family:var(--font-inter);">
+                  <div style="font-size:12px;font-weight:400;">
+                    Here’s where you can view your total points accumulated. The longer you leave your KLIMA staked, the more points you’ll receive. 
+                  </div>
+                  <div style="font-size:12px;font-weight:400;">
+                    At the end of our Fair Launch period, you’ll receive a share of our new token, KlimaX, based on how many points you’ve earned. You’ll also receive an allocation of our improved flagship token, KLIMA.
+                  </div>
+                </div>
+              `,
+          },
+        },
+        {
+          element: "#step3",
+          popover: {
+            side: "bottom",
+            align: "center",
+            showButtons: ["previous", "next", "close"],
+            progressText: `Step 4/6`,
+            nextBtnText: "Next",
+            prevBtnText: "Back",
+            description: `
+              <div style="display:flex;flex-direction:column;gap:10px;color:#fff;font-family:var(--font-inter);">
+                <div style="font-size:12px;font-weight:400;">
+                  The table "Stake History" shows you each time you’ve staked, and what rewards you’ve earned from that stake.
+                </div>
+              </div>
+              `,
+          },
+        },
+        {
+          element: "#step4",
+          popover: {
+            side: "bottom",
+            align: "end",
+            showButtons: ["previous", "next", "close"],
+            progressText: `Step 5/6`,
+            nextBtnText: "Next",
+            prevBtnText: "Back",
+            description: `
+                <div style="display:flex;flex-direction:column;gap:10px;color:#fff;font-family:var(--font-inter);">
+                  <div style="font-size:12px;font-weight:400;">
+                    This table also shows you our estimate of how much KlimaX you’ll receive at the end of our Fair Launch.
+                  </div>
+                  <div style="font-size:12px;font-weight:400;">
+                    The KlimaX you hold can vote to influence KLIMA's carbon purchasing decisions. Votes provide real-time market data that influences the protocol's pricing of carbon credits.
+                  </div>
+                </div>
+              `,
+          },
+        },
+        {
+          element: "#step5",
+          popover: {
+            side: "right",
+            align: "start",
+            showButtons: ["previous", "next", "close"],
+            progressText: `Step 6/6`,
+            nextBtnText: "Finish",
+            prevBtnText: "Back",
+            description: `
+                <div style="display:flex;flex-direction:column;gap:10px;color:#fff;font-family:var(--font-inter);">
+                  <div style="font-size:12px;font-weight:400;">
+                    You can view leaderboards, fair launch metrics, and other information on the Protocol Dashboard.
+                  </div>
+                  <div style="font-size:12px;font-weight:400;">
+                    Remember: the earlier you stake, and the longer you leave your KLIMA staked, the higher your rewards.
+                  </div>
+                  <div style="font-size:12px;font-weight:400;">
+                    You can learn more about Klima 2.0 by <a style="text-decoration:underline;" href="https://github.com/KlimaDAO/klimadao-docs/blob/main/klima%202.0/Klima%202.0%20-%20Whitepaper%20-%20March%2025%2C%202025.pdf" target="_blank" rel="noopener noreferrer">downloading our whitepaper</a>.
+                  </div>
+                </div>
+              `,
+          },
+        },
+      ],
+    });
+    driverObj.drive();
+  };
+
+  return (
+    <TourDialog
+      onOpen={(isOpen) => props.onOpen?.(isOpen)}
+      onClose={() => {
+        handleWalkthrough();
+      }}
+    />
+  );
+};
