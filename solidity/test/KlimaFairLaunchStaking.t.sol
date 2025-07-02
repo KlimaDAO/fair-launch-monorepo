@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import {Test, console} from "forge-std/Test.sol";
+import {Test, console, Vm} from "forge-std/Test.sol";
 import {KlimaFairLaunchStaking} from "../src/KlimaFairLaunchStaking.sol";
 import {KlimaFairLaunchBurnVault} from "../src/KlimaFairLaunchBurnVault.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -2095,5 +2095,123 @@ contract KlimaFairLaunchStakingTest is Test {
         vm.expectRevert("Must wait 30 days after start");
         staking.manualFreeze(block.timestamp + 1 days);
         vm.stopPrank();
+    }
+
+    /// @notice Test manualFreeze works exactly at 30 days after start
+    function test_ManualFreezeExactlyAt30Days() public {
+        // Setup staking
+        setupStaking();
+
+        // Warp to exactly 30 days after start
+        vm.warp(staking.startTimestamp() + 30 days);
+
+        uint256 freezeTimestampBefore = staking.freezeTimestamp();
+        uint256 newFreezeTimestamp = block.timestamp + 1 days;
+
+        // Should work exactly at 30 days
+        vm.startPrank(owner);
+        staking.manualFreeze(newFreezeTimestamp);
+        vm.stopPrank();
+
+        uint256 freezeTimestampAfter = staking.freezeTimestamp();
+        assertEq(freezeTimestampAfter, newFreezeTimestamp, "Freeze timestamp should be set correctly");
+        assertNotEq(freezeTimestampAfter, freezeTimestampBefore, "Freeze timestamp should change");
+    }
+
+    /// @notice Test manualFreeze can be called multiple times (extending the freeze period)
+    function test_ManualFreezeMultipleCalls() public {
+        // Setup staking
+        setupStaking();
+
+        // Warp to 32 days after start
+        vm.warp(staking.startTimestamp() + 32 days);
+
+        // First manual freeze
+        vm.startPrank(owner);
+        uint256 firstFreezeTimestamp = block.timestamp + 5 days;
+        staking.manualFreeze(firstFreezeTimestamp);
+        
+        // Warp ahead 2 days
+        vm.warp(block.timestamp + 2 days);
+        
+        // Second manual freeze - extend further
+        uint256 secondFreezeTimestamp = block.timestamp + 10 days;
+        staking.manualFreeze(secondFreezeTimestamp);
+        vm.stopPrank();
+
+        uint256 finalFreezeTimestamp = staking.freezeTimestamp();
+        assertEq(finalFreezeTimestamp, secondFreezeTimestamp, "Should allow multiple manual freeze calls");
+    }
+
+    /// @notice Test manualFreeze rejects current timestamp (must use 0 or future)
+    function test_RevertWhen_ManualFreezeWithCurrentTimestamp() public {
+        // Setup staking
+        setupStaking();
+
+        // Warp to 32 days after start
+        vm.warp(staking.startTimestamp() + 32 days);
+
+        // Manual freeze with current timestamp should revert
+        vm.startPrank(owner);
+        vm.expectRevert("New timestamp must be in the future (use 0 for current timestamp)");
+        staking.manualFreeze(block.timestamp);
+        vm.stopPrank();
+    }
+
+    /// @notice Test manualFreeze during pre-staking period
+    function test_RevertWhen_ManualFreezeDuringPreStaking() public {
+        // Setup staking
+        setupStaking();
+
+        // Warp to pre-staking period (before official start)
+        vm.warp(staking.startTimestamp() - 1 days);
+
+        // Try to manual freeze during pre-staking
+        vm.startPrank(owner);
+        vm.expectRevert("Must wait 30 days after start");
+        staking.manualFreeze(block.timestamp + 1 days);
+        vm.stopPrank();
+    }
+
+    /// @notice Test manualFreeze setting timestamp beyond original freeze
+    function test_ManualFreezeExtendBeyondOriginalFreeze() public {
+        // Setup staking
+        setupStaking();
+
+        uint256 originalFreezeTimestamp = staking.freezeTimestamp();
+        
+        // Warp to 32 days after start
+        vm.warp(staking.startTimestamp() + 32 days);
+
+        // Set manual freeze way beyond original freeze
+        vm.startPrank(owner);
+        uint256 newFreezeTimestamp = originalFreezeTimestamp + 365 days;
+        staking.manualFreeze(newFreezeTimestamp);
+        vm.stopPrank();
+
+        uint256 actualFreezeTimestamp = staking.freezeTimestamp();
+        assertEq(actualFreezeTimestamp, newFreezeTimestamp, "Should allow extending beyond original freeze");
+        
+        // Users should still be able to stake until new freeze
+        createStake(user1, 100 * 1e9);
+    }
+
+    /// @notice Test manualFreeze with same timestamp as current freeze (no-op case)
+    function test_ManualFreezeWithSameTimestamp() public {
+        // Setup staking
+        setupStaking();
+
+        // Warp to 32 days after start
+        vm.warp(staking.startTimestamp() + 32 days);
+
+        uint256 currentFreezeTimestamp = staking.freezeTimestamp();
+
+        // Set manual freeze to same timestamp
+        vm.startPrank(owner);
+        staking.manualFreeze(currentFreezeTimestamp);
+        vm.stopPrank();
+
+        uint256 newFreezeTimestamp = staking.freezeTimestamp();
+        assertEq(newFreezeTimestamp, currentFreezeTimestamp, "Timestamp should remain the same");
     }
 }
