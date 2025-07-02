@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 import {Test, console} from "forge-std/Test.sol";
 import {KlimaFairLaunchStaking} from "../src/KlimaFairLaunchStaking.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import {UD60x18} from "@prb/math/UD60x18.sol";
 
 /**
  * @title UpgradeStakingTest
@@ -535,5 +536,107 @@ contract UpgradeStakingTest is Test {
         console.log("Burn ratio snapshot:", beforeBurnRatioSnapshot);
         console.log("Burn accrued:", beforeBurnAccrued);
         console.log("Has been claimed:", beforeHasBeenClaimed);
+    }
+
+    // Test claim deadline preservation
+    function test_PreservesClaimDeadline() public {
+        beforeValue = proxy.claimDeadline();
+        upgradeProxy();
+        afterValue = proxy.claimDeadline();
+
+        console.log("=== Claim Deadline ===");
+        console.log("Before:", beforeValue);
+        console.log("After:", afterValue);
+
+        assertEq(afterValue, beforeValue, "claimDeadline changed");
+    }
+
+    // Test final total points preservation  
+    function test_PreservesFinalTotalPoints() public {
+        beforeValue = proxy.finalTotalPoints();
+        upgradeProxy();
+        afterValue = proxy.finalTotalPoints();
+
+        console.log("=== Final Total Points ===");
+        console.log("Before:", beforeValue);
+        console.log("After:", afterValue);
+
+        assertEq(afterValue, beforeValue, "finalTotalPoints changed");
+    }
+
+    // Test finalize index preservation
+    function test_PreservesFinalizeIndex() public {
+        beforeValue = proxy.finalizeIndex();
+        upgradeProxy();
+        afterValue = proxy.finalizeIndex();
+
+        console.log("=== Finalize Index ===");
+        console.log("Before:", beforeValue);
+        console.log("After:", afterValue);
+
+        assertEq(afterValue, beforeValue, "finalizeIndex changed");
+    }
+
+    // Test finalization complete flag preservation
+    function test_PreservesFinalizationComplete() public {
+        beforeValue = proxy.finalizationComplete();
+        upgradeProxy();
+        afterValue = proxy.finalizationComplete();
+
+        console.log("=== Finalization Complete ===");
+        console.log("Before:", beforeValue);
+        console.log("After:", afterValue);
+
+        assertEq(afterValue, beforeValue, "finalizationComplete changed");
+    }
+
+    // Test UD60x18 constants preservation - these are critical for points calculation
+    function test_PreservesSecondsPerDay() public {
+        // UD60x18 values need to be unwrapped to compare
+        beforeValue = proxy.SECONDS_PER_DAY().unwrap();
+        upgradeProxy();
+        afterValue = proxy.SECONDS_PER_DAY().unwrap();
+
+        console.log("=== Seconds Per Day ===");
+        console.log("Before:", beforeValue);
+        console.log("After:", afterValue);
+
+        assertEq(afterValue, beforeValue, "SECONDS_PER_DAY changed");
+    }
+
+    function test_PreservesPercentageScale() public {
+        beforeValue = proxy.PERCENTAGE_SCALE().unwrap();
+        upgradeProxy();
+        afterValue = proxy.PERCENTAGE_SCALE().unwrap();
+
+        console.log("=== Percentage Scale ===");
+        console.log("Before:", beforeValue);
+        console.log("After:", afterValue);
+
+        assertEq(afterValue, beforeValue, "PERCENTAGE_SCALE changed");
+    }
+
+    function test_PreservesPointsScaleDenominator() public {
+        beforeValue = proxy.POINTS_SCALE_DENOMINATOR().unwrap();
+        upgradeProxy();
+        afterValue = proxy.POINTS_SCALE_DENOMINATOR().unwrap();
+
+        console.log("=== Points Scale Denominator ===");
+        console.log("Before:", beforeValue);
+        console.log("After:", afterValue);
+
+        assertEq(afterValue, beforeValue, "POINTS_SCALE_DENOMINATOR changed");
+    }
+
+    function test_PreservesExpGrowthRate() public {
+        beforeValue = proxy.EXP_GROWTH_RATE().unwrap();
+        upgradeProxy();
+        afterValue = proxy.EXP_GROWTH_RATE().unwrap();
+
+        console.log("=== Exp Growth Rate ===");
+        console.log("Before:", beforeValue);
+        console.log("After:", afterValue);
+
+        assertEq(afterValue, beforeValue, "EXP_GROWTH_RATE changed");
     }
 }
