@@ -2130,10 +2130,10 @@ contract KlimaFairLaunchStakingTest is Test {
         vm.startPrank(owner);
         uint256 firstFreezeTimestamp = block.timestamp + 5 days;
         staking.manualFreeze(firstFreezeTimestamp);
-        
+
         // Warp ahead 2 days
         vm.warp(block.timestamp + 2 days);
-        
+
         // Second manual freeze - extend further
         uint256 secondFreezeTimestamp = block.timestamp + 10 days;
         staking.manualFreeze(secondFreezeTimestamp);
@@ -2179,7 +2179,7 @@ contract KlimaFairLaunchStakingTest is Test {
         setupStaking();
 
         uint256 originalFreezeTimestamp = staking.freezeTimestamp();
-        
+
         // Warp to 32 days after start
         vm.warp(staking.startTimestamp() + 32 days);
 
@@ -2191,7 +2191,7 @@ contract KlimaFairLaunchStakingTest is Test {
 
         uint256 actualFreezeTimestamp = staking.freezeTimestamp();
         assertEq(actualFreezeTimestamp, newFreezeTimestamp, "Should allow extending beyond original freeze");
-        
+
         // Users should still be able to stake until new freeze
         createStake(user1, 100 * 1e9);
     }

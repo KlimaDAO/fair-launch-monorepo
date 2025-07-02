@@ -551,7 +551,7 @@ contract UpgradeStakingTest is Test {
         assertEq(afterValue, beforeValue, "claimDeadline changed");
     }
 
-    // Test final total points preservation  
+    // Test final total points preservation
     function test_PreservesFinalTotalPoints() public {
         beforeValue = proxy.finalTotalPoints();
         upgradeProxy();
