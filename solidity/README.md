@@ -1,13 +1,13 @@
 # KLIMA Fair Launch Smart Contracts
 
-This repository contains the smart contracts for the Klima 2.0 Fair Launch, a mechanism designed to transition from KLIMA V0 (legacy Klima token launched on Polygon in 2021 and bridged to Base using Axelar Interchain Token Service (ITS)) to KLIMA and KLIMAX tokens (on Base) through a staking and burn process.
+This repository contains the smart contracts for the Klima 2.0 Fair Launch, a mechanism designed to transition from KLIMA V0 (legacy Klima token launched on Polygon in 2021 and bridged to Base using Axelar Interchain Token Service (ITS)) to KLIMA and K2 tokens (on Base) through a staking and burn process.
 
 ## KlimaDAO Token System Transition Context
 
 The Fair Launch represents KlimaDAO's transition from the legacy KLIMA V0 token to a new two-token system:
 
-- **KLIMA**: A dynamic carbon index token (17.5M supply) that maintains the protocol's carbon backing
-- **KLIMAX**: An economic governance token (40M supply) for the Klima X ecosystem
+- **kVCM**: A dynamic carbon index token (17.5M supply) that maintains the protocol's carbon backing
+- **K2**: An economic governance token (40M supply) for the Klima X ecosystem
 
 ### Deployment addresses
 
@@ -37,7 +37,7 @@ This design ensures that participants who maintain their position until the free
 
 The Klima 2.0 Fair Launch consists of three main components:
 
-1. **KlimaFairLaunchStaking**: Allows users to stake KLIMA V0 tokens and earn points toward the new KLIMA and KLIMAX token allocations. Users can unstake during the staking period, which triggers a burn calculation.
+1. **KlimaFairLaunchStaking**: Allows users to stake KLIMA V0 tokens and earn points toward the new kVCM and K2 token allocations. Users can unstake during the staking period, which triggers a burn calculation.
 2. **KlimaFairLaunchBurnVault**: Collects KLIMA V0 tokens that will be burned as part of the transition. Handles the cross-chain burn process via Axelar's Interchain Token Service.
 3. **KlimaFairLaunchPolygonBurnHelper**: Deployed on Polygon to receive KLIMA V0 tokens via Axelar's Interchain Token Service and burn them on Polygon using the burn function of the polygon KLIMA contract.
 
@@ -78,8 +78,8 @@ The fair launch process follows a specific timeline with distinct phases:
 - Set the burn vault address in the staking contract via `setBurnVault()`
 - Set the staking contract address in the burn vault via `setKlimaFairLaunchStaking()`
 - Set token addresses for KLIMA and KLIMA-X via `setTokenAddresses()`
-- Configure KLIMA supply via `setKlimaSupply()` (default is 17,500,000 KLIMA)
-- Configure KLIMA-X supply via `setKlimaXSupply()` (default is 40,000,000 KLIMA-X)
+- Configure kVCM supply via `setKlimaSupply()` (default is 17,500,000 kVCM)
+- Configure K2 supply via `setKlimaXSupply()` (default is 40,000,000 K2)
 - Configure the pre-staking window via `setPreStakingWindow()` (between 3-7 days)
 - Configure the growth rate for points calculation via `setGrowthRate()` (default is 274, representing 0.00274 daily growth)
 
@@ -110,9 +110,9 @@ The fair launch process follows a specific timeline with distinct phases:
 - Points continue to accrue until finalization
 
 #### Prior to Finalization
-- Before finalization can complete, transfer the required KLIMA and KLIMA-X tokens to the staking contract
-- The contract must have at least KLIMA_SUPPLY (default 17,500,000) of KLIMA tokens
-- The contract must have at least KLIMAX_SUPPLY (default 40,000,000) of KLIMA-X tokens
+- Before finalization can complete, transfer the required kVCM and K2 tokens to the staking contract
+- The contract must have at least KLIMA_SUPPLY (default 17,500,000) of kVCM tokens
+- The contract must have at least KLIMAX_SUPPLY (default 40,000,000) of K2 tokens
 
 ### 5. Finalization Phase
 - After `freezeTimestamp`, the owner calls `storeTotalPoints()` to process all stakers
@@ -245,8 +245,8 @@ Where:
 - Si = Final staked amount for wallet i
 - ST = Total KLIMA remaining staked at freeze (totalStaked)
 
-KLIMAX Allocation:
-For each wallet i, the KLIMAX allocation (Ki) is determined by:
+K2 Allocation:
+For each wallet i, the K2 allocation (Ki) is determined by:
 Ki = (Pi / PT) × 40,000,000
 Where:
 - Pi = Final points for wallet i (organic + burn accrued)
@@ -255,7 +255,7 @@ Where:
 ### System Invariants
 The system must maintain these mathematical invariants throughout the distribution:
 1. ∑(Ni) = 17,500,000 (Total KLIMA allocated)
-2. ∑(Ki) = 40,000,000 (Total KLIMAX allocated)
+2. ∑(Ki) = 40,000,000 (Total K2 allocated)
 3. For any wallet i: if Si > 0, then Ni > 0 and Ki > 0
 4. For any wallet i: if Si = 0, then Ni = 0 and Ki = 0
 

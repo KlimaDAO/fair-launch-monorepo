@@ -99,8 +99,8 @@ export const StakesTable = <T extends StakeData>({
         },
       },
       {
-        id: "klimaxAllocation",
-        header: "KlimaX Allocation",
+        id: "k2Allocation",
+        header: "K2 Allocation",
         cell: ({ row }) => {
           const klimaxAllocation = row.original.klimaxAllocation;
           const formatted = Number(
@@ -109,13 +109,13 @@ export const StakesTable = <T extends StakeData>({
           if (formatted < 1000) {
             return (
               <>
-                <strong>{formatNumber(formatted, 3)}</strong> KlimaX
+                <strong>{formatNumber(formatted, 3)}</strong> K2
               </>
             );
           } else {
             return (
               <>
-                <strong>{formatLargeNumber(formatted)}</strong> KlimaX
+                <strong>{formatLargeNumber(formatted)}</strong> K2
               </>
             );
           }
