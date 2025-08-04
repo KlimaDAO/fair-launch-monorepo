@@ -23,7 +23,7 @@ export const getKlimaXSupply = async () => {
       functionName: "KLIMAX_SUPPLY",
     })) as bigint;
   } catch (error) {
-    console.error("Error getting K2 supply", error);
+    console.error("Error getting KlimaX supply", error);
     return 0;
   }
 };
