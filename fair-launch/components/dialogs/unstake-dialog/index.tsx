@@ -191,7 +191,7 @@ export const UnstakeDialog: FC<Props> = ({
           <Link target="_blank" href={URLS.fairLaunchFaq}>
             the burn mechanism
           </Link>
-          , but you’ll also miss out on KlimaX!
+          , but you’ll also miss out on K2!
         </div>
         <div>
           Make sure you have a good reason to unstake before you go clickin’
@@ -336,7 +336,7 @@ export const UnstakeDialog: FC<Props> = ({
               <strong>will not be able to re-stake it.</strong>
             </div>
             <div>
-              Unstaking will also reduce your points and KlimaX balance
+              Unstaking will also reduce your points and K2 balance
               proportionally, based on the amount of KLIMA you unstake.
             </div>
             <Link target="_blank" href={URLS.fairLaunchFaq}>

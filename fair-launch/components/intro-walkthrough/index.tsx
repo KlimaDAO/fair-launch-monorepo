@@ -37,7 +37,7 @@ export const IntroWalkthrough: FC<Props> = (props) => {
                   Here’s where you can view your total KLIMA deposited. Depositing KLIMA is what we call "Staking."
                 </div>
                 <div style="font-size:12px;font-weight:400;">
-                  Staking is the only way to acquire KlimaX, which we’ll explain in a moment.
+                  Staking is the only way to acquire K2, which we’ll explain in a moment.
                 </div>
               </div>
             `,
@@ -58,7 +58,7 @@ export const IntroWalkthrough: FC<Props> = (props) => {
                     Here’s where you can view your total points accumulated. The longer you leave your KLIMA staked, the more points you’ll receive. 
                   </div>
                   <div style="font-size:12px;font-weight:400;">
-                    At the end of our Fair Launch period, you’ll receive a share of our new token, KlimaX, based on how many points you’ve earned. You’ll also receive an allocation of our improved flagship token, KLIMA.
+                    At the end of our Fair Launch period, you’ll receive a share of our new token, K2, based on how many points you’ve earned. You’ll also receive an allocation of our improved flagship token, kVCM.
                   </div>
                 </div>
               `,
@@ -94,10 +94,10 @@ export const IntroWalkthrough: FC<Props> = (props) => {
             description: `
                 <div style="display:flex;flex-direction:column;gap:10px;color:#fff;font-family:var(--font-inter);">
                   <div style="font-size:12px;font-weight:400;">
-                    This table also shows you our estimate of how much KlimaX you’ll receive at the end of our Fair Launch.
+                    This table also shows you our estimate of how much K2 you’ll receive at the end of our Fair Launch.
                   </div>
                   <div style="font-size:12px;font-weight:400;">
-                    The KlimaX you hold can vote to influence KLIMA's carbon purchasing decisions. Votes provide real-time market data that influences the protocol's pricing of carbon credits.
+                    The K2 you hold can vote to influence kVCM's carbon purchasing decisions. Votes provide real-time market data that influences the protocol's pricing of carbon credits.
                   </div>
                 </div>
               `,
