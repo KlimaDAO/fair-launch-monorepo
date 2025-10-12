@@ -44,7 +44,7 @@ import * as styles from "./styles";
 
 type StakeResult = [bigint, bigint, bigint, bigint, bigint, bigint, bigint];
 
-const Page = async ({ searchParams }: { searchParams: SearchParams }) => {
+const Page = async ({ searchParams }: { searchParams: Promise<SearchParams> }) => {
   const config = getConfig();
   const headersList = await headers();
   const cookie = headersList.get("cookie");
