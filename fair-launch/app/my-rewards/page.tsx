@@ -1,8 +1,11 @@
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
 import { getContractConstants } from "@actions/contract-reads-action";
+import { getTotalSupply } from "@actions/total-supply-action";
 import { Card } from "@components/card";
+import { ClaimDialog } from "@components/dialogs/claim-dialog";
 import { StakeDialog } from "@components/dialogs/stake-dialog";
 import { UnstakeDialog } from "@components/dialogs/unstake-dialog";
+import { KvcmClaimNotification } from "@components/kvcm-claim-notification";
 import { Notification } from "@components/notification";
 import { PhaseBadge } from "@components/phase-badge";
 import { KlimaXAllocationTable } from "@components/tables/klimax-allocation";
@@ -11,6 +14,12 @@ import { StakesTable } from "@components/tables/stakes";
 import { Tooltip } from "@components/tooltip";
 import gklimaLogo from "@public/tokens/g-klima.svg";
 import klimav1Logo from "@public/tokens/klima-v1.svg";
+import {
+  getConfig,
+  IS_LOCAL_DEVELOPMENT,
+  IS_PREVIEW,
+  URLS,
+} from "@utils/constants";
 import {
   calculateTokenPercentage,
   calculateUnstakePenalty,
@@ -24,19 +33,18 @@ import {
 } from "@utils/formatting";
 import { config as wagmiConfig } from "@utils/wagmi.server";
 import { readContracts } from "@wagmi/core";
+import { SearchParams } from "next/dist/server/request/search-params";
 import { headers } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
 import { MdHelpOutline } from "react-icons/md";
 import { AbiFunction, formatUnits, parseUnits } from "viem";
-import { getConfig, URLS } from "@utils/constants";
-import { getTotalSupply } from "@actions/total-supply-action";
 import { cookieToInitialState } from "wagmi";
 import * as styles from "./styles";
 
 type StakeResult = [bigint, bigint, bigint, bigint, bigint, bigint, bigint];
 
-const Page = async () => {
+const Page = async ({ searchParams }: { searchParams: SearchParams }) => {
   const config = getConfig();
   const headersList = await headers();
   const cookie = headersList.get("cookie");
@@ -62,10 +70,35 @@ const Page = async () => {
     userStakeCount,
     burnDistributionPrecision,
     pointsScaleDenominator,
+    stakeFreezeTime,
+    claimStartTime,
+    isKvcmClaimEnabled,
+    getUserClaimableAmount,
+    hasUserClaimed,
   ] = contractConstants;
 
   const klimaXSupply = await getKlimaXSupply();
   const stakes = new Array(Number(userStakeCount.result)).fill("");
+
+  let timestamp = Math.floor(Date.now() / 1000);
+  const searchParamsObject = await searchParams;
+  const qaTimestampQueryParam = searchParamsObject["qa_timestamp"];
+  if (qaTimestampQueryParam && (IS_LOCAL_DEVELOPMENT || IS_PREVIEW)) {
+    timestamp = Number(qaTimestampQueryParam);
+  }
+
+  const stakeFreezeTimestamp = Number(stakeFreezeTime.result);
+  const claimStartTimestamp = Number(claimStartTime.result);
+
+  const isStakeFrozen = timestamp < stakeFreezeTimestamp;
+  const isClaimOpen = timestamp >= claimStartTimestamp;
+  const isClaimed = hasUserClaimed.result;
+
+  console.log("timestamp", timestamp);
+  console.log("isStakeFrozen", isStakeFrozen);
+  console.log("isClaimOpen", isClaimOpen);
+  console.log("isClaimed", isClaimed);
+
   // todo - move this to an action or util?
   const userStakes = await readContracts(wagmiConfig, {
     contracts: stakes.map((_, index) => ({
@@ -152,140 +185,166 @@ const Page = async () => {
 
   const totalStaked = Number(totalUserStakes(allUserStakes));
 
+  const isKvcmClaimEnabledFlag = isKvcmClaimEnabled.result || true;
+  const klimaDeposited = formatNumber(
+    formatUnits(BigInt(totalUserStakes(allUserStakes || [])), 9),
+    4
+  );
+  const userClaimableAmount = formatNumber(
+    formatUnits(BigInt(getUserClaimableAmount?.result || 0), 18),
+    4
+  );
+  console.log("userClaimableAmount", userClaimableAmount);
+
   return (
     <>
-      <Notification />
-      <div className={styles.twoCols}>
-        <div className={styles.titleContainer}>
-          <h1 className={styles.title}>My Rewards</h1>
-          <PhaseBadge
-            prestakingWindow={Number(prestakingWindow.result)}
-            startTimestamp={Number(startTimestamp.result)}
-          />
-        </div>
-        <div className={styles.links}>
-          <Link target="_blank" href={URLS.faq}>FAQ</Link>
-          <Link target="_blank" href={URLS.guide}>Guide</Link>
-        </div>
-        <StakeDialog />
-        {walletAddress && (
-          <div className={styles.walletAddress}>
-            Your Wallet Address:
-            <span>{truncateAddress(walletAddress as string)}</span>
-          </div>
-        )}
-      </div>
-      <div className={styles.card}>
-        <div className={styles.cardInner}>
-          <h5 className={styles.cardTitle}>My KLIMA Deposited</h5>
-          <div className={styles.cardContents}>
-            <div
-              id="step1"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.8rem",
-              }}
-            >
-              <Image src={klimav1Logo} alt="Klima V1 Logo" />
-              <div className={styles.mainText}>
-                {formatNumber(
-                  formatUnits(BigInt(totalUserStakes(allUserStakes || [])), 9),
-                  4
-                )}
-              </div>
-            </div>
-            <div className={styles.secondaryText}>
-              <strong>&lt;{tokenPercentage.toFixed(2)}%</strong> of{" "}
-              <strong>
-                {formatLargeNumber(
-                  Number(formatUnits(totalSupply!, 9))
-                )}
-              </strong>{" "}
-            </div>
-          </div>
-        </div>
-        <div className={styles.divider} />
-        <div className={styles.cardInner}>
-          <h5 className={styles.cardTitle}>My Points Accumulated</h5>
-          <div className={styles.cardContents}>
-            <div id="step2" className={styles.mainText}>
-              {formatLargeNumber(
-                Number(formatUnits(BigInt(previewUserPoints.result || 0), 18))
-              )}
-            </div>
-            <div className={styles.secondaryText}>
-              <strong>&lt;{totalPointsPercentage.toFixed(2)}%</strong> of{" "}
-              <strong>
-                {formatLargeNumber(
-                  Number(formatUnits(BigInt(getTotalPoints.result || 0), 18))
-                )}
-              </strong>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <Card>
-        <div className={styles.stakeHistoryContainer}>
-          <h5 className={styles.cardTitle} id="step3">
-            Stake History
-          </h5>
-          <div>
-            {allUserStakes.length > 0 && (
-              <UnstakeDialog
-                stakes={allUserStakes}
-                startTimestamp={String(allUserStakes[0].stakeStartTime)}
-                totalStaked={Number(totalUserStakes(allUserStakes || []))}
-              />
-            )}
-            <Tooltip content="When you unstake KLIMA, your tokens are always unstaked from the most recent stake first.">
-              <MdHelpOutline className={styles.klimaXHelp} />
-            </Tooltip>
-          </div>
-        </div>
-        <div className={styles.cardContents}>
-          <StakesTable data={allUserStakes || []} totalStaked={totalStaked} />
-        </div>
-      </Card>
-
-      <div className={styles.twoCols}>
-        <Card>
-          <LeaderboardsTable pageSize={6} showUserPosition />
-          <div className={styles.leaderboardFooter}>
-            <div>Updated every 15 minutes</div>
-            <Link className={styles.leaderboardLink} href="/protocol">
-              View full leaderboard
-            </Link>
-          </div>
-        </Card>
-        <Card>
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: "1rem",
-            }}
-          >
-            <div className={styles.klimaXTitle}>
-              <Image src={gklimaLogo} alt="Klima Logo" />
-              <div className={styles.cardTitle}>
-                My K2 Allocation Value At:
-              </div>
-            </div>
-            <Tooltip content="If more users stake and earn points, your individual share of the K2 allocation may decrease. The projections below are based on your current share percentage.">
-              <MdHelpOutline className={styles.klimaXHelp} />
-            </Tooltip>
-          </div>
-          <div className={styles.cardContents}>
-            <KlimaXAllocationTable
-              userPoints={BigInt(previewUserPoints.result!)}
-              totalPoints={BigInt(getTotalPoints.result!)}
+      {isStakeFrozen && isClaimOpen && (
+        <KvcmClaimNotification isKvcmClaimEnabled={isKvcmClaimEnabledFlag} />
+      )}
+      <div className={styles.content}>
+        <Notification />
+        <div className={styles.twoCols}>
+          <div className={styles.titleContainer}>
+            <h1 className={styles.title}>My Rewards</h1>
+            <PhaseBadge
+              prestakingWindow={Number(prestakingWindow.result)}
+              startTimestamp={Number(startTimestamp.result)}
             />
           </div>
+          <div className={styles.links}>
+            <Link target="_blank" href={URLS.tgeDocs}>
+              Read TGE Docs
+            </Link>
+          </div>
+          {!isStakeFrozen && !isClaimOpen ? (
+            <StakeDialog />
+          ) : (
+            <ClaimDialog
+              klimaDeposited={klimaDeposited}
+              isKvcmClaimEnabled={isKvcmClaimEnabledFlag}
+              userClaimableAmount={userClaimableAmount}
+            />
+          )}
+
+          {walletAddress && (
+            <div className={styles.walletAddress}>
+              Your Wallet Address:
+              <span>{truncateAddress(walletAddress as string)}</span>
+            </div>
+          )}
+        </div>
+        <div className={styles.card}>
+          <div className={styles.cardInner}>
+            <h5 className={styles.cardTitle}>My KLIMA Deposited</h5>
+            <div className={styles.cardContents}>
+              <div
+                id="step1"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.8rem",
+                }}
+              >
+                <Image src={klimav1Logo} alt="Klima V1 Logo" />
+                <div className={styles.mainText}>{klimaDeposited}</div>
+              </div>
+              <div className={styles.secondaryText}>
+                <strong>&lt;{tokenPercentage.toFixed(2)}%</strong> of{" "}
+                <strong>
+                  {formatLargeNumber(Number(formatUnits(totalSupply!, 9)))}
+                </strong>{" "}
+              </div>
+            </div>
+          </div>
+          <div className={styles.divider} />
+          <div className={styles.cardInner}>
+            <h5 className={styles.cardTitle}>My Points Accumulated</h5>
+            <div className={styles.cardContents}>
+              <div id="step2" className={styles.mainText}>
+                {formatLargeNumber(
+                  Number(formatUnits(BigInt(previewUserPoints.result || 0), 18))
+                )}
+              </div>
+              <div className={styles.secondaryText}>
+                <strong>&lt;{totalPointsPercentage.toFixed(2)}%</strong> of{" "}
+                <strong>
+                  {formatLargeNumber(
+                    Number(formatUnits(BigInt(getTotalPoints.result || 0), 18))
+                  )}
+                </strong>
+              </div>
+            </div>
+            {isStakeFrozen && (
+              <div className={styles.cardContents}>
+                <div className={styles.frozenText}>
+                  Frozen for claim calculation.
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <Card>
+          <div className={styles.stakeHistoryContainer}>
+            <h5 className={styles.cardTitle} id="step3">
+              Stake History
+            </h5>
+            <div>
+              {allUserStakes.length > 0 && !isStakeFrozen && (
+                <UnstakeDialog
+                  stakes={allUserStakes}
+                  startTimestamp={String(allUserStakes[0].stakeStartTime)}
+                  totalStaked={Number(totalUserStakes(allUserStakes || []))}
+                />
+              )}
+              <Tooltip content="When you unstake KLIMA, your tokens are always unstaked from the most recent stake first.">
+                <MdHelpOutline className={styles.klimaXHelp} />
+              </Tooltip>
+            </div>
+          </div>
+          <div className={styles.cardContents}>
+            <StakesTable data={allUserStakes || []} totalStaked={totalStaked} />
+          </div>
         </Card>
+
+        <div className={styles.twoCols}>
+          <Card>
+            <LeaderboardsTable pageSize={6} showUserPosition />
+            <div className={styles.leaderboardFooter}>
+              <div>Updated every 15 minutes</div>
+              <Link className={styles.leaderboardLink} href="/protocol">
+                View full leaderboard
+              </Link>
+            </div>
+          </Card>
+          <Card>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "1rem",
+              }}
+            >
+              <div className={styles.klimaXTitle}>
+                <Image src={gklimaLogo} alt="Klima Logo" />
+                <div className={styles.cardTitle}>
+                  My K2 Allocation Value At:
+                </div>
+              </div>
+              <Tooltip content="If more users stake and earn points, your individual share of the K2 allocation may decrease. The projections below are based on your current share percentage.">
+                <MdHelpOutline className={styles.klimaXHelp} />
+              </Tooltip>
+            </div>
+            <div className={styles.cardContents}>
+              <KlimaXAllocationTable
+                userPoints={BigInt(previewUserPoints.result!)}
+                totalPoints={BigInt(getTotalPoints.result!)}
+              />
+            </div>
+          </Card>
+        </div>
       </div>
     </>
   );

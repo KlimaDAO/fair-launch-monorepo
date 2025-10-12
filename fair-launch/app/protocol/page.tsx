@@ -46,8 +46,7 @@ const Page: FC = async () => {
         <div className={styles.titleContainer}>
           <h1 className={styles.title}>Protocol</h1>
           <div className={styles.links}>
-            <Link target="_blank" href={URLS.faq}>FAQ</Link>
-            <Link target="_blank" href={URLS.guide}>Guide</Link>
+            <Link target="_blank" href={URLS.tgeDocs}>Read TGE Docs</Link>
           </div>
         </div>
       </div>

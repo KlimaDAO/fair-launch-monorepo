@@ -8,7 +8,7 @@ export const IS_PRODUCTION =
 export const IS_LOCAL_DEVELOPMENT =
   process.env.NODE_ENV === 'development' || process.env.NODE_ENV == undefined;
 
-const IS_PREVIEW = !IS_PRODUCTION && !IS_LOCAL_DEVELOPMENT;
+export const IS_PREVIEW = !IS_PRODUCTION && !IS_LOCAL_DEVELOPMENT;
 
 export const QUICKNODE_RPC_URL = process.env.QUICKNODE_RPC_URL;
 
@@ -26,18 +26,21 @@ const CONFIG = {
     subgraphUrl: 'https://api.studio.thegraph.com/query/28985/fair-launch-base/version/latest',
     klimaTokenAddress: '0xDCEFd8C8fCc492630B943ABcaB3429F12Ea9Fea2',
     fairLaunchContractAddress: '0xea8a59D0bf9C05B437c6a5396cfB429F1A57B682',
+    fairLaunchClaimContractAddress: '0x0000000000000000000000000000000000000000',
   },
   preview: {
     chain: base.id,
     subgraphUrl: 'https://api.studio.thegraph.com/query/28985/fair-launch-base/version/latest',
     klimaTokenAddress: '0xDCEFd8C8fCc492630B943ABcaB3429F12Ea9Fea2',
     fairLaunchContractAddress: '0xea8a59D0bf9C05B437c6a5396cfB429F1A57B682',
+    fairLaunchClaimContractAddress: '0x0000000000000000000000000000000000000000',
   },
   development: {
     chain: base.id,
     subgraphUrl: 'https://api.studio.thegraph.com/query/28985/fair-launch-base/version/latest',
     klimaTokenAddress: '0xDCEFd8C8fCc492630B943ABcaB3429F12Ea9Fea2',
     fairLaunchContractAddress: '0xea8a59D0bf9C05B437c6a5396cfB429F1A57B682',
+    fairLaunchClaimContractAddress: '0x0000000000000000000000000000000000000000',
   },
 } as const;
 
@@ -55,8 +58,8 @@ export const getConfig = () => {
 };
 
 export const URLS = {
-  faq: "https://www.klimaprotocol.com/faq",
-  guide: "https://www.klimadao.finance/resources/how-to-join-the-klima-fair-launch-step-by-step-guide-for-klima-holders-and-future-ones",
+  aerodrome: "https://aerodrome.finance/",
+  tgeDocs: "https://www.klimadao.finance/resources/klima-2-0-tge-fair-launch-of-the-open-climate-protocol",
   protocol: "https://www.klimaprotocol.com",
   resources: "https://www.klimadao.finance/resource-hub",
   disclaimer: "https://www.klimadao.finance/disclaimer",
