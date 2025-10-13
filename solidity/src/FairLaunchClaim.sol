@@ -151,6 +151,10 @@ contract FairLaunchClaim is
             kVCMClaimStartTime > block.timestamp,
             "KVCM claim start time must be in the future"
         );
+        require(
+            adminWithdrawDelayPeriod >= 1 hours,
+            "Delay period must be at least 1 hour"
+        );
 
         FairLaunchClaimStorage.Config storage config = FairLaunchClaimStorage
             .getConfig();
@@ -246,6 +250,7 @@ contract FairLaunchClaim is
     function setAdminWithdrawDelayPeriod(
         uint128 delayPeriod
     ) external onlyOwner {
+        require(delayPeriod >= 1 hours, "Delay period must be at least 1 hour");
         FairLaunchClaimStorage
             .getConfig()
             .adminWithdrawDelayPeriod = delayPeriod;

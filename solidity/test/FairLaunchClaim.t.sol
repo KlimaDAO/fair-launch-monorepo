@@ -13,7 +13,7 @@ import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.s
 import {console2} from "forge-std/console2.sol";
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 
-contract FairLaunchClaimTest is Test {
+contract BaseFairLaunchClaimTest is Test {
     KlimaFairLaunchStaking staking;
     FairLaunchClaim claim;
     KlimaFairLaunchBurnVault burnVault;
@@ -84,7 +84,9 @@ contract FairLaunchClaimTest is Test {
             6 hours
         );
     }
+}
 
+contract FairLaunchClaimTest is BaseFairLaunchClaimTest {
     function test_happyPath_claimKVCM() public {
         uint256 userPointsBeforeFreeze = staking.previewUserPoints(user);
 
@@ -287,6 +289,103 @@ contract FairLaunchClaimTest is Test {
         vm.startPrank(user);
         vm.expectRevert(PausableUpgradeable.EnforcedPause.selector);
         claim.claimKVCM();
+        vm.stopPrank();
+    }
+}
+
+contract FairLaunchClaimWithdrawTest is BaseFairLaunchClaimTest {
+    function test_withdraw_KVCM() public {
+        uint256 kvcmAmount = 15_500_000 * 1e18;
+
+        // Fund the claim contract with KVCM
+        vm.startPrank(treasury);
+        KVCM.approve(address(claim), kvcmAmount);
+        claim.addKVCM(kvcmAmount);
+        vm.stopPrank();
+
+        // Verify KVCM was added
+        assertEq(
+            KVCM.balanceOf(address(claim)),
+            kvcmAmount,
+            "KVCM not added to claim contract"
+        );
+
+        uint256 treasuryBalanceBefore = KVCM.balanceOf(treasury);
+
+        // Enable token withdrawal
+        vm.prank(treasury);
+        vm.expectEmit(true, false, false, false);
+        emit IFairLaunchClaim.TokenWithdrawEnabled(address(KVCM));
+        claim.enableTokenWithdraw(address(KVCM));
+
+        // Try to withdraw before delay period passes - should fail
+        vm.startPrank(treasury);
+        vm.expectRevert("Token withdraw not enabled");
+        claim.withdrawToken(address(KVCM), kvcmAmount);
+        vm.stopPrank();
+
+        // Warp time past the delay period (6 hours + 1 second)
+        vm.warp(block.timestamp + 6 hours + 1);
+
+        // Withdraw KVCM
+        vm.prank(treasury);
+        vm.expectEmit(true, true, false, false);
+        emit IFairLaunchClaim.TokenWithdrawn(address(KVCM), kvcmAmount);
+        claim.withdrawToken(address(KVCM), kvcmAmount);
+
+        // Verify balances
+        assertEq(
+            KVCM.balanceOf(address(claim)),
+            0,
+            "KVCM not withdrawn from claim contract"
+        );
+        assertEq(
+            KVCM.balanceOf(treasury),
+            treasuryBalanceBefore + kvcmAmount,
+            "KVCM not received by treasury"
+        );
+    }
+
+    function test_withdraw_revert_if_withdraw_not_enabled() public {
+        uint256 kvcmAmount = 15_500_000 * 1e18;
+
+        // Fund the claim contract
+        vm.startPrank(treasury);
+        KVCM.approve(address(claim), kvcmAmount);
+        claim.addKVCM(kvcmAmount);
+        vm.stopPrank();
+
+        // Try to withdraw without enabling - should fail
+        vm.startPrank(treasury);
+        vm.expectRevert("Token withdraw not enabled");
+        claim.withdrawToken(address(KVCM), kvcmAmount);
+        vm.stopPrank();
+    }
+
+    function test_disable_token_withdraw() public {
+        uint256 kvcmAmount = 15_500_000 * 1e18;
+
+        // Fund the claim contract
+        vm.startPrank(treasury);
+        KVCM.approve(address(claim), kvcmAmount);
+        claim.addKVCM(kvcmAmount);
+
+        // Enable token withdrawal
+        claim.enableTokenWithdraw(address(KVCM));
+
+        // Disable token withdrawal
+        vm.expectEmit(true, false, false, false);
+        emit IFairLaunchClaim.TokenWithdrawDisabled(address(KVCM));
+        claim.disableTokenWithdraw(address(KVCM));
+        vm.stopPrank();
+
+        // Warp time past the delay period
+        vm.warp(block.timestamp + 6 hours + 1);
+
+        // Try to withdraw after disabling - should fail
+        vm.startPrank(treasury);
+        vm.expectRevert("Token withdraw not enabled");
+        claim.withdrawToken(address(KVCM), kvcmAmount);
         vm.stopPrank();
     }
 }
