@@ -1,6 +1,7 @@
 "use client";
 
 import { Alert } from "@components/alert";
+import { css } from "styled-system/css";
 import clsx from "clsx";
 import { FC } from "react";
 import { MdCheckCircle, MdInfoOutline } from "react-icons/md";
@@ -17,7 +18,7 @@ export const KvcmClaimNotification: FC<Props> = ({ isKvcmClaimEnabled }) => (
         <div className={styles.content}>
           <div className={styles.titleContainer}>
             <MdCheckCircle className={styles.icon} />
-            <p className={styles.title}>Claim is open.</p>
+            <p className={clsx(styles.title, css({ color: "green.90" }))}>Claim is open.</p>
           </div>
           <div className={clsx(styles.description, "claim")}>
             You can now claim kVCM. Your K2 allocation starts vesting at

@@ -44,7 +44,11 @@ import * as styles from "./styles";
 
 type StakeResult = [bigint, bigint, bigint, bigint, bigint, bigint, bigint];
 
-const Page = async ({ searchParams }: { searchParams: Promise<SearchParams> }) => {
+const Page = async ({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) => {
   const config = getConfig();
   const headersList = await headers();
   const cookie = headersList.get("cookie");
@@ -70,9 +74,8 @@ const Page = async ({ searchParams }: { searchParams: Promise<SearchParams> }) =
     userStakeCount,
     burnDistributionPrecision,
     pointsScaleDenominator,
-    stakeFreezeTime,
-    claimStartTime,
-    isKvcmClaimEnabled,
+    freezeTimestamp,
+    getKVCMClaimStartTime,
     getUserClaimableAmount,
     hasUserClaimed,
   ] = contractConstants;
@@ -87,18 +90,13 @@ const Page = async ({ searchParams }: { searchParams: Promise<SearchParams> }) =
     timestamp = Number(qaTimestampQueryParam);
   }
 
-  // temporarily hardcode timestamps until contracts are ready
-  const stakeFreezeTimestamp = 1760486400; // Number(stakeFreezeTime.result);
-  const claimStartTimestamp = 1760572800; // Number(claimStartTime.result);
+  const claimStartTimestamp = Number(getKVCMClaimStartTime.result);
+  const stakeFreezeTimestamp = Number(freezeTimestamp.result);
 
   const isBeforeStakeFreeze = timestamp < stakeFreezeTimestamp;
-  const isAfterStakeFreeze = timestamp >= stakeFreezeTimestamp && timestamp < claimStartTimestamp;
+  const isAfterStakeFreeze =
+    timestamp >= stakeFreezeTimestamp && timestamp < claimStartTimestamp;
   const isAfterClaimStart = timestamp >= claimStartTimestamp;
-
-  console.log("isBeforeStakeFreeze", isBeforeStakeFreeze);
-  console.log("isAfterStakeFreeze", isAfterStakeFreeze);
-  console.log("isAfterClaimStart", isAfterClaimStart);
-  console.log("timestamp", timestamp);
 
   // todo - move this to an action or util?
   const userStakes = await readContracts(wagmiConfig, {
@@ -185,8 +183,6 @@ const Page = async ({ searchParams }: { searchParams: Promise<SearchParams> }) =
   );
 
   const totalStaked = Number(totalUserStakes(allUserStakes));
-
-  const isKvcmClaimEnabledFlag = isKvcmClaimEnabled.result || true;
   const klimaDeposited = formatNumber(
     formatUnits(BigInt(totalUserStakes(allUserStakes || [])), 9),
     4
@@ -195,7 +191,6 @@ const Page = async ({ searchParams }: { searchParams: Promise<SearchParams> }) =
     formatUnits(BigInt(getUserClaimableAmount?.result || 0), 18),
     4
   );
-  console.log("userClaimableAmount", userClaimableAmount);
 
   return (
     <>
@@ -224,6 +219,7 @@ const Page = async ({ searchParams }: { searchParams: Promise<SearchParams> }) =
               klimaDeposited={klimaDeposited}
               isKvcmClaimEnabled={isAfterClaimStart}
               userClaimableAmount={userClaimableAmount}
+              hasUserClaimed={hasUserClaimed.result! || false}
             />
           )}
 

@@ -9,14 +9,12 @@ import Link from "next/link";
 import { Dialog } from "radix-ui";
 import { type FC, useEffect, useState } from "react";
 import { BsArrowRightShort } from "react-icons/bs";
+import { IoMdCheckmark } from "react-icons/io";
 import { MdOutlineRocketLaunch } from "react-icons/md";
 import { RiExternalLinkLine } from "react-icons/ri";
 import { css } from "styled-system/css";
 import { parseUnits } from "viem";
-import {
-  useWaitForTransactionReceipt,
-  useWriteContract,
-} from "wagmi";
+import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import * as styles from "./styles";
 
 type InteractOutsideEvent =
@@ -30,12 +28,14 @@ enum DialogState {
 }
 
 type Props = {
+  hasUserClaimed: boolean;
   klimaDeposited: string;
   isKvcmClaimEnabled: boolean;
   userClaimableAmount: string;
 };
 
 export const ClaimDialog: FC<Props> = ({
+  hasUserClaimed,
   klimaDeposited,
   isKvcmClaimEnabled,
   userClaimableAmount,
@@ -46,18 +46,18 @@ export const ClaimDialog: FC<Props> = ({
   const [dialogState, setDialogState] = useState(DialogState.INITIAL);
 
   const {
-    data: stakeData,
-    error: stakeError,
-    isPending: isStakePending,
-    writeContract: stakeContract,
+    data: claimData,
+    error: claimError,
+    isPending: isClaimPending,
+    writeContract: claimContract,
   } = useWriteContract();
 
   const { data: submitReceipt, isError } = useWaitForTransactionReceipt({
     confirmations: 3,
-    hash: stakeData,
+    hash: claimData,
   });
   const isSubmitSuccess = submitReceipt?.status === "success";
-  const isTransactionSuccess = isStakePending || (stakeData && isSubmitSuccess);
+  const isTransactionSuccess = isClaimPending || (claimData && isSubmitSuccess);
 
   const handleDialogState = () => {
     setOpen(!open);
@@ -70,7 +70,7 @@ export const ClaimDialog: FC<Props> = ({
   };
 
   const handleConfirm = async () => {
-    stakeContract({
+    claimContract({
       abi: klimaFairLaunchClaimAbi,
       functionName: "claimKvcm",
       address: config.fairLaunchClaimContractAddress,
@@ -80,18 +80,32 @@ export const ClaimDialog: FC<Props> = ({
   };
 
   useEffect(() => {
-    setOpen(false);
     if (submitReceipt?.status === "success") {
       setDialogState(DialogState.SUCCESS);
     }
   }, [submitReceipt]);
 
   useEffect(() => {
-    if (stakeError?.message.includes("The current chain of the wallet")) {
+    if (claimError?.message.includes("The current chain of the wallet")) {
       openChainModal?.();
       handleDialogState();
     }
-  }, [stakeError]);
+  }, [claimError]);
+
+  if (hasUserClaimed) {
+    return (
+      <div
+        className={clsx(
+          styles.participateButton,
+          styles.closedButton,
+          css({ cursor: "not-allowed", minWidth: "10rem" })
+        )}
+      >
+        <IoMdCheckmark />
+        Claimed
+      </div>
+    );
+  }
 
   const InitialView = () => (
     <>
@@ -99,7 +113,7 @@ export const ClaimDialog: FC<Props> = ({
         <MdOutlineRocketLaunch />
       </div>
       <Dialog.Title className={styles.title}>Claim your rewards</Dialog.Title>
-      <Dialog.Description className={styles.description}>
+      <div className={styles.description}>
         <div className={styles.descriptionItem}>
           KLIMA Deposited
           <span>{klimaDeposited}</span>
@@ -115,7 +129,7 @@ export const ClaimDialog: FC<Props> = ({
             Read TGE docs
           </Link>
         </div>
-      </Dialog.Description>
+      </div>
       <div className={styles.actions}>
         <button className={styles.primaryButton} onClick={handleProceed}>
           Claim kVCM
@@ -129,51 +143,97 @@ export const ClaimDialog: FC<Props> = ({
 
   const ConfirmView = () => (
     <>
-      <div className={styles.confirmContainer}>
-        <Dialog.Title className={styles.confirmTitle}>
-          Confirm your transaction
-        </Dialog.Title>
-        <Dialog.Description className={styles.confirmDescription}>
-          Give the transaction one final review before submitting to the
-          blockchain.
-        </Dialog.Description>
-      </div>
-      <div className={styles.description}>
-        <div className={styles.inputContainer}>
-          <label htmlFor="confirm-contract-address">Contract Address</label>
-          <div id="confirm-contract-address" className={styles.input}>
-            {truncateAddress(config.fairLaunchContractAddress)}
+      {!isError || !claimError ? (
+        <>
+          <div className={styles.confirmContainer}>
+            <Dialog.Title className={styles.confirmTitle}>
+              Confirm your transaction
+            </Dialog.Title>
+            <Dialog.Description className={styles.confirmDescription}>
+              Give the transaction one final review before submitting to the
+              blockchain.
+            </Dialog.Description>
           </div>
-        </div>
-        <div className={styles.inputContainer}>
-          <label htmlFor="confirm-send-amount">You are receiving</label>
-          <div id="confirm-send-amount" className={styles.input}>
-            <div>{`${userClaimableAmount} kVCM`}</div>
+          <div className={styles.description}>
+            <div className={styles.inputContainer}>
+              <label htmlFor="confirm-contract-address">Contract Address</label>
+              <div id="confirm-contract-address" className={styles.input}>
+                {truncateAddress(config.fairLaunchClaimContractAddress)}
+              </div>
+            </div>
+            <div className={styles.inputContainer}>
+              <label htmlFor="confirm-send-amount">You are receiving</label>
+              <div id="confirm-send-amount" className={styles.input}>
+                <div>{`${userClaimableAmount} kVCM`}</div>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-      {isError && (
-        <div className={styles.errorText} role="alert">
-          ❌ Error: something went wrong...
-        </div>
+          <div className={styles.actions}>
+            <button
+              onClick={handleConfirm}
+              disabled={isTransactionSuccess && !isError}
+              className={clsx(styles.primaryButton, {
+                [styles.disabled]: isTransactionSuccess && !isError,
+              })}
+            >
+              {isTransactionSuccess && !isError ? "Submitting ..." : "Submit"}
+            </button>
+            <Dialog.Close asChild>
+              <button className={styles.secondaryButton}>Cancel</button>
+            </Dialog.Close>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className={styles.confirmContainer}>
+            <div className={clsx(styles.icon, styles.errorIcon)}>
+              <MdOutlineRocketLaunch />
+            </div>
+            <Dialog.Title className={styles.title}>Claim Failed</Dialog.Title>
+          </div>
+          <div className={styles.description}>
+            <div className={styles.errorBox} role="alert">
+              Claim failed. <br />
+              Please retry. If it persists, reach us on Discord.
+            </div>
+          </div>
+          <div className={styles.actions}>
+            <button
+              onClick={() => setDialogState(DialogState.INITIAL)}
+              className={clsx(
+                styles.primaryButton,
+                styles.aerodromeButtons,
+                css({ color: "white !important" })
+              )}
+            >
+              Retry
+            </button>
+            <Link
+              href={URLS.discord}
+              target="_blank"
+              className={clsx(
+                styles.secondaryButton,
+                styles.aerodromeButtons,
+                css({ color: "void.80" })
+              )}
+            >
+              Open Discord
+              <RiExternalLinkLine />
+            </Link>
+            <Dialog.Close asChild>
+              <button
+                className={css({
+                  fontSize: "1.4rem",
+                  fontWeight: 500,
+                  cursor: "pointer",
+                })}
+              >
+                Cancel
+              </button>
+            </Dialog.Close>
+          </div>
+        </>
       )}
-      <div className={styles.actions}>
-        <button
-          onClick={handleConfirm}
-          disabled={isTransactionSuccess && !isError}
-          className={clsx(styles.primaryButton, {
-            [styles.disabled]: isTransactionSuccess && !isError,
-          })}
-        >
-          {isTransactionSuccess && !isError ? "Submitting ..." : "Submit"}
-        </button>
-        <button onClick={() => setDialogState(DialogState.SUCCESS)}>
-          Success
-        </button>
-        <Dialog.Close asChild>
-          <button className={styles.secondaryButton}>Cancel</button>
-        </Dialog.Close>
-      </div>
     </>
   );
 
@@ -185,14 +245,18 @@ export const ClaimDialog: FC<Props> = ({
       <Dialog.Title className={styles.title}>
         Successfully claimed {userClaimableAmount} kVCM
       </Dialog.Title>
-      <Dialog.Description className={styles.description}>
+      <div className={styles.description}>
         <div className={css({ textAlign: "center" })}>
           K2 vesting will begin at protocol launch; we'll announce timing.
         </div>
         <div className={styles.txInfo}>
           <span>TX Confirmed</span>
           <span>·</span>
-          <Link target="_blank" href="#" className={styles.txLink}>
+          <Link
+            target="_blank"
+            className={styles.txLink}
+            href={`https://basescan.org/tx/${submitReceipt?.transactionHash}`}
+          >
             View on explorer
             <RiExternalLinkLine />
           </Link>
@@ -231,7 +295,7 @@ export const ClaimDialog: FC<Props> = ({
           </Link>
           <span className={styles.disclaimerText}>Not investment advice</span>
         </div>
-      </Dialog.Description>
+      </div>
       <div className={styles.actions}>
         <Dialog.Close asChild>
           <button className={styles.secondaryButton}>Done</button>

@@ -26,21 +26,21 @@ const CONFIG = {
     subgraphUrl: 'https://api.studio.thegraph.com/query/28985/fair-launch-base/version/latest',
     klimaTokenAddress: '0xDCEFd8C8fCc492630B943ABcaB3429F12Ea9Fea2',
     fairLaunchContractAddress: '0xea8a59D0bf9C05B437c6a5396cfB429F1A57B682',
-    fairLaunchClaimContractAddress: '0x0000000000000000000000000000000000000000',
+    fairLaunchClaimContractAddress: '0x88c0815b50060155179bba3866cf30fb18bda787',
   },
   preview: {
     chain: base.id,
     subgraphUrl: 'https://api.studio.thegraph.com/query/28985/fair-launch-base/version/latest',
     klimaTokenAddress: '0xDCEFd8C8fCc492630B943ABcaB3429F12Ea9Fea2',
     fairLaunchContractAddress: '0xea8a59D0bf9C05B437c6a5396cfB429F1A57B682',
-    fairLaunchClaimContractAddress: '0x0000000000000000000000000000000000000000',
+    fairLaunchClaimContractAddress: '0x88c0815b50060155179bba3866cf30fb18bda787',
   },
   development: {
     chain: base.id,
     subgraphUrl: 'https://api.studio.thegraph.com/query/28985/fair-launch-base/version/latest',
     klimaTokenAddress: '0xDCEFd8C8fCc492630B943ABcaB3429F12Ea9Fea2',
     fairLaunchContractAddress: '0xea8a59D0bf9C05B437c6a5396cfB429F1A57B682',
-    fairLaunchClaimContractAddress: '0x0000000000000000000000000000000000000000',
+    fairLaunchClaimContractAddress: '0x88c0815b50060155179bba3866cf30fb18bda787',
   },
 } as const;
 
@@ -58,6 +58,7 @@ export const getConfig = () => {
 };
 
 export const URLS = {
+  faq: "https://www.klimaprotocol.com/faq",
   aerodrome: "https://aerodrome.finance/",
   tgeDocs: "https://www.klimadao.finance/resources/klima-2-0-tge-fair-launch-of-the-open-climate-protocol",
   protocol: "https://www.klimaprotocol.com",

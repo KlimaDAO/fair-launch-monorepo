@@ -62,17 +62,12 @@ export const getContractConstants = async (walletAddress: string) => {
         {
           abi: klimaFairLaunchAbi as AbiFunction[],
           address: config.fairLaunchContractAddress,
-          functionName: "STAKE_FREEZE_TIME",
-        },
-        {
-          abi: klimaFairLaunchAbi as AbiFunction[],
-          address: config.fairLaunchContractAddress,
-          functionName: "CLAIM_START_TIME",
+          functionName: "freezeTimestamp",
         },
         {
           abi: klimaFairLaunchClaimAbi as AbiFunction[],
           address: config.fairLaunchClaimContractAddress,
-          functionName: "isKvcmClaimEnabled",
+          functionName: "getKVCMClaimStartTime",
         },
         {
           abi: klimaFairLaunchClaimAbi as AbiFunction[],

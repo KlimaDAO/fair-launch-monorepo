@@ -59,6 +59,20 @@ export const icon = css({
   },
 });
 
+export const errorIcon = css({
+  backgroundColor: "red.100",
+  borderRadius: "4xl",
+  padding: "0.8rem",
+  width: "4.8rem",
+  height: "4.8rem",
+
+  "& svg": {
+    width: "2.4rem",
+    height: "2.4rem",
+    fill: "red.600 !important",
+  },
+});
+
 export const title = css({
   fontSize: "base",
   lineHeight: "base",
@@ -212,6 +226,19 @@ export const secondaryButton = css({
   fontWeight: 500,
   height: "4rem",
   cursor: "pointer",
+});
+
+export const errorBox = css({
+  fontSize: "1.4rem",
+  fontWeight: 500,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "0.4rem",
+  padding: "1.6rem",
+  borderRadius: "sm",
+  backgroundColor: "red.100",
+  color: "red.600",
 });
 
 export const aerodromeButtons = css({

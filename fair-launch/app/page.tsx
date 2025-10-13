@@ -24,7 +24,7 @@ const Page: FC = () => (
         <ConnectButton />
         <Link
           target="_blank"
-          href={URLS.fairLaunchFaq}
+          href={URLS.faq}
           className={styles.learnMore}
         >
           Learn more about Klima Fair Launch
