@@ -788,6 +788,10 @@ contract KlimaFairLaunchStaking is
         return stakerAddresses.length;
     }
 
+    function getUserStakes(address user) public view returns (Stake[] memory) {
+        return userStakes[user];
+    }
+
     /// @dev Reserved storage space per auditor recommendation.
     uint256[50] private __gap;
 }
