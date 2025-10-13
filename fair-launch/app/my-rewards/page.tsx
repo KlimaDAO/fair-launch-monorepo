@@ -87,17 +87,18 @@ const Page = async ({ searchParams }: { searchParams: Promise<SearchParams> }) =
     timestamp = Number(qaTimestampQueryParam);
   }
 
-  const stakeFreezeTimestamp = Number(stakeFreezeTime.result);
-  const claimStartTimestamp = Number(claimStartTime.result);
+  // temporarily hardcode timestamps until contracts are ready
+  const stakeFreezeTimestamp = 1760486400; // Number(stakeFreezeTime.result);
+  const claimStartTimestamp = 1760572800; // Number(claimStartTime.result);
 
-  const isStakeFrozen = timestamp < stakeFreezeTimestamp;
-  const isClaimOpen = timestamp >= claimStartTimestamp;
-  const isClaimed = hasUserClaimed.result;
+  const isBeforeStakeFreeze = timestamp < stakeFreezeTimestamp;
+  const isAfterStakeFreeze = timestamp >= stakeFreezeTimestamp && timestamp < claimStartTimestamp;
+  const isAfterClaimStart = timestamp >= claimStartTimestamp;
 
+  console.log("isBeforeStakeFreeze", isBeforeStakeFreeze);
+  console.log("isAfterStakeFreeze", isAfterStakeFreeze);
+  console.log("isAfterClaimStart", isAfterClaimStart);
   console.log("timestamp", timestamp);
-  console.log("isStakeFrozen", isStakeFrozen);
-  console.log("isClaimOpen", isClaimOpen);
-  console.log("isClaimed", isClaimed);
 
   // todo - move this to an action or util?
   const userStakes = await readContracts(wagmiConfig, {
@@ -198,8 +199,8 @@ const Page = async ({ searchParams }: { searchParams: Promise<SearchParams> }) =
 
   return (
     <>
-      {isStakeFrozen && isClaimOpen && (
-        <KvcmClaimNotification isKvcmClaimEnabled={isKvcmClaimEnabledFlag} />
+      {(isAfterStakeFreeze || isAfterClaimStart) && (
+        <KvcmClaimNotification isKvcmClaimEnabled={isAfterClaimStart} />
       )}
       <div className={styles.content}>
         <Notification />
@@ -216,12 +217,12 @@ const Page = async ({ searchParams }: { searchParams: Promise<SearchParams> }) =
               Read TGE Docs
             </Link>
           </div>
-          {!isStakeFrozen && !isClaimOpen ? (
+          {isBeforeStakeFreeze && !isAfterClaimStart ? (
             <StakeDialog />
           ) : (
             <ClaimDialog
               klimaDeposited={klimaDeposited}
-              isKvcmClaimEnabled={isKvcmClaimEnabledFlag}
+              isKvcmClaimEnabled={isAfterClaimStart}
               userClaimableAmount={userClaimableAmount}
             />
           )}
@@ -274,7 +275,7 @@ const Page = async ({ searchParams }: { searchParams: Promise<SearchParams> }) =
                 </strong>
               </div>
             </div>
-            {isStakeFrozen && (
+            {isAfterStakeFreeze && (
               <div className={styles.cardContents}>
                 <div className={styles.frozenText}>
                   Frozen for claim calculation.
@@ -290,7 +291,7 @@ const Page = async ({ searchParams }: { searchParams: Promise<SearchParams> }) =
               Stake History
             </h5>
             <div>
-              {allUserStakes.length > 0 && !isStakeFrozen && (
+              {allUserStakes.length > 0 && isBeforeStakeFreeze && (
                 <UnstakeDialog
                   stakes={allUserStakes}
                   startTimestamp={String(allUserStakes[0].stakeStartTime)}

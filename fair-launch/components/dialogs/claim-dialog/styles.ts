@@ -262,6 +262,7 @@ export const closedButton = css({
   color: "white",
   borderRadius: "sm",
   border: "none",
+  minWidth: "34rem",
   padding: "0.8rem 2.4rem",
 });
 
