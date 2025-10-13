@@ -1,15 +1,15 @@
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
+import { getTotalSupply } from "@actions/total-supply-action";
 import { Card } from "@components/card";
 import { LeaderboardsTable } from "@components/tables/leaderboards";
 import klimav1Logo from "@public/tokens/klima-v1.svg";
+import { getConfig, URLS } from "@utils/constants";
 import { calculateTokenPercentage } from "@utils/contract";
 import { formatLargeNumber, formatNumber } from "@utils/formatting";
 import { config as wagmiConfig } from "@utils/wagmi.server";
-import Link from "next/link";
-import { getConfig, URLS } from "@utils/constants";
 import { readContract } from "@wagmi/core";
 import Image from "next/image";
-import { getTotalSupply } from "@actions/total-supply-action";
+import Link from "next/link";
 import { type FC } from "react";
 import { formatUnits } from "viem";
 import * as styles from "./styles";
@@ -46,7 +46,12 @@ const Page: FC = async () => {
         <div className={styles.titleContainer}>
           <h1 className={styles.title}>Protocol</h1>
           <div className={styles.links}>
-            <Link target="_blank" href={URLS.tgeDocs}>Read TGE Docs</Link>
+            <Link target="_blank" href={URLS.faq}>
+              FAQ
+            </Link>
+            <Link target="_blank" href={URLS.guide}>
+              Guide
+            </Link>
           </div>
         </div>
       </div>

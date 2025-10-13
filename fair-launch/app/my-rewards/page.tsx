@@ -208,9 +208,20 @@ const Page = async ({
             />
           </div>
           <div className={styles.links}>
-            <Link target="_blank" href={URLS.tgeDocs}>
-              Read TGE Docs
-            </Link>
+            {isBeforeStakeFreeze ? (
+              <>
+                <Link target="_blank" href={URLS.faq}>
+                  FAQ
+                </Link>
+                <Link target="_blank" href={URLS.guide}>
+                  Guide
+                </Link>
+              </>
+            ) : (
+              <Link target="_blank" href={URLS.tgeDocs}>
+                Read TGE Docs
+              </Link>
+            )}
           </div>
           {isBeforeStakeFreeze && !isAfterClaimStart ? (
             <StakeDialog />
@@ -286,18 +297,20 @@ const Page = async ({
             <h5 className={styles.cardTitle} id="step3">
               Stake History
             </h5>
-            <div>
-              {allUserStakes.length > 0 && isBeforeStakeFreeze && (
-                <UnstakeDialog
-                  stakes={allUserStakes}
-                  startTimestamp={String(allUserStakes[0].stakeStartTime)}
-                  totalStaked={Number(totalUserStakes(allUserStakes || []))}
-                />
-              )}
-              <Tooltip content="When you unstake KLIMA, your tokens are always unstaked from the most recent stake first.">
-                <MdHelpOutline className={styles.klimaXHelp} />
-              </Tooltip>
-            </div>
+            {isBeforeStakeFreeze && (
+              <div>
+                {allUserStakes.length > 0 && (
+                  <UnstakeDialog
+                    stakes={allUserStakes}
+                    startTimestamp={String(allUserStakes[0].stakeStartTime)}
+                    totalStaked={Number(totalUserStakes(allUserStakes || []))}
+                  />
+                )}
+                <Tooltip content="When you unstake KLIMA, your tokens are always unstaked from the most recent stake first.">
+                  <MdHelpOutline className={styles.klimaXHelp} />
+                </Tooltip>
+              </div>
+            )}
           </div>
           <div className={styles.cardContents}>
             <StakesTable data={allUserStakes || []} totalStaked={totalStaked} />

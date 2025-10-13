@@ -1,56 +1,62 @@
-import { base, baseSepolia } from "viem/chains";
+import { base } from "viem/chains";
 
-type Environment = 'development' | 'preview' | 'production';
+type Environment = "development" | "preview" | "production";
 
 export const IS_PRODUCTION =
-  process.env.NEXT_PUBLIC_VERCEL_ENV === 'production';
+  process.env.NEXT_PUBLIC_VERCEL_ENV === "production";
 
 export const IS_LOCAL_DEVELOPMENT =
-  process.env.NODE_ENV === 'development' || process.env.NODE_ENV == undefined;
+  process.env.NODE_ENV === "development" || process.env.NODE_ENV == undefined;
 
 export const IS_PREVIEW = !IS_PRODUCTION && !IS_LOCAL_DEVELOPMENT;
 
 export const QUICKNODE_RPC_URL = process.env.QUICKNODE_RPC_URL;
 
 export const ENVIRONMENT: Environment = IS_PRODUCTION
-  ? 'production'
+  ? "production"
   : IS_PREVIEW
-    ? 'preview'
-    : IS_LOCAL_DEVELOPMENT
-      ? 'development'
-      : 'preview';
+  ? "preview"
+  : IS_LOCAL_DEVELOPMENT
+  ? "development"
+  : "preview";
 
 const CONFIG = {
   production: {
     chain: base.id,
-    subgraphUrl: 'https://api.studio.thegraph.com/query/28985/fair-launch-base/version/latest',
-    klimaTokenAddress: '0xDCEFd8C8fCc492630B943ABcaB3429F12Ea9Fea2',
-    fairLaunchContractAddress: '0xea8a59D0bf9C05B437c6a5396cfB429F1A57B682',
-    fairLaunchClaimContractAddress: '0x88c0815b50060155179bba3866cf30fb18bda787',
+    subgraphUrl:
+      "https://api.studio.thegraph.com/query/28985/fair-launch-base/version/latest",
+    klimaTokenAddress: "0xDCEFd8C8fCc492630B943ABcaB3429F12Ea9Fea2",
+    fairLaunchContractAddress: "0xea8a59D0bf9C05B437c6a5396cfB429F1A57B682",
+    fairLaunchClaimContractAddress:
+      "0x88c0815b50060155179bba3866cf30fb18bda787",
   },
   preview: {
     chain: base.id,
-    subgraphUrl: 'https://api.studio.thegraph.com/query/28985/fair-launch-base/version/latest',
-    klimaTokenAddress: '0xDCEFd8C8fCc492630B943ABcaB3429F12Ea9Fea2',
-    fairLaunchContractAddress: '0xea8a59D0bf9C05B437c6a5396cfB429F1A57B682',
-    fairLaunchClaimContractAddress: '0x88c0815b50060155179bba3866cf30fb18bda787',
+    subgraphUrl:
+      "https://api.studio.thegraph.com/query/28985/fair-launch-base/version/latest",
+    klimaTokenAddress: "0xDCEFd8C8fCc492630B943ABcaB3429F12Ea9Fea2",
+    fairLaunchContractAddress: "0xea8a59D0bf9C05B437c6a5396cfB429F1A57B682",
+    fairLaunchClaimContractAddress:
+      "0x88c0815b50060155179bba3866cf30fb18bda787",
   },
   development: {
     chain: base.id,
-    subgraphUrl: 'https://api.studio.thegraph.com/query/28985/fair-launch-base/version/latest',
-    klimaTokenAddress: '0xDCEFd8C8fCc492630B943ABcaB3429F12Ea9Fea2',
-    fairLaunchContractAddress: '0xea8a59D0bf9C05B437c6a5396cfB429F1A57B682',
-    fairLaunchClaimContractAddress: '0x88c0815b50060155179bba3866cf30fb18bda787',
+    subgraphUrl:
+      "https://api.studio.thegraph.com/query/28985/fair-launch-base/version/latest",
+    klimaTokenAddress: "0xDCEFd8C8fCc492630B943ABcaB3429F12Ea9Fea2",
+    fairLaunchContractAddress: "0xea8a59D0bf9C05B437c6a5396cfB429F1A57B682",
+    fairLaunchClaimContractAddress:
+      "0x88c0815b50060155179bba3866cf30fb18bda787",
   },
 } as const;
 
 export const getConfig = () => {
   switch (ENVIRONMENT) {
-    case 'production':
+    case "production":
       return CONFIG.production;
-    case 'preview':
+    case "preview":
       return CONFIG.preview;
-    case 'development':
+    case "development":
       return CONFIG.development;
     default:
       return CONFIG.preview;
@@ -59,15 +65,20 @@ export const getConfig = () => {
 
 export const URLS = {
   faq: "https://www.klimaprotocol.com/faq",
+  guide:
+    "https://www.klimadao.finance/resources/how-to-join-the-klima-fair-launch-step-by-step-guide-for-klima-holders-and-future-ones",
   aerodrome: "https://aerodrome.finance/",
-  tgeDocs: "https://www.klimadao.finance/resources/klima-2-0-tge-fair-launch-of-the-open-climate-protocol",
+  tgeDocs:
+    "https://www.klimadao.finance/resources/klima-2-0-tge-fair-launch-of-the-open-climate-protocol",
   protocol: "https://www.klimaprotocol.com",
   resources: "https://www.klimadao.finance/resource-hub",
   disclaimer: "https://www.klimadao.finance/disclaimer",
   contact: "https://discord.com/channels/841390338324824096/938056860651647056",
-  fairLaunchFaq: "https://github.com/KlimaDAO/klimadao-docs/blob/main/klima%202.0/KlimaDAO%20-%20Klima%202.0%20-%20Fair%20Launch%20FAQ%20-%20April%201%2C%202025.md#burn-calculation",
-  klima2Whitepaper: "https://github.com/KlimaDAO/klimadao-docs/blob/main/klima%202.0/Klima%202.0%20-%20Whitepaper%20-%20March%2025%2C%202025.pdf",
+  fairLaunchFaq:
+    "https://github.com/KlimaDAO/klimadao-docs/blob/main/klima%202.0/KlimaDAO%20-%20Klima%202.0%20-%20Fair%20Launch%20FAQ%20-%20April%201%2C%202025.md#burn-calculation",
+  klima2Whitepaper:
+    "https://github.com/KlimaDAO/klimadao-docs/blob/main/klima%202.0/Klima%202.0%20-%20Whitepaper%20-%20March%2025%2C%202025.pdf",
   twitter: "https://twitter.com/KlimaDAO",
   discord: "https://discord.com/invite/klimadao",
   telegram: "https://t.me/KlimaDAO_Official",
-}
+};
