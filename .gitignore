@@ -53,7 +53,9 @@ yarn-error.log*
 
 .env
 .env*.local
+.env.keys
 
 # solidity
 solidity/lib/*
 solidity/cache/*
+

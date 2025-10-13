@@ -64,6 +64,12 @@ interface IFairLaunchClaim {
     event KVCMClaimDisabled();
 
     /**
+     * @notice Emitted when the start time for KVCM claims is set.
+     * @param startTime The new start time for KVCM claims.
+     */
+    event KVCMClaimStartTimeSet(uint128 indexed startTime);
+
+    /**
      * @notice Error thrown when a user with no Klima staked in the fair launch tries to claim.
      */
     error NoKlimaStakedInFairLaunch();
@@ -145,11 +151,19 @@ interface IFairLaunchClaim {
     function addKVCM(uint256 amount) external;
 
     /**
+     * @notice Adds K2 tokens to the contract for claims.
+     * @param amount The amount of K2 to add.
+     */
+    function addK2(uint256 amount) external;
+
+    /**
      * @notice Sets the configuration of the contract.
      * @param kvcm The address of the KVCM token.
      * @param k2 The address of the K2 token.
-     * @param kVCMClaimStartTime The start time for KVCM claims.
+     * @param fairLaunch The address of the fair launch staking contract.
      * @param isKVCMClaimEnabled Whether KVCM claiming is enabled.
+     * @param kVCMClaimStartTime The start time for KVCM claims.
+     * @param adminWithdrawDelayPeriod The delay period for admin withdrawals.
      */
     function setConfig(
         address kvcm,
@@ -187,4 +201,10 @@ interface IFairLaunchClaim {
      * @param delayPeriod The new delay period in seconds.
      */
     function setAdminWithdrawDelayPeriod(uint128 delayPeriod) external;
+
+    /**
+     * @notice Sets the start time for KVCM claims.
+     * @param startTime The new start time for KVCM claims.
+     */
+    function setKVCMClaimStartTime(uint128 startTime) external;
 }

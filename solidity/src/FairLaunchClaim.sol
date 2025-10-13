@@ -70,6 +70,7 @@ contract FairLaunchClaim is
     function claimKVCM()
         external
         nonReentrant
+        whenNotPaused
         returns (uint256 kVCMClaimAmount)
     {
         FairLaunchClaimStorage.Config storage config = FairLaunchClaimStorage
@@ -78,6 +79,7 @@ contract FairLaunchClaim is
             .getState();
 
         require(config.isKVCMClaimEnabled, "KVCM claim not enabled");
+
         require(
             block.timestamp >= config.kVCMClaimStartTime,
             "KVCM claim not started"
@@ -125,9 +127,181 @@ contract FairLaunchClaim is
         IERC20(config.kvcm).safeTransfer(msg.sender, kVCMClaimAmount);
     }
 
-    // =============================================================
-    // EXTERNAL VIEW FUNCTIONS
-    // =============================================================
+    /**
+     * @notice Sets the configuration parameters for the contract. Can only be called by the owner.
+     * @param kvcm The address of the KVCM token.
+     * @param k2 The address of the K2 token.
+     * @param fairLaunch The address of the fair launch staking contract.
+     * @param isKVCMClaimEnabled A flag to enable or disable KVCM claims.
+     * @param kVCMClaimStartTime The timestamp when KVCM claims can start.
+     * @param adminWithdrawDelayPeriod The delay period for admin withdrawals.
+     */
+    function setConfig(
+        address kvcm,
+        address k2,
+        address fairLaunch,
+        bool isKVCMClaimEnabled,
+        uint128 kVCMClaimStartTime,
+        uint128 adminWithdrawDelayPeriod
+    ) external onlyOwner {
+        require(kvcm != address(0), "KVCM cannot be zero address");
+        require(k2 != address(0), "K2 cannot be zero address");
+        require(fairLaunch != address(0), "FairLaunch cannot be zero address");
+        require(
+            kVCMClaimStartTime > block.timestamp,
+            "KVCM claim start time must be in the future"
+        );
+
+        FairLaunchClaimStorage.Config storage config = FairLaunchClaimStorage
+            .getConfig();
+
+        config.kvcm = kvcm;
+        config.k2 = k2;
+        config.fairLaunch = fairLaunch;
+        config.isKVCMClaimEnabled = isKVCMClaimEnabled;
+        config.kVCMClaimStartTime = kVCMClaimStartTime;
+        config.adminWithdrawDelayPeriod = adminWithdrawDelayPeriod;
+    }
+
+    /**
+     * @notice Adds a specified amount of KVCM tokens to the contract for claims.
+     * @param amount The amount of KVCM to add.
+     */
+    function addKVCM(uint256 amount) external onlyOwner {
+        // We have an option to pull it from an escrow, but using claim contract as an escrow should be fine.
+        FairLaunchClaimStorage.Config storage config = FairLaunchClaimStorage
+            .getConfig();
+        IERC20(config.kvcm).safeTransferFrom(msg.sender, address(this), amount);
+        FairLaunchClaimStorage.getState().kvcmForClaims += amount;
+        emit KVCMAdded(amount);
+    }
+
+    /**
+     * @notice Adds a specified amount of K2 tokens to the contract for claims.
+     * @param amount The amount of K2 to add.
+     */
+    function addK2(uint256 amount) external onlyOwner {
+        FairLaunchClaimStorage.Config storage config = FairLaunchClaimStorage
+            .getConfig();
+        IERC20(config.k2).safeTransferFrom(msg.sender, address(this), amount);
+        FairLaunchClaimStorage.getState().k2ForClaims += amount;
+        emit K2Added(amount);
+    }
+
+    /**
+     * @notice Withdraws a specified amount of a token from the contract.
+     * @dev The withdrawal is subject to a time delay configured by the owner.
+     * @param token The address of the token to withdraw.
+     * @param amount The amount of the token to withdraw.
+     */
+    function withdrawToken(
+        address token,
+        uint256 amount
+    ) external onlyOwner nonReentrant whenNotPaused {
+        FairLaunchClaimStorage.State storage state = FairLaunchClaimStorage
+            .getState();
+        require(
+            state.tokenWithdrawTime[token] > 0,
+            "Token withdraw not enabled"
+        );
+        require(
+            block.timestamp >= state.tokenWithdrawTime[token],
+            "Token withdraw not enabled"
+        );
+        IERC20(token).safeTransfer(msg.sender, amount);
+        emit TokenWithdrawn(token, amount);
+        state.tokenWithdrawTime[token] = 0;
+    }
+
+    /**
+     * @notice Enables the withdrawal of a specific token after a delay period.
+     * @param token The address of the token to enable withdrawal for.
+     */
+    function enableTokenWithdraw(
+        address token
+    ) external onlyOwner whenNotPaused {
+        FairLaunchClaimStorage.State storage state = FairLaunchClaimStorage
+            .getState();
+        state.tokenWithdrawTime[token] =
+            uint128(block.timestamp) +
+            FairLaunchClaimStorage.getConfig().adminWithdrawDelayPeriod;
+        emit TokenWithdrawEnabled(token);
+    }
+
+    /**
+     * @notice Disables the withdrawal of a specific token.
+     * @param token The address of the token to disable withdrawal for.
+     */
+    function disableTokenWithdraw(
+        address token
+    ) external onlyOwner whenNotPaused {
+        FairLaunchClaimStorage.getState().tokenWithdrawTime[token] = 0;
+        emit TokenWithdrawDisabled(token);
+    }
+
+    /**
+     * @notice Sets the delay period for admin withdrawals.
+     * @param delayPeriod The new delay period in seconds.
+     */
+    function setAdminWithdrawDelayPeriod(
+        uint128 delayPeriod
+    ) external onlyOwner {
+        FairLaunchClaimStorage
+            .getConfig()
+            .adminWithdrawDelayPeriod = delayPeriod;
+        emit AdminWithdrawDelayPeriodSet(delayPeriod);
+    }
+
+    /**
+     * @notice Sets the start time for KVCM claims.
+     * @param startTime The new start time timestamp.
+     */
+    function setKVCMClaimStartTime(uint128 startTime) external onlyOwner {
+        FairLaunchClaimStorage.Config storage config = FairLaunchClaimStorage
+            .getConfig();
+        require(
+            startTime > block.timestamp,
+            "KVCM claim start time must be in the future"
+        );
+        config.kVCMClaimStartTime = startTime;
+        emit KVCMClaimStartTimeSet(startTime);
+    }
+
+    /**
+     * @notice Enables KVCM claiming. Can only be called by the owner.
+     */
+    function enableKVCMClaim() external onlyOwner whenNotPaused {
+        FairLaunchClaimStorage.Config storage config = FairLaunchClaimStorage
+            .getConfig();
+        require(!config.isKVCMClaimEnabled, "KVCM claim already enabled");
+        config.isKVCMClaimEnabled = true;
+        emit KVCMClaimEnabled();
+    }
+
+    /**
+     * @notice Disables KVCM claiming. Can only be called by the owner.
+     */
+    function disableKVCMClaim() external onlyOwner whenNotPaused {
+        FairLaunchClaimStorage.Config storage config = FairLaunchClaimStorage
+            .getConfig();
+        require(config.isKVCMClaimEnabled, "KVCM claim already disabled");
+        config.isKVCMClaimEnabled = false;
+        emit KVCMClaimDisabled();
+    }
+
+    /**
+     * @notice Pauses the contract. Can only be called by the owner.
+     */
+    function pause() external onlyOwner whenNotPaused {
+        _pause();
+    }
+
+    /**
+     * @notice Unpauses the contract. Can only be called by the owner.
+     */
+    function unpause() external onlyOwner whenPaused {
+        _unpause();
+    }
 
     /**
      * @notice Checks if a user has already claimed their KVCM tokens.
@@ -198,163 +372,6 @@ contract FairLaunchClaim is
      */
     function isKVCMClaimEnabled() external view returns (bool) {
         return FairLaunchClaimStorage.getConfig().isKVCMClaimEnabled;
-    }
-
-    // =============================================================
-    // EXTERNAL ADMIN FUNCTIONS
-    // =============================================================
-
-    /**
-     * @notice Sets the configuration parameters for the contract. Can only be called by the owner.
-     * @param kvcm The address of the KVCM token.
-     * @param k2 The address of the K2 token.
-     * @param fairLaunch The address of the fair launch staking contract.
-     * @param isKVCMClaimEnabled A flag to enable or disable KVCM claims.
-     * @param kVCMClaimStartTime The timestamp when KVCM claims can start.
-     * @param adminWithdrawDelayPeriod The delay period for admin withdrawals.
-     */
-    function setConfig(
-        address kvcm,
-        address k2,
-        address fairLaunch,
-        bool isKVCMClaimEnabled,
-        uint128 kVCMClaimStartTime,
-        uint128 adminWithdrawDelayPeriod
-    ) external onlyOwner {
-        require(kvcm != address(0), "KVCM cannot be zero address");
-        require(k2 != address(0), "K2 cannot be zero address");
-        require(fairLaunch != address(0), "FairLaunch cannot be zero address");
-        require(
-            kVCMClaimStartTime > block.timestamp,
-            "KVCM claim start time must be in the future"
-        );
-
-        FairLaunchClaimStorage.Config storage config = FairLaunchClaimStorage
-            .getConfig();
-
-        config.kvcm = kvcm;
-        config.k2 = k2;
-        config.fairLaunch = fairLaunch;
-        config.isKVCMClaimEnabled = isKVCMClaimEnabled;
-        config.kVCMClaimStartTime = kVCMClaimStartTime;
-        config.adminWithdrawDelayPeriod = adminWithdrawDelayPeriod;
-    }
-
-    /**
-     * @notice Adds a specified amount of KVCM tokens to the contract for claims.
-     * @param amount The amount of KVCM to add.
-     */
-    function addKVCM(uint256 amount) external onlyOwner {
-        // We have an option to pull it from an escrow, but using claim contract as an escrow should be fine.
-        FairLaunchClaimStorage.Config storage config = FairLaunchClaimStorage
-            .getConfig();
-        IERC20(config.kvcm).safeTransferFrom(msg.sender, address(this), amount);
-        FairLaunchClaimStorage.getState().kvcmForClaims += amount;
-        emit KVCMAdded(amount);
-    }
-
-    function addK2(uint256 amount) external onlyOwner {
-        FairLaunchClaimStorage.Config storage config = FairLaunchClaimStorage
-            .getConfig();
-        IERC20(config.k2).safeTransferFrom(msg.sender, address(this), amount);
-        FairLaunchClaimStorage.getState().k2ForClaims += amount;
-        emit K2Added(amount);
-    }
-
-    /**
-     * @notice Withdraws a specified amount of a token from the contract.
-     * @dev The withdrawal is subject to a time delay configured by the owner.
-     * @param token The address of the token to withdraw.
-     * @param amount The amount of the token to withdraw.
-     */
-    function withdrawToken(
-        address token,
-        uint256 amount
-    ) external onlyOwner nonReentrant {
-        FairLaunchClaimStorage.State storage state = FairLaunchClaimStorage
-            .getState();
-        require(
-            state.tokenWithdrawTime[token] > 0,
-            "Token withdraw not enabled"
-        );
-        require(
-            block.timestamp >= state.tokenWithdrawTime[token],
-            "Token withdraw not enabled"
-        );
-        IERC20(token).safeTransfer(msg.sender, amount);
-        emit TokenWithdrawn(token, amount);
-        state.tokenWithdrawTime[token] = 0;
-    }
-
-    /**
-     * @notice Enables the withdrawal of a specific token after a delay period.
-     * @param token The address of the token to enable withdrawal for.
-     */
-    function enableTokenWithdraw(address token) external onlyOwner {
-        FairLaunchClaimStorage.State storage state = FairLaunchClaimStorage
-            .getState();
-        state.tokenWithdrawTime[token] =
-            uint128(block.timestamp) +
-            FairLaunchClaimStorage.getConfig().adminWithdrawDelayPeriod;
-        emit TokenWithdrawEnabled(token);
-    }
-
-    /**
-     * @notice Disables the withdrawal of a specific token.
-     * @param token The address of the token to disable withdrawal for.
-     */
-    function disableTokenWithdraw(address token) external onlyOwner {
-        FairLaunchClaimStorage.getState().tokenWithdrawTime[token] = 0;
-        emit TokenWithdrawDisabled(token);
-    }
-
-    /**
-     * @notice Sets the delay period for admin withdrawals.
-     * @param delayPeriod The new delay period in seconds.
-     */
-    function setAdminWithdrawDelayPeriod(
-        uint128 delayPeriod
-    ) external onlyOwner {
-        FairLaunchClaimStorage
-            .getConfig()
-            .adminWithdrawDelayPeriod = delayPeriod;
-        emit AdminWithdrawDelayPeriodSet(delayPeriod);
-    }
-
-    /**
-     * @notice Enables KVCM claiming. Can only be called by the owner.
-     */
-    function enableKVCMClaim() external onlyOwner {
-        FairLaunchClaimStorage.Config storage config = FairLaunchClaimStorage
-            .getConfig();
-        require(!config.isKVCMClaimEnabled, "KVCM claim already enabled");
-        config.isKVCMClaimEnabled = true;
-        emit KVCMClaimEnabled();
-    }
-
-    /**
-     * @notice Disables KVCM claiming. Can only be called by the owner.
-     */
-    function disableKVCMClaim() external onlyOwner {
-        FairLaunchClaimStorage.Config storage config = FairLaunchClaimStorage
-            .getConfig();
-        require(config.isKVCMClaimEnabled, "KVCM claim already disabled");
-        config.isKVCMClaimEnabled = false;
-        emit KVCMClaimDisabled();
-    }
-
-    /**
-     * @notice Pauses the contract. Can only be called by the owner.
-     */
-    function pause() external onlyOwner whenNotPaused {
-        _pause();
-    }
-
-    /**
-     * @notice Unpauses the contract. Can only be called by the owner.
-     */
-    function unpause() external onlyOwner whenPaused {
-        _unpause();
     }
 
     // =============================================================
