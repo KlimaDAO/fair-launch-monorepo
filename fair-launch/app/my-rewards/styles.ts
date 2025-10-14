@@ -98,7 +98,7 @@ export const cardInner = css({
   padding: "2rem",
   display: "flex",
   flexDirection: "column",
-  justifyContent: "space-between",
+  justifyContent: "flex-start",
 });
 
 export const cardTitle = css({
@@ -113,6 +113,12 @@ export const cardContents = css({
   flexDirection: "row",
   alignItems: "baseline",
   justifyContent: "space-between",
+});
+
+export const frozenText = css({
+  fontSize: "1.4rem",
+  fontWeight: 400,
+  color: "void.50",
 });
 
 export const mainText = css({
@@ -216,7 +222,6 @@ export const leaderboardFooter = css({
 });
 
 export const links = css({
-  marginRight: "2.8rem",
   display: "flex",
   flexDirection: "row",
   alignItems: "center",
@@ -225,6 +230,7 @@ export const links = css({
   color: "green.70",
   fontWeight: 500,
   height: "4rem",
+  width: "100%",
 
   '& a': {
     textDecoration: "underline",

@@ -1,6 +1,7 @@
 "use server";
 
 import { abi as klimaFairLaunchAbi } from "@abi/klima-fair-launch";
+import { abi as klimaFairLaunchClaimAbi } from "@abi/klima-fair-launch-claim";
 import { getConfig } from "@utils/constants";
 import { config as wagmiConfig } from "@utils/wagmi.server";
 import { readContracts } from "@wagmi/core";
@@ -57,6 +58,28 @@ export const getContractConstants = async (walletAddress: string) => {
           abi: klimaFairLaunchAbi as AbiFunction[],
           address: config.fairLaunchContractAddress,
           functionName: "POINTS_SCALE_DENOMINATOR",
+        },
+        {
+          abi: klimaFairLaunchAbi as AbiFunction[],
+          address: config.fairLaunchContractAddress,
+          functionName: "freezeTimestamp",
+        },
+        {
+          abi: klimaFairLaunchClaimAbi as AbiFunction[],
+          address: config.fairLaunchClaimContractAddress,
+          functionName: "getKVCMClaimStartTime",
+        },
+        {
+          abi: klimaFairLaunchClaimAbi as AbiFunction[],
+          address: config.fairLaunchClaimContractAddress,
+          functionName: "getUserClaimableAmount",
+          args: [walletAddress],
+        },
+        {
+          abi: klimaFairLaunchClaimAbi as AbiFunction[],
+          address: config.fairLaunchClaimContractAddress,
+          functionName: "hasUserClaimed",
+          args: [walletAddress],
         },
       ],
     });

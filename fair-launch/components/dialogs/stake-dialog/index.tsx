@@ -112,7 +112,7 @@ export const StakeDialog: FC = () => {
       functionName: "approve",
       address: config.klimaTokenAddress,
       args: [config.fairLaunchContractAddress, parseUnits(stakeAmount, 9)],
-      chainId: config.chain
+      chainId: config.chain,
     });
   };
 
@@ -242,7 +242,10 @@ export const StakeDialog: FC = () => {
             </div>
             <Alert variant="default">
               <strong>Note:</strong> It is best to leave this amount staked
-              until the end of the Fair Launch period. <strong>Unstaking your KLIMA will always result in a penalty.</strong>
+              until the end of the Fair Launch period.{" "}
+              <strong>
+                Unstaking your KLIMA will always result in a penalty.
+              </strong>
             </Alert>
             <div className={styles.actions}>
               <button

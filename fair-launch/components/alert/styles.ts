@@ -24,6 +24,13 @@ export const alertVariants = cva({
         color: "black",
         padding: "2rem",
       },
+      closed: {
+        bg: "void.60",
+        border: "none",
+        color: "white",
+        padding: "2rem",
+        borderRadius: "0",
+      }
     },
   },
   defaultVariants: {

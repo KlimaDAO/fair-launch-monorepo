@@ -1,10 +1,10 @@
 import { ConnectButton } from "@components/connect-button";
 import { Footer } from "@components/footer";
 import backgroundImage from "@public/background.png";
+import { URLS } from "@utils/constants";
 import Image from "next/image";
 import Link from "next/link";
 import type { FC } from "react";
-import { URLS } from "@utils/constants";
 import * as styles from "./styles";
 
 const Page: FC = () => (
@@ -23,8 +23,8 @@ const Page: FC = () => (
         <p className={styles.description}>Connect a wallet to get started.</p>
         <ConnectButton />
         <Link
-          href={URLS.faq}
           target="_blank"
+          href={URLS.faq}
           className={styles.learnMore}
         >
           Learn more about Klima Fair Launch

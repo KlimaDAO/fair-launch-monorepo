@@ -21,7 +21,7 @@ const Layout: FC<Props> = (props) => (
     <div className={styles.container}>
       <Sidebar />
       <div className={styles.main}>
-        <div className={styles.content}>{props.children}</div>
+        {props.children}
         <Footer />
       </div>
     </div>
