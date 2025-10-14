@@ -58,6 +58,7 @@ export const ClaimDialog: FC<Props> = ({
     error: claimError,
     isPending: isClaimPending,
     writeContract: claimContract,
+    reset: resetClaim,
   } = useWriteContract();
 
   const { data: submitReceipt, isError } = useWaitForTransactionReceipt({
@@ -123,7 +124,7 @@ export const ClaimDialog: FC<Props> = ({
   };
 
   useEffect(() => {
-    if (submitReceipt?.status === "success") {
+    if (isSubmitSuccess) {
       setDialogState(DialogState.SUCCESS);
       setIsSubmitting(false);
     }
@@ -226,7 +227,7 @@ export const ClaimDialog: FC<Props> = ({
 
   const ConfirmView = () => (
     <>
-      {!isError || !claimError ? (
+      {!isError && !claimError ? (
         <>
           <div className={styles.confirmContainer}>
             <Dialog.Title className={styles.confirmTitle}>
@@ -284,7 +285,10 @@ export const ClaimDialog: FC<Props> = ({
           </div>
           <div className={styles.actions}>
             <button
-              onClick={() => setDialogState(DialogState.INITIAL)}
+              onClick={() => {
+                setDialogState(DialogState.INITIAL);
+                resetClaim?.();
+              }}
               className={clsx(
                 styles.primaryButton,
                 styles.aerodromeButtons,
@@ -307,6 +311,7 @@ export const ClaimDialog: FC<Props> = ({
             </Link>
             <Dialog.Close asChild>
               <button
+                onClick={() => resetClaim?.()}
                 className={css({
                   fontSize: "1.4rem",
                   fontWeight: 500,
