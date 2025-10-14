@@ -6,6 +6,7 @@ import { getConfig, URLS } from "@utils/constants";
 import { truncateAddress } from "@utils/formatting";
 import clsx from "clsx";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Dialog } from "radix-ui";
 import { type FC, useEffect, useState } from "react";
 import { BsArrowRightShort } from "react-icons/bs";
@@ -13,7 +14,7 @@ import { IoMdCheckmark } from "react-icons/io";
 import { MdOutlineRocketLaunch } from "react-icons/md";
 import { RiExternalLinkLine } from "react-icons/ri";
 import { css } from "styled-system/css";
-import { parseUnits } from "viem";
+import { useAccount } from "wagmi";
 import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import * as styles from "./styles";
 
@@ -41,6 +42,8 @@ export const ClaimDialog: FC<Props> = ({
   userClaimableAmount,
 }) => {
   const config = getConfig();
+  const router = useRouter();
+  const { address } = useAccount();
   const [open, setOpen] = useState(false);
   const { openChainModal } = useChainModal();
   const [dialogState, setDialogState] = useState(DialogState.INITIAL);
@@ -53,8 +56,8 @@ export const ClaimDialog: FC<Props> = ({
   } = useWriteContract();
 
   const { data: submitReceipt, isError } = useWaitForTransactionReceipt({
-    confirmations: 3,
     hash: claimData,
+    confirmations: 3,
   });
   const isSubmitSuccess = submitReceipt?.status === "success";
   const isTransactionSuccess = isClaimPending || (claimData && isSubmitSuccess);
@@ -69,12 +72,20 @@ export const ClaimDialog: FC<Props> = ({
     setDialogState(DialogState.CONFIRM);
   };
 
+  const handleClaimSuccess = () => {
+    router.refresh();
+    setOpen(!open);
+    // reset dialog state when dialog is closed
+    if (open) setDialogState(DialogState.INITIAL);
+  };
+
   const handleConfirm = async () => {
     claimContract({
       abi: klimaFairLaunchClaimAbi,
-      functionName: "claimKvcm",
-      address: config.fairLaunchClaimContractAddress,
-      args: [parseUnits(klimaDeposited, 9)],
+      functionName: "claimKVCM",
+      // @TODO - replace before merging
+      address: config.mockFairLaunchClaimContractAddress,
+      args: [address],
       chainId: config.chain,
     });
   };
@@ -98,7 +109,7 @@ export const ClaimDialog: FC<Props> = ({
         className={clsx(
           styles.participateButton,
           styles.closedButton,
-          css({ cursor: "not-allowed", minWidth: "10rem" })
+          css({ cursor: "not-allowed", minWidth: "12rem !important" })
         )}
       >
         <IoMdCheckmark />
@@ -158,7 +169,9 @@ export const ClaimDialog: FC<Props> = ({
             <div className={styles.inputContainer}>
               <label htmlFor="confirm-contract-address">Contract Address</label>
               <div id="confirm-contract-address" className={styles.input}>
-                {truncateAddress(config.fairLaunchClaimContractAddress)}
+                {truncateAddress(config.mockFairLaunchClaimContractAddress)}
+                {/* @TODO - replace before merging */}
+                {/* {truncateAddress(config.fairLaunchClaimContractAddress)} */}
               </div>
             </div>
             <div className={styles.inputContainer}>
@@ -298,7 +311,12 @@ export const ClaimDialog: FC<Props> = ({
       </div>
       <div className={styles.actions}>
         <Dialog.Close asChild>
-          <button className={styles.secondaryButton}>Done</button>
+          <button
+            onClick={handleClaimSuccess}
+            className={styles.secondaryButton}
+          >
+            Done
+          </button>
         </Dialog.Close>
       </div>
     </>

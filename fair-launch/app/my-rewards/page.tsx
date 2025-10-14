@@ -195,7 +195,10 @@ const Page = async ({
   return (
     <>
       {(isAfterStakeFreeze || isAfterClaimStart) && (
-        <KvcmClaimNotification isKvcmClaimEnabled={isAfterClaimStart} />
+        <KvcmClaimNotification
+          isKvcmClaimEnabled={isAfterClaimStart}
+          hasUserClaimed={hasUserClaimed.result! || false}
+        />
       )}
       <div className={styles.content}>
         <Notification />
@@ -227,10 +230,10 @@ const Page = async ({
             <StakeDialog />
           ) : (
             <ClaimDialog
+              hasUserClaimed={hasUserClaimed.result! || false}
               klimaDeposited={klimaDeposited}
               isKvcmClaimEnabled={isAfterClaimStart}
               userClaimableAmount={userClaimableAmount}
-              hasUserClaimed={hasUserClaimed.result! || false}
             />
           )}
 

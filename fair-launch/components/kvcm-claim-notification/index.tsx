@@ -1,28 +1,35 @@
 "use client";
 
 import { Alert } from "@components/alert";
-import { css } from "styled-system/css";
 import clsx from "clsx";
 import { FC } from "react";
 import { MdCheckCircle, MdInfoOutline } from "react-icons/md";
+import { css } from "styled-system/css";
 import * as styles from "./styles";
 
 type Props = {
+  hasUserClaimed: boolean;
   isKvcmClaimEnabled: boolean;
 };
 
-export const KvcmClaimNotification: FC<Props> = ({ isKvcmClaimEnabled }) => (
+export const KvcmClaimNotification: FC<Props> = ({
+  isKvcmClaimEnabled,
+  hasUserClaimed,
+}) => (
   <div className={styles.container}>
     {isKvcmClaimEnabled ? (
       <Alert variant="success">
         <div className={styles.content}>
           <div className={styles.titleContainer}>
             <MdCheckCircle className={styles.icon} />
-            <p className={clsx(styles.title, css({ color: "green.90" }))}>Claim is open.</p>
+            <p className={clsx(styles.title, css({ color: "green.90" }))}>
+              {hasUserClaimed ? "Claim successful." : "Claim is open."}
+            </p>
           </div>
           <div className={clsx(styles.description, "claim")}>
-            You can now claim kVCM. Your K2 allocation starts vesting at
-            protocol launch.
+            {hasUserClaimed
+              ? "Congrats! Your kVCM claim is complete."
+              : "You can now claim kVCM. Your K2 allocation starts vesting at protocol launch."}
           </div>
         </div>
       </Alert>
