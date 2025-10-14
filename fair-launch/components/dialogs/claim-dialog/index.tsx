@@ -92,6 +92,7 @@ export const ClaimDialog: FC<Props> = ({
 
   const handleClaimSuccess = () => {
     router.refresh();
+    window.location.reload();
     setOpen(!open);
     // reset dialog state when dialog is closed
     if (open) setDialogState(DialogState.INITIAL);
@@ -152,8 +153,8 @@ export const ClaimDialog: FC<Props> = ({
   useEffect(() => {
     if (resetReceipt?.status === "success") {
       router.refresh();
+      window.location.reload();
       setIsReseting(false);
-      // window.location.reload();
     }
   }, [resetReceipt]);
 
