@@ -275,6 +275,19 @@ export const abi = [
   },
   {
     type: "function",
+    name: "reset",
+    inputs: [
+      {
+        name: "user",
+        type: "address",
+        internalType: "address",
+      },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
     name: "hasUserClaimed",
     inputs: [
       {

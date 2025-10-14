@@ -14,8 +14,11 @@ import { IoMdCheckmark } from "react-icons/io";
 import { MdOutlineRocketLaunch } from "react-icons/md";
 import { RiExternalLinkLine } from "react-icons/ri";
 import { css } from "styled-system/css";
-import { useAccount } from "wagmi";
-import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import {
+  useAccount,
+  useWaitForTransactionReceipt,
+  useWriteContract,
+} from "wagmi";
 import * as styles from "./styles";
 
 type InteractOutsideEvent =
@@ -46,6 +49,8 @@ export const ClaimDialog: FC<Props> = ({
   const { address } = useAccount();
   const [open, setOpen] = useState(false);
   const { openChainModal } = useChainModal();
+  const [isReseting, setIsReseting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [dialogState, setDialogState] = useState(DialogState.INITIAL);
 
   const {
@@ -60,7 +65,20 @@ export const ClaimDialog: FC<Props> = ({
     confirmations: 3,
   });
   const isSubmitSuccess = submitReceipt?.status === "success";
-  const isTransactionSuccess = isClaimPending || (claimData && isSubmitSuccess);
+  const isTransactionSuccess =
+    isClaimPending || (submitReceipt && isSubmitSuccess);
+
+  const {
+    data: resetData,
+    error: resetError,
+    writeContract: resetContract,
+  } = useWriteContract();
+
+  const { data: resetReceipt, isError: isResetError } =
+    useWaitForTransactionReceipt({
+      hash: resetData,
+      confirmations: 3,
+    });
 
   const handleDialogState = () => {
     setOpen(!open);
@@ -79,7 +97,20 @@ export const ClaimDialog: FC<Props> = ({
     if (open) setDialogState(DialogState.INITIAL);
   };
 
+  useEffect(() => {
+    if (isError || claimError) {
+      setIsSubmitting(false);
+    }
+  }, [isError, claimError]);
+
+  useEffect(() => {
+    if (isResetError || resetError) {
+      setIsReseting(false);
+    }
+  }, [isResetError, resetError]);
+
   const handleConfirm = async () => {
+    setIsSubmitting(true);
     claimContract({
       abi: klimaFairLaunchClaimAbi,
       functionName: "claimKVCM",
@@ -93,6 +124,7 @@ export const ClaimDialog: FC<Props> = ({
   useEffect(() => {
     if (submitReceipt?.status === "success") {
       setDialogState(DialogState.SUCCESS);
+      setIsSubmitting(false);
     }
   }, [submitReceipt]);
 
@@ -103,18 +135,57 @@ export const ClaimDialog: FC<Props> = ({
     }
   }, [claimError]);
 
+  // @TODO - remove before merging
+  const handleReset = () => {
+    setIsReseting(true);
+    resetContract({
+      abi: klimaFairLaunchClaimAbi,
+      functionName: "reset",
+      // @TODO - replace before merging
+      address: config.mockFairLaunchClaimContractAddress,
+      args: [address],
+      chainId: config.chain,
+    });
+  };
+
+  // @TODO - remove before merging
+  useEffect(() => {
+    if (resetReceipt?.status === "success") {
+      router.refresh();
+      window.location.reload();
+      setIsReseting(false);
+    }
+  }, [resetReceipt]);
+
   if (hasUserClaimed) {
     return (
-      <div
-        className={clsx(
-          styles.participateButton,
-          styles.closedButton,
-          css({ cursor: "not-allowed", minWidth: "12rem !important" })
-        )}
-      >
-        <IoMdCheckmark />
-        Claimed
-      </div>
+      <>
+        <div
+          onClick={handleReset}
+          className={clsx(
+            styles.participateButton,
+            styles.aerodromeButtons,
+            css({
+              cursor: isReseting ? "not-allowed" : "pointer",
+              opacity: isReseting ? 0.45 : 1,
+              minWidth: "12rem !important",
+            })
+          )}
+        >
+          <IoMdCheckmark />
+          {isReseting ? "Resetting ..." : "Reset"}
+        </div>
+        <div
+          className={clsx(
+            styles.participateButton,
+            styles.closedButton,
+            css({ cursor: "not-allowed", minWidth: "12rem !important" })
+          )}
+        >
+          <IoMdCheckmark />
+          Claimed
+        </div>
+      </>
     );
   }
 
@@ -184,12 +255,12 @@ export const ClaimDialog: FC<Props> = ({
           <div className={styles.actions}>
             <button
               onClick={handleConfirm}
-              disabled={isTransactionSuccess && !isError}
+              disabled={isSubmitting && !isError}
               className={clsx(styles.primaryButton, {
                 [styles.disabled]: isTransactionSuccess && !isError,
               })}
             >
-              {isTransactionSuccess && !isError ? "Submitting ..." : "Submit"}
+              {isSubmitting && !isError ? "Submitting ..." : "Submit"}
             </button>
             <Dialog.Close asChild>
               <button className={styles.secondaryButton}>Cancel</button>
