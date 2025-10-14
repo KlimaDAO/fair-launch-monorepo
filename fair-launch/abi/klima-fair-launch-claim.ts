@@ -72,15 +72,7 @@ export const abi = [
   {
     type: "function",
     name: "claimKVCM",
-    // @TODO - replace before merging
-    inputs: [
-      {
-        name: "user",
-        type: "address",
-        internalType: "address",
-      },
-    ],
-    // inputs: [],
+    inputs: [],
     outputs: [
       {
         name: "kVCMClaimAmount",
@@ -272,19 +264,6 @@ export const abi = [
       },
     ],
     stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "reset",
-    inputs: [
-      {
-        name: "user",
-        type: "address",
-        internalType: "address",
-      },
-    ],
-    outputs: [],
-    stateMutability: "nonpayable",
   },
   {
     type: "function",

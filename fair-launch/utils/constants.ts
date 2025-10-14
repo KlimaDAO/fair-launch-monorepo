@@ -29,8 +29,6 @@ const CONFIG = {
     fairLaunchContractAddress: "0xea8a59D0bf9C05B437c6a5396cfB429F1A57B682",
     fairLaunchClaimContractAddress:
       "0x88c0815b50060155179bba3866cf30fb18bda787",
-    mockFairLaunchClaimContractAddress:
-      "0xc56bec3b558b58096cd154f375a3e7db71d86494",
   },
   preview: {
     chain: base.id,
@@ -40,8 +38,6 @@ const CONFIG = {
     fairLaunchContractAddress: "0xea8a59D0bf9C05B437c6a5396cfB429F1A57B682",
     fairLaunchClaimContractAddress:
       "0x88c0815b50060155179bba3866cf30fb18bda787",
-    mockFairLaunchClaimContractAddress:
-      "0xc56bec3b558b58096cd154f375a3e7db71d86494",
   },
   development: {
     chain: base.id,
@@ -51,8 +47,6 @@ const CONFIG = {
     fairLaunchContractAddress: "0xea8a59D0bf9C05B437c6a5396cfB429F1A57B682",
     fairLaunchClaimContractAddress:
       "0x88c0815b50060155179bba3866cf30fb18bda787",
-    mockFairLaunchClaimContractAddress:
-      "0xc56bec3b558b58096cd154f375a3e7db71d86494",
   },
 } as const;
 

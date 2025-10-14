@@ -76,18 +76,11 @@ export const getContractConstants = async (walletAddress: string) => {
           args: [walletAddress],
         },
         {
-          // @TODO - replace before merging
           abi: klimaFairLaunchClaimAbi as AbiFunction[],
-          address: config.mockFairLaunchClaimContractAddress,
+          address: config.fairLaunchClaimContractAddress,
           functionName: "hasUserClaimed",
           args: [walletAddress],
-        }
-        // {
-        //   abi: klimaFairLaunchClaimAbi as AbiFunction[],
-        //   address: config.fairLaunchClaimContractAddress,
-        //   functionName: "hasUserClaimed",
-        //   args: [walletAddress],
-        // },
+        },
       ],
     });
   } catch (error) {

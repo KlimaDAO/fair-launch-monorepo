@@ -14,11 +14,7 @@ import { IoMdCheckmark } from "react-icons/io";
 import { MdOutlineRocketLaunch } from "react-icons/md";
 import { RiExternalLinkLine } from "react-icons/ri";
 import { css } from "styled-system/css";
-import {
-  useAccount,
-  useWaitForTransactionReceipt,
-  useWriteContract,
-} from "wagmi";
+import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import * as styles from "./styles";
 
 type InteractOutsideEvent =
@@ -46,10 +42,8 @@ export const ClaimDialog: FC<Props> = ({
 }) => {
   const config = getConfig();
   const router = useRouter();
-  const { address } = useAccount();
   const [open, setOpen] = useState(false);
   const { openChainModal } = useChainModal();
-  const [isReseting, setIsReseting] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dialogState, setDialogState] = useState(DialogState.INITIAL);
 
@@ -68,18 +62,6 @@ export const ClaimDialog: FC<Props> = ({
   const isSubmitSuccess = submitReceipt?.status === "success";
   const isTransactionSuccess =
     isClaimPending || (submitReceipt && isSubmitSuccess);
-
-  const {
-    data: resetData,
-    error: resetError,
-    writeContract: resetContract,
-  } = useWriteContract();
-
-  const { data: resetReceipt, isError: isResetError } =
-    useWaitForTransactionReceipt({
-      hash: resetData,
-      confirmations: 3,
-    });
 
   const handleDialogState = () => {
     setOpen(!open);
@@ -105,20 +87,13 @@ export const ClaimDialog: FC<Props> = ({
     }
   }, [isError, claimError]);
 
-  useEffect(() => {
-    if (isResetError || resetError) {
-      setIsReseting(false);
-    }
-  }, [isResetError, resetError]);
-
   const handleConfirm = async () => {
     setIsSubmitting(true);
     claimContract({
+      args: [],
       abi: klimaFairLaunchClaimAbi,
       functionName: "claimKVCM",
-      // @TODO - replace before merging
-      address: config.mockFairLaunchClaimContractAddress,
-      args: [address],
+      address: config.fairLaunchClaimContractAddress,
       chainId: config.chain,
     });
   };
@@ -137,57 +112,18 @@ export const ClaimDialog: FC<Props> = ({
     }
   }, [claimError]);
 
-  // @TODO - remove before merging
-  const handleReset = () => {
-    setIsReseting(true);
-    resetContract({
-      abi: klimaFairLaunchClaimAbi,
-      functionName: "reset",
-      // @TODO - replace before merging
-      address: config.mockFairLaunchClaimContractAddress,
-      args: [address],
-      chainId: config.chain,
-    });
-  };
-
-  // @TODO - remove before merging
-  useEffect(() => {
-    if (resetReceipt?.status === "success") {
-      router.refresh();
-      window.location.reload();
-      setIsReseting(false);
-    }
-  }, [resetReceipt]);
-
   if (hasUserClaimed) {
     return (
-      <>
-        <div
-          onClick={handleReset}
-          className={clsx(
-            styles.participateButton,
-            styles.aerodromeButtons,
-            css({
-              cursor: isReseting ? "not-allowed" : "pointer",
-              opacity: isReseting ? 0.45 : 1,
-              minWidth: "12rem !important",
-            })
-          )}
-        >
-          <IoMdCheckmark />
-          {isReseting ? "Resetting ..." : "Reset"}
-        </div>
-        <div
-          className={clsx(
-            styles.participateButton,
-            styles.closedButton,
-            css({ cursor: "not-allowed", minWidth: "12rem !important" })
-          )}
-        >
-          <IoMdCheckmark />
-          Claimed
-        </div>
-      </>
+      <div
+        className={clsx(
+          styles.participateButton,
+          styles.closedButton,
+          css({ cursor: "not-allowed", minWidth: "12rem !important" })
+        )}
+      >
+        <IoMdCheckmark />
+        Claimed
+      </div>
     );
   }
 
@@ -242,9 +178,7 @@ export const ClaimDialog: FC<Props> = ({
             <div className={styles.inputContainer}>
               <label htmlFor="confirm-contract-address">Contract Address</label>
               <div id="confirm-contract-address" className={styles.input}>
-                {truncateAddress(config.mockFairLaunchClaimContractAddress)}
-                {/* @TODO - replace before merging */}
-                {/* {truncateAddress(config.fairLaunchClaimContractAddress)} */}
+                {truncateAddress(config.fairLaunchClaimContractAddress)}
               </div>
             </div>
             <div className={styles.inputContainer}>
