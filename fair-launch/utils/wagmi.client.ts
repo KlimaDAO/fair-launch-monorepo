@@ -10,11 +10,9 @@ import {
   cookieStorage,
   createConfig,
   createStorage,
-  fallback,
   http,
 } from "wagmi";
 import { base } from "wagmi/chains";
-import { QUICKNODE_RPC_URL } from "./constants";
 
 const connectors = connectorsForWallets(
   [
@@ -41,9 +39,6 @@ export const config: Config = createConfig({
   chains: [base],
   storage: createStorage({ storage: cookieStorage }),
   transports: {
-    [base.id]: fallback([
-      http(QUICKNODE_RPC_URL),
-      http("https://mainnet.base.org"),
-    ]),
+    [base.id]: http(),
   },
 });
