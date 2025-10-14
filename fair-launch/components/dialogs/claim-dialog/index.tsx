@@ -152,8 +152,8 @@ export const ClaimDialog: FC<Props> = ({
   useEffect(() => {
     if (resetReceipt?.status === "success") {
       router.refresh();
-      window.location.reload();
       setIsReseting(false);
+      // window.location.reload();
     }
   }, [resetReceipt]);
 
