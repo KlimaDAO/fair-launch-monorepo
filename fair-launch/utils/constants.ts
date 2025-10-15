@@ -67,7 +67,7 @@ export const URLS = {
   faq: "https://www.klimaprotocol.com/faq",
   guide:
     "https://www.klimadao.finance/resources/how-to-join-the-klima-fair-launch-step-by-step-guide-for-klima-holders-and-future-ones",
-  aerodrome: "https://aerodrome.finance/",
+  aerodrome: "https://aerodrome.finance/liquidity?query=kVCM",
   tgeDocs:
     "https://www.klimadao.finance/resources/klima-2-0-tge-fair-launch-of-the-open-climate-protocol",
   protocol: "https://www.klimaprotocol.com",
