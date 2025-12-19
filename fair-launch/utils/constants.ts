@@ -79,6 +79,6 @@ export const URLS = {
   klima2Whitepaper:
     "https://github.com/KlimaDAO/klimadao-docs/blob/main/klima%202.0/Klima%202.0%20-%20Whitepaper%20-%20March%2025%2C%202025.pdf",
   twitter: "https://twitter.com/KlimaDAO",
-  discord: "https://discord.com/invite/klimadao",
+  discord: "https://www.klimaprotocol.com/discord",
   telegram: "https://t.me/KlimaDAO_Official",
 };
