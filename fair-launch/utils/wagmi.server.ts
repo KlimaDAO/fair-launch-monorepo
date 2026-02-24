@@ -1,5 +1,5 @@
 import { Config, createConfig, fallback, http } from "wagmi";
-import { QUICKNODE_RPC_URL } from "./constants";
+import { BASE_QUICKNODE_RPC_URL } from "./constants";
 import { base } from "wagmi/chains";
 
 export const config: Config = createConfig({
@@ -7,7 +7,7 @@ export const config: Config = createConfig({
   chains: [base],
   transports: {
     [base.id]: fallback([
-      http(QUICKNODE_RPC_URL),
+      http(BASE_QUICKNODE_RPC_URL),
       http("https://mainnet.base.org"),
     ]),
   },

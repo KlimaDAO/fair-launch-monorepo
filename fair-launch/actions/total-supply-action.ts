@@ -6,13 +6,13 @@ import { AbiFunction, http } from "viem";
 import { polygon } from "viem/chains";
 import { Config } from "wagmi";
 import { createConfig } from "wagmi";
-import { QUICKNODE_RPC_URL } from "../utils/constants";
+import { MATIC_QUICKNODE_RPC_URL } from "../utils/constants";
 
 const polygonConfig: Config = createConfig({
   ssr: true,
   chains: [polygon],
   transports: {
-    [polygon.id]: http(QUICKNODE_RPC_URL),
+    [polygon.id]: http(MATIC_QUICKNODE_RPC_URL),
   },
 });
 
