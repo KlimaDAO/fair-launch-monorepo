@@ -10,6 +10,13 @@ import {FairLaunchClaimStorage} from "./FairLaunchClaimStorage.sol";
  */
 interface IFairLaunchClaim {
     /**
+     * @notice Emitted when a user is blacklisted from KVCM claims.
+     * @param user The address of the user who is blacklisted.
+     * @param blacklisted True if the user is blacklisted, false otherwise.
+     */
+    event UserBlacklisted(address indexed user, bool blacklisted);
+
+    /**
      * @notice Emitted when a user claims their KVCM tokens.
      * @param user The address of the user who claimed.
      * @param amount The amount of KVCM claimed.
@@ -85,6 +92,20 @@ interface IFairLaunchClaim {
     error InsufficientKVCMForClaims();
 
     /**
+     * @notice Sets whether a user may call claimKVCM. Blacklisted users cannot claim.
+     * @param user The address to update.
+     * @param blacklisted True to block claims, false to allow.
+     */
+    function setUserBlacklisted(address user, bool blacklisted) external;
+
+    /**
+     * @notice Returns whether a user is blacklisted from KVCM claims.
+     * @param user The address to check.
+     * @return True if the user is blacklisted, false otherwise.
+     */
+    function isUserBlacklisted(address user) external view returns (bool);
+
+    /**
      * @notice Allows a user to claim their KVCM tokens.
      * @return The amount of KVCM claimed.
      */
@@ -102,18 +123,13 @@ interface IFairLaunchClaim {
      * @param user The address of the user.
      * @return The amount of KVCM claimable by the user.
      */
-    function getUserClaimableAmount(
-        address user
-    ) external view returns (uint256);
+    function getUserClaimableAmount(address user) external view returns (uint256);
 
     /**
      * @notice Gets the current configuration of the contract.
      * @return A memory struct containing the contract's configuration.
      */
-    function getConfig()
-        external
-        view
-        returns (FairLaunchClaimStorage.Config memory);
+    function getConfig() external view returns (FairLaunchClaimStorage.Config memory);
 
     /**
      * @notice Gets the start time for KVCM claims.

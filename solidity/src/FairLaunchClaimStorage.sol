@@ -40,13 +40,15 @@ library FairLaunchClaimStorage {
      * @param kvcmForClaims The total amount of KVCM available for claims.
      * @param userClaimableAmount A mapping from user addresses to the amount of KVCM they have claimed.
      * @param tokenWithdrawTime A mapping from token addresses to the timestamp when they can be withdrawn.
+     * @param userBlacklisted A mapping from user addresses to a boolean indicating if they are blacklisted.
      */
     struct State {
         uint256 kvcmForClaims;
         uint256 k2ForClaims;
         mapping(address => uint256) userClaimableAmount;
         mapping(address => uint128) tokenWithdrawTime;
-        uint256[50] _gap;
+        mapping(address => bool) userBlacklisted;
+        uint256[49] _gap;
     }
 
     /**
