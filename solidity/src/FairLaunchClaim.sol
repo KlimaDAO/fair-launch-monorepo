@@ -330,12 +330,21 @@ contract FairLaunchClaim is
     /**
      * @notice Sets whether a user may call claimKVCM. Blacklisted users cannot claim.
      * @param user The address to update.
-     * @param blacklisted True to block claims, false to allow.
      */
 
-    function setUserBlacklisted(address user, bool blacklisted) external onlyOwner {
-        FairLaunchClaimStorage.getState().userBlacklisted[user] = blacklisted;
-        emit UserBlacklisted(user, blacklisted);
+    function blacklistUser(address user) external onlyOwner {
+        FairLaunchClaimStorage.getState().userBlacklisted[user] = true;
+        emit UserBlacklisted(user, true);
+    }
+
+    /**
+     * @notice Removes a user from the blacklist.
+     * @param user The address to remove from the blacklist.
+     */
+
+    function removeUserFromBlacklist(address user) external onlyOwner {
+        FairLaunchClaimStorage.getState().userBlacklisted[user] = false;
+        emit UserBlacklisted(user, false);
     }
 
     /**

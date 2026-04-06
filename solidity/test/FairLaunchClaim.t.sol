@@ -214,7 +214,7 @@ contract FairLaunchClaimTest is BaseFairLaunchClaimTest {
     function test_setUserBlacklisted_reverts_if_not_owner() public {
         vm.prank(user);
         vm.expectRevert("Not owner");
-        claim.setUserBlacklisted(user, true);
+        claim.blacklistUser(user);
     }
 
     function test_blacklisted_user_cannot_claimKVCM() public {
@@ -230,7 +230,7 @@ contract FairLaunchClaimTest is BaseFairLaunchClaimTest {
         claim.addKVCM(klimaToFund);
         vm.expectEmit(true, false, false, true);
         emit IFairLaunchClaim.UserBlacklisted(user, true);
-        claim.setUserBlacklisted(user, true);
+        claim.blacklistUser(user);
         vm.stopPrank();
 
         assertTrue(claim.isUserBlacklisted(user));
@@ -257,10 +257,10 @@ contract FairLaunchClaimTest is BaseFairLaunchClaimTest {
         vm.startPrank(treasury);
         KVCM.approve(address(claim), klimaToFund);
         claim.addKVCM(klimaToFund);
-        claim.setUserBlacklisted(user, true);
+        claim.blacklistUser(user);
         vm.expectEmit(true, false, false, true);
         emit IFairLaunchClaim.UserBlacklisted(user, false);
-        claim.setUserBlacklisted(user, false);
+        claim.removeUserFromBlacklist(user);
         vm.stopPrank();
 
         assertFalse(claim.isUserBlacklisted(user));

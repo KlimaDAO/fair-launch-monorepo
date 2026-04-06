@@ -92,11 +92,16 @@ interface IFairLaunchClaim {
     error InsufficientKVCMForClaims();
 
     /**
-     * @notice Sets whether a user may call claimKVCM. Blacklisted users cannot claim.
-     * @param user The address to update.
-     * @param blacklisted True to block claims, false to allow.
+     * @notice Blacklists a user from claiming KVCM.
+     * @param user The address to blacklist.
      */
-    function setUserBlacklisted(address user, bool blacklisted) external;
+    function blacklistUser(address user) external;
+
+    /**
+     * @notice Removes a user from the blacklist.
+     * @param user The address to remove from the blacklist.
+     */
+    function removeUserFromBlacklist(address user) external;
 
     /**
      * @notice Returns whether a user is blacklisted from KVCM claims.
