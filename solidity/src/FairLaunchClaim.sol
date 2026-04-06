@@ -41,7 +41,7 @@ contract FairLaunchClaim is
         _;
     }
 
-    modifier onlyNotBlacklisted(address user) {
+    modifier notBlacklisted(address user) {
         require(!FairLaunchClaimStorage.getState().userBlacklisted[user], "User is blacklisted");
         _;
     }
@@ -76,7 +76,7 @@ contract FairLaunchClaim is
         external
         nonReentrant
         whenNotPaused
-        onlyNotBlacklisted(msg.sender)
+        notBlacklisted(msg.sender)
         returns (uint256 kVCMClaimAmount)
     {
         FairLaunchClaimStorage.Config storage config = FairLaunchClaimStorage.getConfig();
