@@ -91,8 +91,9 @@ contract KlimaFairLaunchBurnVault is Initializable, UUPSUpgradeable, OwnableUpgr
         try IInterchainTokenService(interchainTokenService).interchainTransfer{value: msg.value}(
             TOKEN_ID, DESTINATION_CHAIN, abi.encodePacked(helperContractOnPolygon), amount, metadata, msg.value
         ) {
-            // Success case
-        } catch Error(string memory reason) {
+        // Success case
+        }
+        catch Error(string memory reason) {
             // If the call reverts with a reason, revert with that reason
             revert(reason);
         } catch {

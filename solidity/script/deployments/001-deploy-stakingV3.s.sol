@@ -12,10 +12,7 @@ contract DeployStakingV3Implementation is Script {
         vm.startBroadcast();
         console2.log("Deploying KlimaFairLaunchStaking implementation...");
         KlimaFairLaunchStaking newImplementation = new KlimaFairLaunchStaking();
-        console2.log(
-            "KlimaFairLaunchStaking implementation deployed at:",
-            address(newImplementation)
-        );
+        console2.log("KlimaFairLaunchStaking implementation deployed at:", address(newImplementation));
 
         vm.stopBroadcast();
     }

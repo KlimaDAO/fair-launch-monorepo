@@ -41,6 +41,11 @@ contract FairLaunchClaim is
         _;
     }
 
+    modifier notBlacklisted(address user) {
+        require(!FairLaunchClaimStorage.getState().userBlacklisted[user], "User is blacklisted");
+        _;
+    }
+
     /**
      * @notice Disables the initializer for the implementation contract.
      */
@@ -71,30 +76,20 @@ contract FairLaunchClaim is
         external
         nonReentrant
         whenNotPaused
+        notBlacklisted(msg.sender)
         returns (uint256 kVCMClaimAmount)
     {
-        FairLaunchClaimStorage.Config storage config = FairLaunchClaimStorage
-            .getConfig();
-        FairLaunchClaimStorage.State storage state = FairLaunchClaimStorage
-            .getState();
+        FairLaunchClaimStorage.Config storage config = FairLaunchClaimStorage.getConfig();
+        FairLaunchClaimStorage.State storage state = FairLaunchClaimStorage.getState();
 
         require(config.isKVCMClaimEnabled, "KVCM claim not enabled");
 
-        require(
-            block.timestamp >= config.kVCMClaimStartTime,
-            "KVCM claim not started"
-        );
-        require(
-            state.userClaimableAmount[msg.sender] == 0,
-            "KVCM already claimed"
-        );
+        require(block.timestamp >= config.kVCMClaimStartTime, "KVCM claim not started");
+        require(state.userClaimableAmount[msg.sender] == 0, "KVCM already claimed");
 
-        KlimaFairLaunchStaking fairLaunchStaking = KlimaFairLaunchStaking(
-            _getConfig().fairLaunch
-        );
+        KlimaFairLaunchStaking fairLaunchStaking = KlimaFairLaunchStaking(_getConfig().fairLaunch);
 
-        KlimaFairLaunchStaking.Stake[] memory userStakes = fairLaunchStaking
-            .getUserStakes(msg.sender);
+        KlimaFairLaunchStaking.Stake[] memory userStakes = fairLaunchStaking.getUserStakes(msg.sender);
 
         // If the user has no stakes, revert.
         if (userStakes.length == 0) {
@@ -107,9 +102,7 @@ contract FairLaunchClaim is
         }
 
         // We can do it for the total user staked amount rather than each stake.
-        kVCMClaimAmount += fairLaunchStaking.calculateKlimaAllocation(
-            totalKlimaUserStaked
-        );
+        kVCMClaimAmount += fairLaunchStaking.calculateKlimaAllocation(totalKlimaUserStaked);
 
         if (kVCMClaimAmount == 0) {
             revert NoKVCMClaimable();
@@ -147,17 +140,10 @@ contract FairLaunchClaim is
         require(kvcm != address(0), "KVCM cannot be zero address");
         require(k2 != address(0), "K2 cannot be zero address");
         require(fairLaunch != address(0), "FairLaunch cannot be zero address");
-        require(
-            kVCMClaimStartTime > block.timestamp,
-            "KVCM claim start time must be in the future"
-        );
-        require(
-            adminWithdrawDelayPeriod >= 1 hours,
-            "Delay period must be at least 1 hour"
-        );
+        require(kVCMClaimStartTime > block.timestamp, "KVCM claim start time must be in the future");
+        require(adminWithdrawDelayPeriod >= 1 hours, "Delay period must be at least 1 hour");
 
-        FairLaunchClaimStorage.Config storage config = FairLaunchClaimStorage
-            .getConfig();
+        FairLaunchClaimStorage.Config storage config = FairLaunchClaimStorage.getConfig();
 
         config.kvcm = kvcm;
         config.k2 = k2;
@@ -173,8 +159,7 @@ contract FairLaunchClaim is
      */
     function addKVCM(uint256 amount) external onlyOwner {
         // We have an option to pull it from an escrow, but using claim contract as an escrow should be fine.
-        FairLaunchClaimStorage.Config storage config = FairLaunchClaimStorage
-            .getConfig();
+        FairLaunchClaimStorage.Config storage config = FairLaunchClaimStorage.getConfig();
         IERC20(config.kvcm).safeTransferFrom(msg.sender, address(this), amount);
         FairLaunchClaimStorage.getState().kvcmForClaims += amount;
         emit KVCMAdded(amount);
@@ -185,8 +170,7 @@ contract FairLaunchClaim is
      * @param amount The amount of K2 to add.
      */
     function addK2(uint256 amount) external onlyOwner {
-        FairLaunchClaimStorage.Config storage config = FairLaunchClaimStorage
-            .getConfig();
+        FairLaunchClaimStorage.Config storage config = FairLaunchClaimStorage.getConfig();
         IERC20(config.k2).safeTransferFrom(msg.sender, address(this), amount);
         FairLaunchClaimStorage.getState().k2ForClaims += amount;
         emit K2Added(amount);
@@ -198,20 +182,10 @@ contract FairLaunchClaim is
      * @param token The address of the token to withdraw.
      * @param amount The amount of the token to withdraw.
      */
-    function withdrawToken(
-        address token,
-        uint256 amount
-    ) external onlyOwner nonReentrant whenNotPaused {
-        FairLaunchClaimStorage.State storage state = FairLaunchClaimStorage
-            .getState();
-        require(
-            state.tokenWithdrawTime[token] > 0,
-            "Token withdraw not enabled"
-        );
-        require(
-            block.timestamp >= state.tokenWithdrawTime[token],
-            "Token withdraw not enabled"
-        );
+    function withdrawToken(address token, uint256 amount) external onlyOwner nonReentrant whenNotPaused {
+        FairLaunchClaimStorage.State storage state = FairLaunchClaimStorage.getState();
+        require(state.tokenWithdrawTime[token] > 0, "Token withdraw not enabled");
+        require(block.timestamp >= state.tokenWithdrawTime[token], "Token withdraw not enabled");
         IERC20(token).safeTransfer(msg.sender, amount);
         emit TokenWithdrawn(token, amount);
         state.tokenWithdrawTime[token] = 0;
@@ -221,14 +195,10 @@ contract FairLaunchClaim is
      * @notice Enables the withdrawal of a specific token after a delay period.
      * @param token The address of the token to enable withdrawal for.
      */
-    function enableTokenWithdraw(
-        address token
-    ) external onlyOwner whenNotPaused {
-        FairLaunchClaimStorage.State storage state = FairLaunchClaimStorage
-            .getState();
+    function enableTokenWithdraw(address token) external onlyOwner whenNotPaused {
+        FairLaunchClaimStorage.State storage state = FairLaunchClaimStorage.getState();
         state.tokenWithdrawTime[token] =
-            uint128(block.timestamp) +
-            FairLaunchClaimStorage.getConfig().adminWithdrawDelayPeriod;
+            uint128(block.timestamp) + FairLaunchClaimStorage.getConfig().adminWithdrawDelayPeriod;
         emit TokenWithdrawEnabled(token);
     }
 
@@ -236,9 +206,7 @@ contract FairLaunchClaim is
      * @notice Disables the withdrawal of a specific token.
      * @param token The address of the token to disable withdrawal for.
      */
-    function disableTokenWithdraw(
-        address token
-    ) external onlyOwner whenNotPaused {
+    function disableTokenWithdraw(address token) external onlyOwner whenNotPaused {
         FairLaunchClaimStorage.getState().tokenWithdrawTime[token] = 0;
         emit TokenWithdrawDisabled(token);
     }
@@ -247,13 +215,9 @@ contract FairLaunchClaim is
      * @notice Sets the delay period for admin withdrawals.
      * @param delayPeriod The new delay period in seconds.
      */
-    function setAdminWithdrawDelayPeriod(
-        uint128 delayPeriod
-    ) external onlyOwner {
+    function setAdminWithdrawDelayPeriod(uint128 delayPeriod) external onlyOwner {
         require(delayPeriod >= 1 hours, "Delay period must be at least 1 hour");
-        FairLaunchClaimStorage
-            .getConfig()
-            .adminWithdrawDelayPeriod = delayPeriod;
+        FairLaunchClaimStorage.getConfig().adminWithdrawDelayPeriod = delayPeriod;
         emit AdminWithdrawDelayPeriodSet(delayPeriod);
     }
 
@@ -262,12 +226,8 @@ contract FairLaunchClaim is
      * @param startTime The new start time timestamp.
      */
     function setKVCMClaimStartTime(uint128 startTime) external onlyOwner {
-        FairLaunchClaimStorage.Config storage config = FairLaunchClaimStorage
-            .getConfig();
-        require(
-            startTime > block.timestamp,
-            "KVCM claim start time must be in the future"
-        );
+        FairLaunchClaimStorage.Config storage config = FairLaunchClaimStorage.getConfig();
+        require(startTime > block.timestamp, "KVCM claim start time must be in the future");
         config.kVCMClaimStartTime = startTime;
         emit KVCMClaimStartTimeSet(startTime);
     }
@@ -276,8 +236,7 @@ contract FairLaunchClaim is
      * @notice Enables KVCM claiming. Can only be called by the owner.
      */
     function enableKVCMClaim() external onlyOwner whenNotPaused {
-        FairLaunchClaimStorage.Config storage config = FairLaunchClaimStorage
-            .getConfig();
+        FairLaunchClaimStorage.Config storage config = FairLaunchClaimStorage.getConfig();
         require(!config.isKVCMClaimEnabled, "KVCM claim already enabled");
         config.isKVCMClaimEnabled = true;
         emit KVCMClaimEnabled();
@@ -287,8 +246,7 @@ contract FairLaunchClaim is
      * @notice Disables KVCM claiming. Can only be called by the owner.
      */
     function disableKVCMClaim() external onlyOwner whenNotPaused {
-        FairLaunchClaimStorage.Config storage config = FairLaunchClaimStorage
-            .getConfig();
+        FairLaunchClaimStorage.Config storage config = FairLaunchClaimStorage.getConfig();
         require(config.isKVCMClaimEnabled, "KVCM claim already disabled");
         config.isKVCMClaimEnabled = false;
         emit KVCMClaimDisabled();
@@ -322,22 +280,16 @@ contract FairLaunchClaim is
      * @param user The address of the user.
      * @return The amount of KVCM claimable by the user.
      */
-    function getUserClaimableAmount(
-        address user
-    ) external view returns (uint256) {
-        FairLaunchClaimStorage.Config storage config = FairLaunchClaimStorage
-            .getConfig();
+    function getUserClaimableAmount(address user) external view returns (uint256) {
+        FairLaunchClaimStorage.Config storage config = FairLaunchClaimStorage.getConfig();
 
         // Ensure the fairLaunch contract is set
         if (config.fairLaunch == address(0)) {
             return 0;
         }
 
-        KlimaFairLaunchStaking fairLaunchStaking = KlimaFairLaunchStaking(
-            config.fairLaunch
-        );
-        KlimaFairLaunchStaking.Stake[] memory userStakes = fairLaunchStaking
-            .getUserStakes(user);
+        KlimaFairLaunchStaking fairLaunchStaking = KlimaFairLaunchStaking(config.fairLaunch);
+        KlimaFairLaunchStaking.Stake[] memory userStakes = fairLaunchStaking.getUserStakes(user);
 
         if (userStakes.length == 0) {
             return 0;
@@ -355,11 +307,7 @@ contract FairLaunchClaim is
      * @notice Gets the current configuration of the contract.
      * @return A memory struct containing the contract's configuration.
      */
-    function getConfig()
-        external
-        view
-        returns (FairLaunchClaimStorage.Config memory)
-    {
+    function getConfig() external view returns (FairLaunchClaimStorage.Config memory) {
         return FairLaunchClaimStorage.getConfig();
     }
 
@@ -379,6 +327,35 @@ contract FairLaunchClaim is
         return FairLaunchClaimStorage.getConfig().isKVCMClaimEnabled;
     }
 
+    /**
+     * @notice Sets whether a user may call claimKVCM. Blacklisted users cannot claim.
+     * @param user The address to update.
+     */
+
+    function blacklistUser(address user) external onlyOwner {
+        FairLaunchClaimStorage.getState().userBlacklisted[user] = true;
+        emit UserBlacklisted(user, true);
+    }
+
+    /**
+     * @notice Removes a user from the blacklist.
+     * @param user The address to remove from the blacklist.
+     */
+
+    function removeUserFromBlacklist(address user) external onlyOwner {
+        FairLaunchClaimStorage.getState().userBlacklisted[user] = false;
+        emit UserBlacklisted(user, false);
+    }
+
+    /**
+     * @notice Returns whether a user is blacklisted from KVCM claims.
+     * @param user The address to check.
+     * @return True if the user is blacklisted, false otherwise.
+     */
+    function isUserBlacklisted(address user) external view returns (bool) {
+        return FairLaunchClaimStorage.getState().userBlacklisted[user];
+    }
+
     // =============================================================
     // INTERNAL FUNCTIONS
     // =============================================================
@@ -388,13 +365,8 @@ contract FairLaunchClaim is
      * @dev Can only be called by the owner.
      * @param newImplementation The address of the new implementation contract.
      */
-    function _authorizeUpgrade(
-        address newImplementation
-    ) internal override onlyOwner {
-        require(
-            newImplementation != address(0),
-            "New implementation cannot be zero address"
-        );
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {
+        require(newImplementation != address(0), "New implementation cannot be zero address");
     }
 
     // =============================================================
@@ -405,11 +377,7 @@ contract FairLaunchClaim is
      * @notice Gets the storage slot for the configuration variables.
      * @return storageSlot The storage pointer to the Config struct.
      */
-    function _getConfig()
-        private
-        pure
-        returns (FairLaunchClaimStorage.Config storage storageSlot)
-    {
+    function _getConfig() private pure returns (FairLaunchClaimStorage.Config storage storageSlot) {
         return FairLaunchClaimStorage.getConfig();
     }
 
@@ -417,11 +385,7 @@ contract FairLaunchClaim is
      * @notice Gets the storage slot for the state variables.
      * @return storageSlot The storage pointer to the State struct.
      */
-    function _getStorage()
-        private
-        pure
-        returns (FairLaunchClaimStorage.State storage storageSlot)
-    {
+    function _getStorage() private pure returns (FairLaunchClaimStorage.State storage storageSlot) {
         return FairLaunchClaimStorage.getState();
     }
 }

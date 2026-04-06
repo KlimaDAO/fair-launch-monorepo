@@ -3,8 +3,9 @@ pragma solidity ^0.8.28;
 
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import {InterchainTokenExecutable} from
-    "@axelar-network/interchain-token-service/contracts/executable/InterchainTokenExecutable.sol";
+import {
+    InterchainTokenExecutable
+} from "@axelar-network/interchain-token-service/contracts/executable/InterchainTokenExecutable.sol";
 
 interface IKLIMA_V0_TOKEN {
     function burn(uint256 amount) external;

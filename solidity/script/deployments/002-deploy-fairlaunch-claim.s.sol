@@ -14,13 +14,8 @@ contract DeployFairLaunchClaim is Script {
 
         console.log("DeployFairLaunchClaim deployed");
         FairLaunchClaim claimImpl = new FairLaunchClaim();
-        bytes memory claimData = abi.encodeWithSelector(
-            FairLaunchClaim.initialize.selector,
-            owner
-        );
-        FairLaunchClaim claim = FairLaunchClaim(
-            address(new ERC1967Proxy(address(claimImpl), claimData))
-        );
+        bytes memory claimData = abi.encodeWithSelector(FairLaunchClaim.initialize.selector, owner);
+        FairLaunchClaim claim = FairLaunchClaim(address(new ERC1967Proxy(address(claimImpl), claimData)));
 
         vm.stopBroadcast();
     }
