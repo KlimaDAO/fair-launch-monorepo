@@ -128,13 +128,12 @@ const Page = async ({
       const timeElapsedDays = elapsedTime / 86400;
 
       const totalKlimaXSupply = formatUnits(BigInt(klimaXSupply), 9);
-      const growthFactor = Math.exp(
-        Number(growthRate.result) * timeElapsedDays - 1e18
-      );
+      const growthFactor =
+        Math.exp((Number(growthRate.result) / 1e18) * timeElapsedDays) - 1;
       const basePoints =
         (BigInt(amount) * parseUnits(bonusMultiplier.toString(), 18)) /
         (BigInt(100) * pointsScaleDenominator.result!);
-      const newPoints = BigInt(basePoints) * BigInt(growthFactor);
+      const newPoints = BigInt(Math.floor(Number(basePoints) * growthFactor));
       let updatedPoints = newPoints + BigInt(organicPoints);
 
       const burnRatioDiff =
